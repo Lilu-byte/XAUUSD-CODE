@@ -197,6 +197,7 @@ inline unsigned long long GetTickCount64() { return 0; }
 static datetime g_mock_now = 1704067200LL;
 inline datetime TimeCurrent() { return g_mock_now; }
 inline datetime TimeTradeServer() { return g_mock_now; }
+inline datetime TimeLocal() { return g_mock_now; }
 inline datetime TimeGMT() { return g_mock_now - 7200; }
 inline datetime iTime(const string &, int, int) { return g_mock_now; }
 inline double NormalizeDouble(double v, int d) { double m = std::pow(10.0, d); return std::round(v * m) / m; }
@@ -211,6 +212,7 @@ enum { ACCOUNT_LOGIN = 1, ACCOUNT_MARGIN_MODE, ACCOUNT_EQUITY, ACCOUNT_MARGIN_FR
 enum { ACCOUNT_MARGIN_MODE_RETAIL_HEDGING = 2 };
 enum { TERMINAL_TRADE_ALLOWED = 1 };
 enum { MQL_TRADE_ALLOWED = 1, MQL_TESTER = 2 };
+enum { INIT_FAILED = 1 };
 inline double SymbolInfoDouble(const string &, int p)
 {
    switch(p) { case SYMBOL_TRADE_TICK_VALUE: case SYMBOL_TRADE_TICK_VALUE_LOSS: return 1.0; case SYMBOL_TRADE_TICK_SIZE: return 0.01;
@@ -276,7 +278,7 @@ inline bool GlobalVariableDel(const string &) { return true; }
 inline int GlobalVariablesDeleteAll(const string & = "", datetime = 0) { return 0; }
 
 // ---- trading ---------------------------------------------------------------------
-enum { TRADE_RETCODE_REQUOTE = 10004, TRADE_RETCODE_PLACED = 10008, TRADE_RETCODE_DONE = 10009, TRADE_RETCODE_DONE_PARTIAL = 10010,
+enum { TRADE_RETCODE_INVALID_STOPS = 10016, TRADE_RETCODE_REQUOTE = 10004, TRADE_RETCODE_PLACED = 10008, TRADE_RETCODE_DONE = 10009, TRADE_RETCODE_DONE_PARTIAL = 10010,
        TRADE_RETCODE_PRICE_CHANGED = 10020, TRADE_RETCODE_PRICE_OFF = 10021 };
 class CTrade
 {

@@ -12,6 +12,9 @@ OUT=research/results
 BIN=$(mktemp -d)
 mkdir -p "$OUT"
 
+echo "[0/5] build self-contained MT5 files"
+python3 research/bundle.py
+
 echo "[1/5] MQL5 syntax check (translated to C++)"
 python3 research/mock/check_mq5.py MQL5/Indicators/XAU_Oracle.mq5 MQL5/Experts/XAU_Sniper_EA.mq5
 

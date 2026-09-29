@@ -20,7 +20,7 @@ in a no-edge world), so a small positive number here is a better sign than it lo
 
 ## Step 1: Strategy Tester on real ticks
 * Symbol XAUUSD, period M15, **Modelling: Every tick based on real ticks**, at least **2 years**, your real deposit and leverage.
-* Inputs: `XAU_Sniper_Balanced.set`. Set the GMT offset **manually** (*InpManualGmt* on) and remember it changes with daylight saving.
+* Inputs: `XAU_Sniper_Balanced.set`. Set the broker clock **manually** (*InpManualGmt* on, winter offset, and the daylight-saving mode that matches your broker).
 * The calendar is unavailable in the tester, so the static 12:30/13:30 GMT window is used instead.
 * Split the period: **first 70% in-sample, last 30% out-of-sample.** Look at the out-of-sample part last, once.
 
@@ -64,4 +64,4 @@ noticeably worse than the tester usually mean fills or spread the tester did not
 * Gating modules off from trailing results can make things worse (tested); it is off by default.
 * Grade-based risk scaling has no supporting evidence; it is off by default.
 * Tick volume is not real volume; VWAP and volume spikes are approximations.
-* GMT conversion uses one offset for the whole history, so the session logic can be an hour off across daylight-saving changes in old data.
+* Daylight saving is modelled with the US or EU rule you select. If your broker's server clock follows neither, set *fixed* or the sessions can be an hour off for part of the year.

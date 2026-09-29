@@ -27,82 +27,112 @@
   ok:   static fallback ignores weekends
   ok:   automatic higher-timeframe map
 
+== unit tests: daylight-saving maths, ADR block, efficiency ratio ==
+  ok:   civil date round-trip
+  ok:   US DST starts 2024-03-10 07:00 UTC
+  ok:   US DST ends 2024-11-03 06:00 UTC
+  ok:   EU DST starts 2024-03-31 01:00 UTC
+  ok:   EU DST ends 2024-10-27 01:00 UTC
+  ok:   US DST 2026 start (2026-03-08)
+  ok:   NY-close server: GMT+2 winter, GMT+3 summer
+  ok:   fixed-offset server ignores DST
+  ok:   efficiency ratio always within [0,1]
+  ok:   no trend-continuation vote survives when >=90% of the daily range is used
+
 == causality: signals on truncated data must equal signals on full data ==
-  bars compared: 16750, signals: 68
+  bars compared: 16750, signals: 67
   ok:   enough signals to make the comparison meaningful
   ok:   every module vote identical on truncated vs full history
   ok:   every signal (dir/grade/SL) identical on truncated vs full history
 
 == window consistency: same signals whether 3000, 6000 or all bars are loaded ==
-  26000 closed bars compared over 10 seeds, 129 signals in the full runs
-  mismatches: 6000-bar window 0, 3000-bar window 1
+  26000 closed bars compared over 10 seeds (EA window: newest 1500 bars), 114 signals in the full runs
+  mismatches: 6000-bar window 0, 3000-bar window 0
   ok:   enough signals for the comparison to mean something
   ok:   6000-bar window (indicator) gives identical signals to full history
-  ok:   3000-bar window (EA) gives the same signals (at most 1 differing bar)
+  ok:   3000-bar window (EA) gives identical signals over the newest 1500 bars (15 trading days)
 
 == world: NULL - random walk, no edge exists  (6 seeds x 40000 M15 bars ~ 1.7 years each) ==
-  COMPOSITE          n= 813  win%= 47.7  TP1%= 46.4  expR=-0.141 (se 0.034)  PF= 0.73  holdMed=  5 bars
-    grade B          n= 759  win%= 47.4  TP1%= 46.0  expR=-0.146 (se 0.035)  PF= 0.73  holdMed=  4 bars
-    grade A          n=  49  win%= 49.0  TP1%= 49.0  expR=-0.128 (se 0.135)  PF= 0.75  holdMed=  5 bars
+  COMPOSITE          n= 770  win%= 47.7  TP1%= 47.0  expR=-0.153 (se 0.035)  PF= 0.71  holdMed=  4 bars
+    grade B          n= 718  win%= 47.1  TP1%= 46.4  expR=-0.162 (se 0.036)  PF= 0.70  holdMed=  4 bars
+    grade A          n=  47  win%= 53.2  TP1%= 53.2  expR=-0.071 (se 0.139)  PF= 0.85  holdMed=  5 bars
     grade A+         n=   5  win%= 80.0  TP1%= 80.0  expR=+0.414 (se 0.256)  PF= 4.69  holdMed= 12 bars
-  Trend Pullback     n= 780  win%= 50.3  TP1%= 48.3  expR=-0.076 (se 0.035)  PF= 0.85  holdMed=  5 bars
-  Liquidity Sweep    n=6962  win%= 49.4  TP1%= 48.2  expR=-0.136 (se 0.012)  PF= 0.74  holdMed=  4 bars
-  Session Breakout   n=1748  win%= 49.7  TP1%= 47.7  expR=-0.061 (se 0.024)  PF= 0.88  holdMed=  6 bars
-  Squeeze Break      n= 967  win%= 49.8  TP1%= 48.1  expR=-0.036 (se 0.033)  PF= 0.93  holdMed=  7 bars
-  VWAP Fade          n= 876  win%= 48.9  TP1%= 48.5  expR=-0.198 (se 0.031)  PF= 0.63  holdMed=  2 bars
-  RSI Divergence     n= 718  win%= 51.8  TP1%= 50.6  expR=-0.074 (se 0.037)  PF= 0.85  holdMed=  4 bars
-  FVG Retest         n=5952  win%= 49.1  TP1%= 48.0  expR=-0.134 (se 0.013)  PF= 0.74  holdMed=  3 bars
-  Round Level        n=4626  win%= 51.4  TP1%= 49.9  expR=-0.079 (se 0.014)  PF= 0.84  holdMed=  4 bars
-  composite trades per trading day: 0.46
-  composite z-score of expectancy vs 0: -4.14
+  Trend Pullback     n= 587  win%= 51.8  TP1%= 50.6  expR=-0.069 (se 0.040)  PF= 0.86  holdMed=  5 bars
+  Liquidity Sweep    n=7081  win%= 49.5  TP1%= 48.4  expR=-0.138 (se 0.011)  PF= 0.73  holdMed=  4 bars
+  Session Breakout   n=1586  win%= 49.3  TP1%= 47.9  expR=-0.071 (se 0.025)  PF= 0.86  holdMed=  6 bars
+  Squeeze Break      n= 990  win%= 47.9  TP1%= 46.9  expR=-0.086 (se 0.032)  PF= 0.84  holdMed=  6 bars
+  VWAP Fade          n= 920  win%= 49.1  TP1%= 48.8  expR=-0.200 (se 0.030)  PF= 0.62  holdMed=  2 bars
+  RSI Divergence     n= 718  win%= 51.3  TP1%= 50.0  expR=-0.092 (se 0.037)  PF= 0.82  holdMed=  4 bars
+  FVG Retest         n=5966  win%= 48.8  TP1%= 47.8  expR=-0.143 (se 0.013)  PF= 0.73  holdMed=  3 bars
+  Round Level        n=4593  win%= 51.0  TP1%= 49.6  expR=-0.087 (se 0.015)  PF= 0.83  holdMed=  4 bars
+  composite trades per trading day: 0.44
+  composite z-score of expectancy vs 0: -4.37
   ok:   no-edge world: composite expectancy is NOT significantly positive (no look-ahead leak)
-  ok:   no-edge world: module PB not significantly positive (z=-2.17)
-  ok:   no-edge world: module SW not significantly positive (z=-11.73)
-  ok:   no-edge world: module BO not significantly positive (z=-2.53)
-  ok:   no-edge world: module SQ not significantly positive (z=-1.10)
-  ok:   no-edge world: module VW not significantly positive (z=-6.34)
-  ok:   no-edge world: module DV not significantly positive (z=-2.01)
-  ok:   no-edge world: module FG not significantly positive (z=-10.68)
-  ok:   no-edge world: module RN not significantly positive (z=-5.48)
+  ok:   no-edge world: module PB not significantly positive (z=-1.69)
+  ok:   no-edge world: module SW not significantly positive (z=-12.00)
+  ok:   no-edge world: module BO not significantly positive (z=-2.79)
+  ok:   no-edge world: module SQ not significantly positive (z=-2.66)
+  ok:   no-edge world: module VW not significantly positive (z=-6.61)
+  ok:   no-edge world: module DV not significantly positive (z=-2.52)
+  ok:   no-edge world: module FG not significantly positive (z=-11.42)
+  ok:   no-edge world: module RN not significantly positive (z=-5.98)
 
 == world: TREND - persistent drift regimes (edge planted)  (6 seeds x 40000 M15 bars ~ 1.7 years each) ==
-  COMPOSITE          n= 909  win%= 55.3  TP1%= 54.6  expR=+0.059 (se 0.035)  PF= 1.13  holdMed=  5 bars
-    grade B          n= 848  win%= 55.3  TP1%= 54.5  expR=+0.061 (se 0.036)  PF= 1.13  holdMed=  5 bars
-    grade A          n=  56  win%= 53.6  TP1%= 53.6  expR=-0.009 (se 0.140)  PF= 0.98  holdMed=  4 bars
+  COMPOSITE          n= 841  win%= 54.5  TP1%= 54.2  expR=+0.032 (se 0.036)  PF= 1.07  holdMed=  5 bars
+    grade B          n= 785  win%= 54.5  TP1%= 54.3  expR=+0.037 (se 0.037)  PF= 1.08  holdMed=  5 bars
+    grade A          n=  51  win%= 51.0  TP1%= 51.0  expR=-0.082 (se 0.143)  PF= 0.84  holdMed=  4 bars
     grade A+         n=   5  win%= 80.0  TP1%= 80.0  expR=+0.481 (se 0.401)  PF= 3.31  holdMed=  8 bars
-  Trend Pullback     n=1007  win%= 58.8  TP1%= 56.7  expR=+0.163 (se 0.034)  PF= 1.39  holdMed=  5 bars
-  Liquidity Sweep    n=5698  win%= 45.7  TP1%= 44.9  expR=-0.205 (se 0.013)  PF= 0.64  holdMed=  3 bars
-  Session Breakout   n=1644  win%= 60.2  TP1%= 59.1  expR=+0.183 (se 0.026)  PF= 1.46  holdMed=  6 bars
-  Squeeze Break      n=1125  win%= 58.4  TP1%= 56.6  expR=+0.193 (se 0.033)  PF= 1.46  holdMed=  7 bars
-  VWAP Fade          n= 425  win%= 44.0  TP1%= 43.5  expR=-0.258 (se 0.046)  PF= 0.56  holdMed=  3 bars
-  RSI Divergence     n= 715  win%= 42.2  TP1%= 41.3  expR=-0.229 (se 0.037)  PF= 0.61  holdMed=  4 bars
-  FVG Retest         n=6054  win%= 56.0  TP1%= 55.1  expR=+0.044 (se 0.013)  PF= 1.10  holdMed=  3 bars
-  Round Level        n=4162  win%= 52.2  TP1%= 51.2  expR=-0.019 (se 0.016)  PF= 0.96  holdMed=  4 bars
-  composite trades per trading day: 0.51
+  Trend Pullback     n= 807  win%= 59.5  TP1%= 58.5  expR=+0.160 (se 0.037)  PF= 1.39  holdMed=  5 bars
+  Liquidity Sweep    n=5769  win%= 45.7  TP1%= 44.9  expR=-0.211 (se 0.013)  PF= 0.63  holdMed=  3 bars
+  Session Breakout   n=1539  win%= 60.5  TP1%= 59.6  expR=+0.183 (se 0.027)  PF= 1.46  holdMed=  6 bars
+  Squeeze Break      n=1114  win%= 59.3  TP1%= 58.2  expR=+0.185 (se 0.032)  PF= 1.44  holdMed=  6 bars
+  VWAP Fade          n= 445  win%= 44.0  TP1%= 43.6  expR=-0.268 (se 0.045)  PF= 0.54  holdMed=  2 bars
+  RSI Divergence     n= 723  win%= 42.5  TP1%= 41.5  expR=-0.230 (se 0.037)  PF= 0.61  holdMed=  3 bars
+  FVG Retest         n=6119  win%= 56.3  TP1%= 55.4  expR=+0.042 (se 0.013)  PF= 1.09  holdMed=  3 bars
+  Round Level        n=4100  win%= 52.3  TP1%= 51.4  expR=-0.023 (se 0.016)  PF= 0.95  holdMed=  4 bars
+  composite trades per trading day: 0.48
 
 == world: MEANREV - price pulled back to a moving anchor  (6 seeds x 40000 M15 bars ~ 1.7 years each) ==
-  COMPOSITE          n= 287  win%= 37.3  TP1%= 37.3  expR=-0.367 (se 0.052)  PF= 0.43  holdMed=  5 bars
-    grade B          n= 276  win%= 37.7  TP1%= 37.7  expR=-0.362 (se 0.053)  PF= 0.43  holdMed=  5 bars
-    grade A          n=  10  win%= 30.0  TP1%= 30.0  expR=-0.432 (se 0.327)  PF= 0.41  holdMed=  4 bars
+  COMPOSITE          n= 226  win%= 42.9  TP1%= 42.9  expR=-0.262 (se 0.062)  PF= 0.55  holdMed=  4 bars
+    grade B          n= 216  win%= 43.5  TP1%= 43.5  expR=-0.254 (se 0.063)  PF= 0.56  holdMed=  4 bars
+    grade A          n=   9  win%= 33.3  TP1%= 33.3  expR=-0.367 (se 0.359)  PF= 0.48  holdMed=  4 bars
     grade A+         n=   1  win%=  0.0  TP1%=  0.0  expR=-1.088 (se 0.000)  PF= 0.00  holdMed=  4 bars
-  Trend Pullback     n= 381  win%= 24.4  TP1%= 24.4  expR=-0.628 (se 0.037)  PF= 0.19  holdMed=  4 bars
-  Liquidity Sweep    n=9730  win%= 58.6  TP1%= 56.5  expR=+0.031 (se 0.010)  PF= 1.08  holdMed=  4 bars
-  Session Breakout   n=2018  win%= 30.4  TP1%= 29.7  expR=-0.474 (se 0.018)  PF= 0.32  holdMed=  6 bars
-  Squeeze Break      n=1159  win%= 31.8  TP1%= 31.2  expR=-0.451 (se 0.025)  PF= 0.34  holdMed=  6 bars
-  VWAP Fade          n=1840  win%= 58.5  TP1%= 57.8  expR=+0.017 (se 0.023)  PF= 1.04  holdMed=  3 bars
-  RSI Divergence     n= 899  win%= 53.7  TP1%= 52.5  expR=-0.039 (se 0.032)  PF= 0.92  holdMed=  5 bars
-  FVG Retest         n=6645  win%= 40.7  TP1%= 40.0  expR=-0.332 (se 0.011)  PF= 0.45  holdMed=  4 bars
-  Round Level        n=5735  win%= 44.7  TP1%= 43.6  expR=-0.241 (se 0.012)  PF= 0.57  holdMed=  4 bars
-  composite trades per trading day: 0.16
+  Trend Pullback     n= 176  win%= 32.4  TP1%= 32.4  expR=-0.508 (se 0.060)  PF= 0.28  holdMed=  4 bars
+  Liquidity Sweep    n=9881  win%= 58.5  TP1%= 56.5  expR=+0.025 (se 0.010)  PF= 1.06  holdMed=  4 bars
+  Session Breakout   n=1700  win%= 31.5  TP1%= 30.8  expR=-0.461 (se 0.020)  PF= 0.33  holdMed=  6 bars
+  Squeeze Break      n=1174  win%= 33.2  TP1%= 32.9  expR=-0.429 (se 0.025)  PF= 0.37  holdMed=  6 bars
+  VWAP Fade          n=1930  win%= 57.4  TP1%= 56.9  expR=-0.013 (se 0.022)  PF= 0.97  holdMed=  3 bars
+  RSI Divergence     n= 917  win%= 53.5  TP1%= 52.3  expR=-0.046 (se 0.032)  PF= 0.90  holdMed=  4 bars
+  FVG Retest         n=6692  win%= 40.8  TP1%= 40.2  expR=-0.332 (se 0.011)  PF= 0.45  holdMed=  4 bars
+  Round Level        n=5684  win%= 45.0  TP1%= 44.2  expR=-0.238 (se 0.012)  PF= 0.57  holdMed=  4 bars
+  composite trades per trading day: 0.13
+
+== A/B on synthetic worlds: efficiency-ratio regime weighting and ADR block (composite, 8 seeds x 40000 bars) ==
+  null: baseline (adr0,reg0) n=1095  win%= 50.7  TP1%= 50.0  expR=-0.089 (se 0.030)  PF= 0.82  holdMed=  5 bars
+  null: ADR block 0.90 n= 993  win%= 51.4  TP1%= 50.9  expR=-0.081 (se 0.031)  PF= 0.84  holdMed=  4 bars
+  null: regime weights n= 855  win%= 50.3  TP1%= 49.5  expR=-0.111 (se 0.033)  PF= 0.78  holdMed=  4 bars
+  null: both         n= 800  win%= 50.8  TP1%= 50.2  expR=-0.103 (se 0.034)  PF= 0.80  holdMed=  4 bars
+  trend: baseline (adr0,reg0) n=1254  win%= 57.8  TP1%= 56.5  expR=+0.097 (se 0.029)  PF= 1.22  holdMed=  5 bars
+  trend: ADR block 0.90 n=1156  win%= 58.0  TP1%= 57.0  expR=+0.097 (se 0.031)  PF= 1.22  holdMed=  5 bars
+  trend: regime weights n= 993  win%= 57.5  TP1%= 56.5  expR=+0.091 (se 0.033)  PF= 1.21  holdMed=  5 bars
+  trend: both        n= 930  win%= 57.5  TP1%= 56.6  expR=+0.089 (se 0.034)  PF= 1.20  holdMed=  5 bars
+  meanrev: baseline (adr0,reg0) n= 335  win%= 34.3  TP1%= 34.3  expR=-0.446 (se 0.046)  PF= 0.34  holdMed=  4 bars
+  meanrev: ADR block 0.90 n= 265  win%= 35.1  TP1%= 35.1  expR=-0.434 (se 0.052)  PF= 0.35  holdMed=  4 bars
+  meanrev: regime weights n= 218  win%= 34.9  TP1%= 34.9  expR=-0.425 (se 0.058)  PF= 0.36  holdMed=  4 bars
+  meanrev: both      n= 184  win%= 36.4  TP1%= 36.4  expR=-0.403 (se 0.063)  PF= 0.38  holdMed=  4 bars
+  mixed: baseline (adr0,reg0) n= 829  win%= 53.7  TP1%= 52.8  expR=+0.001 (se 0.035)  PF= 1.00  holdMed=  5 bars
+  mixed: ADR block 0.90 n= 751  win%= 54.6  TP1%= 53.8  expR=+0.011 (se 0.037)  PF= 1.02  holdMed=  5 bars
+  mixed: regime weights n= 657  win%= 53.0  TP1%= 52.1  expR=-0.002 (se 0.040)  PF= 1.00  holdMed=  4 bars
+  mixed: both        n= 605  win%= 53.9  TP1%= 53.1  expR=+0.012 (se 0.042)  PF= 1.03  holdMed=  4 bars
 
 == walk-forward gating on NULL (segment=6000 bars, gate: n>=20 & expR<-0.25) ==
-  no gating (OOS)    n= 649  win%= 49.8  TP1%= 49.0  expR=-0.097 (se 0.039)  PF= 0.81  holdMed=  5 bars
-  gated (OOS)        n= 595  win%= 50.1  TP1%= 49.4  expR=-0.091 (se 0.041)  PF= 0.82  holdMed=  5 bars
-  avg modules switched off per segment: 0.47
+  no gating (OOS)    n= 593  win%= 51.4  TP1%= 50.8  expR=-0.075 (se 0.041)  PF= 0.85  holdMed=  5 bars
+  gated (OOS)        n= 527  win%= 51.4  TP1%= 50.7  expR=-0.072 (se 0.043)  PF= 0.86  holdMed=  5 bars
+  avg modules switched off per segment: 0.53
 
 == walk-forward gating on MIXED (trend/mean-revert alternating) (segment=6000 bars, gate: n>=20 & expR<-0.25) ==
-  no gating (OOS)    n= 436  win%= 51.8  TP1%= 51.8  expR=-0.021 (se 0.050)  PF= 0.96  holdMed=  4 bars
-  gated (OOS)        n= 202  win%= 41.1  TP1%= 41.1  expR=-0.271 (se 0.067)  PF= 0.55  holdMed=  4 bars
-  avg modules switched off per segment: 1.40
+  no gating (OOS)    n= 388  win%= 51.3  TP1%= 51.3  expR=-0.046 (se 0.052)  PF= 0.91  holdMed=  4 bars
+  gated (OOS)        n= 170  win%= 40.6  TP1%= 40.6  expR=-0.276 (se 0.074)  PF= 0.55  holdMed=  4 bars
+  avg modules switched off per segment: 1.53
 
 ALL CHECKS PASSED (0 failed checks)

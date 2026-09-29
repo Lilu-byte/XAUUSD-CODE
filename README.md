@@ -46,10 +46,10 @@ volatility squeeze break, VWAP-extreme fade, RSI divergence, fair-value-gap rete
 rejection. The higher-timeframe trend and a DXY/EURUSD proxy add or subtract weight. A signal needs a
 minimum score **and** at least two agreeing modules, plus session, volatility and spread filters.
 The stop is structural (with ATR floor/ceiling); targets are multiples of that risk.
-Details: [docs/RESEARCH.md](docs/RESEARCH.md) and [docs/IDEAS.md](docs/IDEAS.md) (75+ ideas, what was built, what was rejected and why).
+Details: [docs/RESEARCH.md](docs/RESEARCH.md), [docs/IDEAS.md](docs/IDEAS.md) (90+ ideas, built/rejected and why), [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) (20 further improvements) and [docs/REFERENCE_REVIEW.md](docs/REFERENCE_REVIEW.md).
 
 ## Quick start
-1. Copy `MQL5/` into your terminal's data folder (File > Open Data Folder). See [docs/INSTALL.md](docs/INSTALL.md).
+1. Copy the two files `MQL5/Indicators/XAU_Oracle.mq5` and `MQL5/Experts/XAU_Sniper_EA.mq5` into your terminal's data folder (File > Open Data Folder > MQL5). Nothing else to install. See [docs/INSTALL.md](docs/INSTALL.md).
 2. Compile `XAU_Oracle.mq5` and `XAU_Sniper_EA.mq5` in MetaEditor (F7).
 3. Attach the indicator to an XAUUSD M15 chart. Read the **TRIAL** block first.
 4. Run the EA in the Strategy Tester (Every tick based on real ticks) with `Presets/XAU_Sniper_Balanced.set`.
@@ -57,14 +57,14 @@ Details: [docs/RESEARCH.md](docs/RESEARCH.md) and [docs/IDEAS.md](docs/IDEAS.md)
 
 ## Repository layout
 ```
-MQL5/Include/XAU/XAU_Core.mqh       signal engine, simulator, sizing (platform independent)
-MQL5/Include/XAU/XAU_Platform.mqh   MT5 glue: data, lots, news filter, drawing
-MQL5/Indicators/XAU_Oracle.mq5      the indicator
-MQL5/Experts/XAU_Sniper_EA.mq5      the EA
+MQL5/Indicators/XAU_Oracle.mq5      the indicator (single self-contained file, generated)
+MQL5/Experts/XAU_Sniper_EA.mq5      the EA (single self-contained file, generated)
 MQL5/Presets/*.set                  five EA risk profiles
-docs/                               ideas, research notes, risk maths, install and testing guides
-research/                           C++ harness, mock MT5 API, Monte Carlo, saved results
+src/                                editable sources: XAU_Core.mqh (engine), XAU_Platform.mqh (MT5 glue), the two mains
+docs/                               ideas, research notes, risk maths, install/testing, reference review, improvements
+research/                           bundler, C++ harness, mock MT5 API, Monte Carlo, saved results
 ```
+Edit `src/`, then `python3 research/bundle.py` (or `research/run_checks.sh`) regenerates the two MT5 files.
 
 ## What was and was not verified
 | Verified here | Not verified (cannot be, offline) |

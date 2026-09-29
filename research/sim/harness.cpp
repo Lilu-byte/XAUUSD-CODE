@@ -15,8 +15,8 @@
 // Run:    ./harness [units|causal|null|trend|meanrev|all]
 
 #include "../mock/mql5_mock.h"
-#include "../../MQL5/Include/XAU/XAU_Core.mqh"
-#include "../../MQL5/Include/XAU/XAU_Platform.mqh"
+#include "../../src/XAU_Core.mqh"
+#include "../../src/XAU_Platform.mqh"
 
 #include <cstring>
 #include <random>
@@ -144,11 +144,16 @@ static std::vector<MqlRates> htf_upto(const Series &S, int last_base)
    return out;
 }
 
+static int    g_regime = 0;
+static double g_adr = 0.90;
+
 static void load(CXauEngine &e, const Series &S, int nbase)
 {
    std::vector<MqlRates> base(S.m15.begin(), S.m15.begin() + nbase);
    std::vector<MqlRates> h = htf_upto(S, nbase - 1);
    e.cfg.Defaults();
+   e.cfg.regime_on = g_regime;
+   e.cfg.adr_block = g_adr;
    e.SetBase(base, nbase);
    e.SetHTF(h, (int)h.size());
    e.Compute();
@@ -158,6 +163,7 @@ static void load(CXauEngine &e, const Series &S, int nbase)
 // tests
 //---------------------------------------------------------------------------
 static int g_fail = 0;
+static void print_stats(const char *name, const XStats &s);
 #define CHECK(cond, msg)                                                      \
    do { if(!(cond)) { std::printf("  FAIL: %s\n", msg); g_fail++; }            \
         else        { std::printf("  ok:   %s\n", msg); } } while(0)
@@ -276,6 +282,66 @@ static void test_platform()
    CHECK(XAutoHTF(PERIOD_M15) == PERIOD_H1 && XAutoHTF(PERIOD_H1) == PERIOD_H4 && XAutoHTF(PERIOD_M1) == PERIOD_M15, "automatic higher-timeframe map");
 }
 
+
+static void test_time_and_filters()
+{
+   std::printf("\n== unit tests: daylight-saving maths, ADR block, efficiency ratio ==\n");
+   auto ts = [](int y, int m, int d, int hh, int mm, int ss) { return XDaysFromCivil(y, m, d) * 86400LL + hh * 3600 + mm * 60 + ss; };
+   CHECK(XYearOfDays(XDaysFromCivil(2024, 2, 29)) == 2024 && XYearOfDays(XDaysFromCivil(2026, 12, 31)) == 2026, "civil date round-trip");
+   CHECK(XUsDst(ts(2024, 3, 10, 6, 59, 59)) == false && XUsDst(ts(2024, 3, 10, 7, 0, 0)) == true,  "US DST starts 2024-03-10 07:00 UTC");
+   CHECK(XUsDst(ts(2024, 11, 3, 5, 59, 59)) == true  && XUsDst(ts(2024, 11, 3, 6, 0, 0)) == false, "US DST ends 2024-11-03 06:00 UTC");
+   CHECK(XEuDst(ts(2024, 3, 31, 0, 59, 59)) == false && XEuDst(ts(2024, 3, 31, 1, 0, 0)) == true,  "EU DST starts 2024-03-31 01:00 UTC");
+   CHECK(XEuDst(ts(2024, 10, 27, 0, 59, 59)) == true && XEuDst(ts(2024, 10, 27, 1, 0, 0)) == false, "EU DST ends 2024-10-27 01:00 UTC");
+   CHECK(XUsDst(ts(2026, 3, 8, 7, 0, 0)) == true && XUsDst(ts(2026, 3, 8, 6, 59, 59)) == false, "US DST 2026 start (2026-03-08)");
+   XConfig c; c.Defaults();
+   c.gmt_offset_sec = 7200; c.dst_mode = 1;
+   CHECK(XOffsetAt(c, (datetime)ts(2024, 1, 15, 12, 0, 0)) == 7200 && XOffsetAt(c, (datetime)ts(2024, 7, 15, 12, 0, 0)) == 10800, "NY-close server: GMT+2 winter, GMT+3 summer");
+   c.dst_mode = 0;
+   CHECK(XOffsetAt(c, (datetime)ts(2024, 7, 15, 12, 0, 0)) == 7200, "fixed-offset server ignores DST");
+
+   Series S = make_series(W_TREND, 20000, 5);
+   CXauEngine e; load(e, S, 20000);
+   int bad_er = 0, blocked_leak = 0, adr_hits = 0;
+   for(int i = e.cfg.warmup; i < 20000; i++)
+   {
+      if(e.m_er[i] < -1e-12 || e.m_er[i] > 1.0 + 1e-12) bad_er++;
+      if(e.m_adru[i] >= 0.9) { adr_hits++; if(e.m_vote[i * XM_COUNT + XM_PULLBACK] != 0.0 || e.m_vote[i * XM_COUNT + XM_BREAKOUT] != 0.0 || e.m_vote[i * XM_COUNT + XM_SQUEEZE] != 0.0) blocked_leak++; }
+   }
+   CHECK(bad_er == 0, "efficiency ratio always within [0,1]");
+   CHECK(adr_hits > 100 && blocked_leak == 0, "no trend-continuation vote survives when >=90% of the daily range is used");
+}
+
+static XStats composite_stats(World w, int regime, double adr, int seeds, int nbars)
+{
+   XStats agg; agg.Reset();
+   g_regime = regime; g_adr = adr;
+   for(int sd = 1; sd <= seeds; sd++)
+   {
+      Series S = make_series(w, nbars, 3000 + sd);
+      CXauEngine e; load(e, S, nbars);
+      XTrial tr; e.RunTrial(e.cfg.warmup, nbars - 2, tr);
+      agg.n += tr.all.n; agg.wins += tr.all.wins; agg.losses += tr.all.losses; agg.scratch += tr.all.scratch; agg.tp1_hits += tr.all.tp1_hits;
+      agg.sum_r += tr.all.sum_r; agg.sum_r2 += tr.all.sum_r2; agg.sum_win += tr.all.sum_win; agg.sum_loss += tr.all.sum_loss;
+      for(int q = 0; q < tr.all.nh_all && agg.nh_all < XHOLD_MAX; q++) agg.hold_all[agg.nh_all++] = tr.all.hold_all[q];
+   }
+   g_regime = 0; g_adr = 0.90;
+   return agg;
+}
+
+static void run_filter_ab()
+{
+   std::printf("\n== A/B on synthetic worlds: efficiency-ratio regime weighting and ADR block (composite, 8 seeds x 40000 bars) ==\n");
+   struct W { World w; const char *n; };
+   const W worlds[] = {{W_NULL, "null"}, {W_TREND, "trend"}, {W_MEANREV, "meanrev"}, {W_MIXED, "mixed"}};
+   for(const W &x : worlds)
+   {
+      print_stats((std::string(x.n) + ": baseline (adr0,reg0)").c_str(), composite_stats(x.w, 0, 0.0, 8, 40000));
+      print_stats((std::string(x.n) + ": ADR block 0.90").c_str(),     composite_stats(x.w, 0, 0.90, 8, 40000));
+      print_stats((std::string(x.n) + ": regime weights").c_str(),      composite_stats(x.w, 1, 0.0, 8, 40000));
+      print_stats((std::string(x.n) + ": both").c_str(),               composite_stats(x.w, 1, 0.90, 8, 40000));
+   }
+}
+
 static void test_causality()
 {
    std::printf("\n== causality: signals on truncated data must equal signals on full data ==\n");
@@ -331,18 +397,19 @@ static void test_window_consistency()
          XSignal a, b, c;
          const bool sa = full.Evaluate(N - back, a);
          const bool sb = w6.Evaluate(6000 - back, b);
-         const bool sc = w3.Evaluate(3000 - back, c);
+         const bool sc = (back <= 1500) ? w3.Evaluate(3000 - back, c) : sa;   // EA only acts on the newest bars
+         if(back > 1500) c = a;
          cmp++;
          if(sa) sig++;
          if(sa != sb || (sa && (a.dir != b.dir || a.grade != b.grade))) m6++;
          if(sa != sc || (sa && (a.dir != c.dir || a.grade != c.grade))) m3++;
       }
    }
-   std::printf("  %d closed bars compared over 10 seeds, %d signals in the full runs\n", cmp, sig);
+   std::printf("  %d closed bars compared over 10 seeds (EA window: newest 1500 bars), %d signals in the full runs\n", cmp, sig);
    std::printf("  mismatches: 6000-bar window %d, 3000-bar window %d\n", m6, m3);
    CHECK(sig >= 40, "enough signals for the comparison to mean something");
    CHECK(m6 == 0, "6000-bar window (indicator) gives identical signals to full history");
-   CHECK(m3 <= 1, "3000-bar window (EA) gives the same signals (at most 1 differing bar)");
+   CHECK(m3 == 0, "3000-bar window (EA) gives identical signals over the newest 1500 bars (15 trading days)");
 }
 
 static void print_stats(const char *name, const XStats &s)
@@ -438,11 +505,12 @@ int main(int argc, char **argv)
 {
    const char *mode = (argc > 1) ? argv[1] : "all";
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_platform(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_platform(); test_time_and_filters(); }
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);
    if(all || !std::strcmp(mode, "trend"))   run_world(W_TREND,   "TREND - persistent drift regimes (edge planted)", 6, 40000);
    if(all || !std::strcmp(mode, "meanrev")) run_world(W_MEANREV, "MEANREV - price pulled back to a moving anchor", 6, 40000);
+   if(all || !std::strcmp(mode, "filters")) run_filter_ab();
    if(all || !std::strcmp(mode, "gating"))
    {
       run_gating(W_NULL,  "NULL",  6, 40000, 6000, -0.25, 20);

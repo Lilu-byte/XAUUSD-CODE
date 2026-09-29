@@ -160,7 +160,9 @@ double XNormLotsDown(const double lots, const double vmin, const double vmax, co
 struct XConfig
 {
    // time model (all "GMT" hours are GMT clock hours 0..24)
-   int    gmt_offset_sec;    // broker server time minus GMT
+   int    gmt_offset_sec;    // broker server time minus GMT in WINTER (standard) time
+   int    dst_mode;          // 0 fixed offset, 1 server follows US DST (New-York-close servers), 2 follows EU DST
+   bool   london_sessions;   // trade_start/end/fri_cutoff are London local clock (follows UK DST)
    int    day_roll_hour;     // GMT hour a new trading day starts (FX roll)
    double asia_start, asia_end;
    double trade_start, trade_end, fri_cutoff;
@@ -188,6 +190,12 @@ struct XConfig
    double atr_ratio_min, atr_ratio_max, min_atr_price;
    double asia_compress;
    double round_step;
+   double adr_block;         // block trend continuation once this share of the average daily range is used (0 = off)
+   int    regime_on;         // 1 = weight modules by the efficiency-ratio regime
+   double er_lo, er_hi;      // efficiency-ratio regime thresholds
+   double reg_trend_lo;      // trend-module weight multiplier in a choppy regime
+   double reg_mr_hi;         // mean-reversion-module weight multiplier in a strongly trending regime
+   double fc_er_min;         // below this efficiency ratio the forecast is 'no map' (range only)
 
    // trade plan
    double sl_atr_min, sl_atr_max, sl_buffer_atr;
@@ -203,7 +211,7 @@ struct XConfig
 
    void Defaults()
    {
-      gmt_offset_sec = 0;   day_roll_hour = 22;
+      gmt_offset_sec = 0;   dst_mode = 0;   london_sessions = true;   day_roll_hour = 22;
       asia_start = 0.0;     asia_end = 7.0;
       trade_start = 7.0;    trade_end = 20.0;   fri_cutoff = 19.0;
       use_session_filter = true;
@@ -221,6 +229,7 @@ struct XConfig
 
       atr_ratio_min = 0.6;  atr_ratio_max = 2.6;  min_atr_price = 0.0;
       asia_compress = 0.7;  round_step = 10.0;
+      adr_block = 0.90;  regime_on = 0;  er_lo = 0.20;  er_hi = 0.45;  reg_trend_lo = 0.5;  reg_mr_hi = 0.5;  fc_er_min = 0.12;
 
       sl_atr_min = 0.9;  sl_atr_max = 2.6;  sl_buffer_atr = 0.15;  sl_lookback = 3;
       tp1_r = 1.0;  tp2_r = 2.5;  partial_pct = 0.5;  trail_atr = 2.0;
@@ -439,6 +448,77 @@ void XMapTF(XCT(bt), const int bn, const int base_sec, XCT(ht), const int hn, co
    }
 }
 
+//--- calendar maths for daylight saving (Howard Hinnant's civil-date algorithms)
+long XDaysFromCivil(const int y0, const int m, const int d)
+{
+   const long y = (m <= 2) ? y0 - 1 : y0;
+   const long era = ((y >= 0) ? y : y - 399) / 400;
+   const long yoe = y - era * 400;
+   const long mp = (m > 2) ? m - 3 : m + 9;
+   const long doy = (153 * mp + 2) / 5 + d - 1;
+   const long doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+   return era * 146097 + doe - 719468;
+}
+
+int XYearOfDays(const long z0)
+{
+   const long z = z0 + 719468;
+   const long era = ((z >= 0) ? z : z - 146096) / 146097;
+   const long doe = z - era * 146097;
+   const long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+   long y = yoe + era * 400;
+   const long doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+   const long mp = (5 * doy + 2) / 153;
+   const long m = (mp < 10) ? mp + 3 : mp - 9;
+   if(m <= 2) y++;
+   return (int)y;
+}
+
+// days-since-epoch of the n-th Sunday (n>=1) of a month
+long XNthSunday(const int y, const int m, const int n)
+{
+   const long first = XDaysFromCivil(y, m, 1);
+   const long dow = (first + 4) % 7;                 // 0 = Sunday
+   return first + (7 - dow) % 7 + 7 * (n - 1);
+}
+
+long XLastSunday(const int y, const int m)
+{
+   const long next = (m == 12) ? XDaysFromCivil(y + 1, 1, 1) : XDaysFromCivil(y, m + 1, 1);
+   const long last = next - 1;
+   const long dow = (last + 4) % 7;
+   return last - dow;
+}
+
+// US daylight time: 2nd Sunday of March 07:00 UTC .. 1st Sunday of November 06:00 UTC
+bool XUsDst(const long gmt_sec)
+{
+   const int y = XYearOfDays(gmt_sec / 86400);
+   const long a = XNthSunday(y, 3, 2) * 86400 + 7 * 3600;
+   const long b = XNthSunday(y, 11, 1) * 86400 + 6 * 3600;
+   return (gmt_sec >= a && gmt_sec < b);
+}
+
+// EU/UK summer time: last Sunday of March 01:00 UTC .. last Sunday of October 01:00 UTC
+bool XEuDst(const long gmt_sec)
+{
+   const int y = XYearOfDays(gmt_sec / 86400);
+   const long a = XLastSunday(y, 3) * 86400 + 3600;
+   const long b = XLastSunday(y, 10) * 86400 + 3600;
+   return (gmt_sec >= a && gmt_sec < b);
+}
+
+// Server-time minus GMT that applied at server timestamp t.
+int XOffsetAt(const XConfig &c, const datetime t)
+{
+   int off = c.gmt_offset_sec;
+   if(c.dst_mode == 0) return off;
+   const long g = (long)t - c.gmt_offset_sec;
+   if(c.dst_mode == 1 && XUsDst(g)) off += 3600;
+   else if(c.dst_mode == 2 && XEuDst(g)) off += 3600;
+   return off;
+}
+
 double XHourGmt(const datetime t, const int gmt_offset_sec)
 {
    long s = ((long)t - gmt_offset_sec) % 86400;
@@ -471,7 +551,7 @@ public:
    XDARR(m_bbw); XDARR(m_bbp); XDARR(m_donh); XDARR(m_donl); XDARR(m_vavg);
    XDARR(m_vwap); XDARR(m_vsd); XDARR(m_hour);
    XIARR(m_daybars); XIARR(m_asiaok); XDARR(m_asiahi); XDARR(m_asialo);
-   XDARR(m_pdh); XDARR(m_pdl); XDARR(m_adr);
+   XDARR(m_pdh); XDARR(m_pdl); XDARR(m_adr); XDARR(m_adru); XDARR(m_er);
    // higher timeframe
    XTARR(m_ht); XDARR(m_hc); XDARR(m_hh); XDARR(m_hl); XDARR(m_hema2); XDARR(m_hema3);
    XDARR(m_hpdi); XDARR(m_hmdi); XDARR(m_hadx0); XIARR(m_hbias0);
@@ -487,8 +567,10 @@ public:
    int     fc_n;
    XTARR(fc_t); XDARR(fc_o); XDARR(fc_h); XDARR(fc_l); XDARR(fc_c); XDARR(fc_up); XDARR(fc_dn);
    double  fc_drift_atr;
+   double  fc_rmse;      // realised one-step error of the drift model (calibrates the cone)
+   bool    fc_nomap;     // choppy / spiking market: show range only, no directional path
 
-   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; }
+   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false; }
 
    //--- data loading ------------------------------------------------
    bool SetBase(XCRATES(r), const int cnt)
@@ -557,7 +639,7 @@ public:
 
    double SeasonAt(const datetime t) const
    {
-      int h = (int)XHourGmt(t, cfg.gmt_offset_sec);
+      int h = (int)XHourGmt(t, XOffsetAt(cfg, t));
       if(h < 0) h = 0;
       if(h > 23) h = 23;
       return season[h];
@@ -589,8 +671,16 @@ public:
             {
                if(cfg.en[m] == 0) continue;
                const double v = m_vote[i * XM_COUNT + m];
-               if(v > 0.0)      { sl += cfg.w[m] * v;  nl++; ml |= (1 << m); }
-               else if(v < 0.0) { ss += cfg.w[m] * -v; ns++; ms |= (1 << m); }
+               double wm = cfg.w[m];
+               if(cfg.regime_on == 1)
+               {
+                  const bool trend_mod = (m == XM_PULLBACK || m == XM_BREAKOUT || m == XM_SQUEEZE);
+                  const bool mr_mod = (m == XM_VWAP || m == XM_DIVERGE);
+                  if(trend_mod && m_er[i] < cfg.er_lo) wm *= cfg.reg_trend_lo;
+                  if(mr_mod && m_er[i] > cfg.er_hi) wm *= cfg.reg_mr_hi;
+               }
+               if(v > 0.0)      { sl += wm * v;  nl++; ml |= (1 << m); }
+               else if(v < 0.0) { ss += wm * -v; ns++; ms |= (1 << m); }
             }
             const double b = (double)m_bias[i];
             sl += cfg.w_htf * b;  ss -= cfg.w_htf * b;
@@ -616,10 +706,12 @@ public:
       }
       if(cfg.use_session_filter && cfg.base_sec <= 7200)
       {
-         double hrn = m_hour[i] + cfg.base_sec / 3600.0;      // the next bar's open, where we would enter
+         double hrn = m_hour[i] + cfg.base_sec / 3600.0;      // the next bar's open (GMT), where we would enter
+         const int off = XOffsetAt(cfg, m_t[i]);
+         if(cfg.london_sessions && XEuDst((long)m_t[i] - off)) hrn += 1.0;   // London local clock
          if(hrn >= 24.0) hrn -= 24.0;
          if(!(hrn >= cfg.trade_start && hrn < cfg.trade_end)) return XR_SESSION;
-         if(XWeekdayGmt(m_t[i], cfg.gmt_offset_sec) == 5 && hrn >= cfg.fri_cutoff) return XR_FRIDAY;
+         if(XWeekdayGmt(m_t[i], off) == 5 && hrn >= cfg.fri_cutoff) return XR_FRIDAY;
       }
       return XR_OK;
    }
@@ -838,9 +930,21 @@ public:
       ArrayResize(fc_l, steps); ArrayResize(fc_c, steps); ArrayResize(fc_up, steps); ArrayResize(fc_dn, steps);
       const double a = m_atr[ref_i];
       const double e = m_ema1[ref_i];
-      const double dir_s = XClamp(m_snet[ref_i] / 3.0, -1.0, 1.0);
+      // calibrate the cone on how wrong this very drift model has been over the last 100 bars
+      double se = 0.0;
+      int ne = 0;
+      for(int k = XMaxI(cfg.warmup, ref_i - 100); k < ref_i; k++)
+      {
+         const double ex = m_atr[k] * XClamp(m_snet[k] / 3.0, -1.0, 1.0) * cfg.fc_drift;
+         const double er1 = (m_c[k + 1] - m_c[k]) - ex;
+         se += er1 * er1;
+         ne++;
+      }
+      fc_rmse = (ne >= 20) ? MathSqrt(se / ne) : 0.63 * a;
+      fc_nomap = (m_er[ref_i] < cfg.fc_er_min) || (m_atrref[ref_i] > 0.0 && a / m_atrref[ref_i] > cfg.atr_ratio_max);
+      const double dir_s = fc_nomap ? 0.0 : XClamp(m_snet[ref_i] / 3.0, -1.0, 1.0);
       fc_drift_atr = dir_s * cfg.fc_drift;
-      const double mr = (m_adx[ref_i] < 20.0) ? cfg.fc_mr : cfg.fc_mr * 0.4;
+      const double mr = fc_nomap ? 0.0 : ((m_adx[ref_i] < 20.0) ? cfg.fc_mr : cfg.fc_mr * 0.4);
       double px = start_price;
       double decay = 1.0;
       for(int j = 0; j < steps; j++)
@@ -857,7 +961,7 @@ public:
          fc_c[j] = c;
          fc_h[j] = XMax(o, c) + wick;
          fc_l[j] = XMin(o, c) - wick;
-         const double sigma = 0.63 * a * sea * MathSqrt((double)(j + 1));
+         const double sigma = fc_rmse * sea * MathSqrt((double)(j + 1));
          fc_up[j] = c + sigma;
          fc_dn[j] = c - sigma;
          px = c;
@@ -892,7 +996,7 @@ private:
       ArrayResize(m_bbw, n);  ArrayResize(m_bbp, n);  ArrayResize(m_donh, n); ArrayResize(m_donl, n);
       ArrayResize(m_vavg, n); ArrayResize(m_vwap, n); ArrayResize(m_vsd, n);  ArrayResize(m_hour, n);
       ArrayResize(m_daybars, n); ArrayResize(m_asiaok, n); ArrayResize(m_asiahi, n); ArrayResize(m_asialo, n);
-      ArrayResize(m_pdh, n);  ArrayResize(m_pdl, n);  ArrayResize(m_adr, n);
+      ArrayResize(m_pdh, n);  ArrayResize(m_pdl, n);  ArrayResize(m_adr, n);  ArrayResize(m_adru, n);  ArrayResize(m_er, n);
       ArrayResize(m_hmap, n); ArrayResize(m_bias, n); ArrayResize(m_hadx, n);
       ArrayResize(m_imap, n); ArrayResize(m_inter, n);
       ArrayResize(m_vote, n * XM_COUNT);
@@ -947,6 +1051,15 @@ private:
             m_vavg[i] = sv / 20.0;
          }
       }
+      // Kaufman efficiency ratio: net move / path length over 30 bars (0 = pure chop, 1 = straight line)
+      for(int i = 0; i < n; i++)
+      {
+         m_er[i] = 0.0;
+         if(i < 30) continue;
+         double path = 0.0;
+         for(int k = i - 29; k <= i; k++) path += XAbs(m_c[k] - m_c[k - 1]);
+         m_er[i] = (path > 0.0) ? XAbs(m_c[i] - m_c[i - 30]) / path : 0.0;
+      }
       // intraday range seasonality by GMT hour
       double hs[24], hc[24];
       double allsum = 0.0; int allc = 0;
@@ -955,7 +1068,7 @@ private:
       {
          for(int i = 0; i < n; i++)
          {
-            int hh = (int)XHourGmt(m_t[i], cfg.gmt_offset_sec);
+            int hh = (int)XHourGmt(m_t[i], XOffsetAt(cfg, m_t[i]));
             if(hh < 0) hh = 0;
             if(hh > 23) hh = 23;
             hs[hh] += (m_h[i] - m_l[i]) / XMax(m_atrref[i], 1e-9);
@@ -981,7 +1094,7 @@ private:
       const bool intraday = (cfg.base_sec <= 7200);
       for(int i = 0; i < n; i++)
       {
-         const long tt = (long)m_t[i] - cfg.gmt_offset_sec;
+         const long tt = (long)m_t[i] - XOffsetAt(cfg, m_t[i]);
          const long day = (tt - (long)cfg.day_roll_hour * 3600) / 86400;
          const long cal = tt / 86400;
          long sec = tt % 86400;
@@ -1032,6 +1145,7 @@ private:
             adr /= nr;
          }
          m_adr[i] = adr;
+         m_adru[i] = (adr > 0.0) ? (day_hi - day_lo) / adr : 0.0;
       }
    }
 
@@ -1280,7 +1394,7 @@ private:
          const double a = m_atr[i];
 
          // Asian-range break state (reset each GMT calendar day)
-         const long cal = ((long)m_t[i] - cfg.gmt_offset_sec) / 86400;
+         const long cal = ((long)m_t[i] - XOffsetAt(cfg, m_t[i])) / 86400;
          if(cal != prev_cal) { prev_cal = cal; bk_up_bar = -1; bk_dn_bar = -1; }
          if(m_asiaok[i] == 1)
          {
@@ -1405,6 +1519,13 @@ private:
          m_vote[o + XM_DIVERGE]  = vdiv;
          m_vote[o + XM_FVG]      = vfvg;
          m_vote[o + XM_ROUND]    = VoteRound(i);
+         // late in the day, after most of the average daily range is spent, continuation setups are usually exhaustion
+         if(cfg.adr_block > 0.0 && m_adru[i] >= cfg.adr_block)
+         {
+            m_vote[o + XM_PULLBACK] = 0.0;
+            m_vote[o + XM_BREAKOUT] = 0.0;
+            m_vote[o + XM_SQUEEZE]  = 0.0;
+         }
       }
    }
 };

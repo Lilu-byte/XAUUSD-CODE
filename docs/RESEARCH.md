@@ -60,6 +60,8 @@ volatility clustering, GMT-hour volatility profile, market hours). Results are i
 | Alternating regimes; walk-forward gating | Gating made it worse (-0.02R to -0.27R), so it is off by default |
 | Does setup grade predict outcome? | **No evidence.** Grade A did not beat grade B in any world; A+ produced only 5 trades. Grade-based risk scaling is therefore off by default |
 | Composite vs single modules | In the trending world the composite (+0.06R) is *weaker* than the trend modules alone (+0.16 to +0.19R): counter-trend modules dilute it |
+| ADR block / efficiency-ratio regime weights (A/B, 8 seeds, 4 worlds) | ADR block: neutral within noise, ~9% fewer trades. Regime weights: **no measurable benefit** (mean-reverting world -0.45R vs -0.43R), off by default |
+| DST maths | US and EU transition instants unit-tested for 2024 and 2026 |
 | Signal frequency | Roughly 0.5 composite trades per trading day on M15 |
 
 **The simulator is deliberately pessimistic.** A bar that touches both stop and target counts as stopped, and the runner cannot

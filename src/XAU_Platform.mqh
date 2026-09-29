@@ -43,12 +43,24 @@ string XTfName(const ENUM_TIMEFRAMES tf)
 //+------------------------------------------------------------------+
 //| data                                                             |
 //+------------------------------------------------------------------+
-// Server-time minus GMT in seconds (rounded to 30 minutes), or the manual value.
-int XGmtOffsetSec(const bool manual, const double manual_hours)
+enum ENUM_XAU_DST
+{
+   XAU_DST_FIXED = 0,   // server clock never changes
+   XAU_DST_US    = 1,   // server follows US daylight time (typical "New York close" servers: GMT+2 / GMT+3)
+   XAU_DST_EU    = 2    // server follows EU daylight time
+};
+
+// Server-time minus GMT in WINTER (standard) time, in seconds. With manual = true the value is the one you typed.
+// Automatic: measure today's offset and, if the server is currently on summer time, remove the extra hour.
+int XWinterOffsetSec(const bool manual, const double manual_hours, const int dst_mode)
 {
    if(manual) return (int)MathRound(manual_hours * 3600.0);
    const double d = (double)(TimeTradeServer() - TimeGMT());
-   return (int)(MathRound(d / 1800.0) * 1800.0);
+   int cur = (int)(MathRound(d / 1800.0) * 1800.0);
+   const long g = (long)TimeGMT();
+   if(dst_mode == XAU_DST_US && XUsDst(g)) cur -= 3600;
+   if(dst_mode == XAU_DST_EU && XEuDst(g)) cur -= 3600;
+   return cur;
 }
 
 // Loads the most recent `count` bars, oldest first (index count-1 = forming bar).

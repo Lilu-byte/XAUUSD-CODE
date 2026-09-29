@@ -10,7 +10,7 @@ import os, re, subprocess, sys, tempfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MOCK = os.path.join(ROOT, "research", "mock", "mql5_mock.h")
-INC = os.path.join(ROOT, "MQL5", "Include")
+INC = os.path.join(ROOT, "src")
 
 def translate(src: str) -> str:
     out = []
@@ -24,7 +24,7 @@ def translate(src: str) -> str:
             continue
         m = re.match(r'#include\s*<(XAU/[^>]+)>', t)
         if m:
-            out.append('#include "%s"' % os.path.join(INC, m.group(1)))
+            out.append('#include "%s"' % os.path.join(INC, os.path.basename(m.group(1))))
             continue
         if re.match(r'#include\s*<Trade/Trade.mqh>', t):
             out.append("")
@@ -46,7 +46,7 @@ def main(files):
     for f in files:
         with open(f, encoding="utf-8") as fh:
             body = translate(fh.read())
-        prelude = '#include "%s"\n#include "%s"\n' % (MOCK, os.path.join(INC, "XAU", "XAU_Platform.mqh"))
+        prelude = '#include "%s"\n' % MOCK
         tail = "\nint main() { return 0; }\n"
         with tempfile.NamedTemporaryFile("w", suffix=".cpp", delete=False) as tmp:
             tmp.write(prelude + body + tail)
