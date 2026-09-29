@@ -1,0 +1,43 @@
+; XAU_Sniper_Growth
+; Faster compounding, larger swings. Only after the Balanced set has passed your own tests. 2% risk.
+; Load via the EA inputs dialog: Load. Symbol XAUUSD, timeframe M15 recommended.
+InpRiskPct=2.0
+InpGradeScaling=false
+InpStreakScale=0.5
+InpMaxLots=0.0
+InpMarginUsePct=50.0
+InpMaxRiskOverrun=1.5
+InpDailyLossPct=4.0
+InpWeeklyLossPct=8.0
+InpMaxDDPct=20.0
+InpKillFlatten=true
+InpResetKill=false
+InpMaxConsecLosses=3
+InpMaxTradesPerDay=4
+InpMaxPositions=1
+InpCooldownBars=4
+InpHistoryBars=3000
+InpScoreMin=1.7
+InpMinConfluence=2
+InpMinGrade=1
+InpAdaptiveGate=false
+InpTP1_R=1.0
+InpTP2_R=2.5
+InpPartialPct=50.0
+InpTrailATR=2.0
+InpSLMinATR=0.9
+InpSLMaxATR=2.6
+InpHoldMinutes=480
+InpSessionFilter=true
+InpTradeStartGMT=7.0
+InpTradeEndGMT=20.0
+InpFridayCutGMT=19.0
+InpFridayFlatten=true
+InpFlattenGMT=20.5
+InpMaxSpreadPts=60
+InpMaxSpreadATR=12.0
+InpUseNews=true
+InpNewsBefore=30
+InpNewsAfter=30
+InpManualGmt=false
+InpGmtOffsetHrs=2.0
