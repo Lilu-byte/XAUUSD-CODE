@@ -174,9 +174,12 @@ void XPlanLots(const string sym, const double equity, const double risk_pct, con
       const double allowed = free_margin * margin_use_frac;
       if(margin > allowed)
       {
+         const double lots_before = lots;
          lots = XNormLotsDown(lots * allowed / margin, vmin, vmax, vstep);
          if(lots <= 0.0) { p.note = "not enough free margin"; return; }
-         OrderCalcMargin(ot, sym, lots, price, margin);
+         double margin2 = 0.0;
+         if(OrderCalcMargin(ot, sym, lots, price, margin2) && margin2 > 0.0) margin = margin2;
+         else margin = margin * lots / lots_before;   // recalculation failed: scale the earlier figure proportionally
       }
    }
    p.lots = lots;

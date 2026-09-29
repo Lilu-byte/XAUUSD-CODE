@@ -110,7 +110,7 @@
 == analog (pattern-matching) forecaster ==
   causality: 16 queries compared on truncated vs full history, 0 differ
   ok:   analog forecast identical on truncated vs full history (no look-ahead)
-  audit + live query on 6000 bars: 35 ms
+  audit + live query on 6000 bars: 33 ms
   NULL (no edge: must be ~50%)     next bar: all 49.9% (n=19995) confident 50.6% (n=4501) | +4 bars: all 50.0% confident 51.4% (n=6660, z=+2.2) | old drift model: next 49.8%, +4 49.9%
   ok:   no-edge world: analog hit-rate is a coin flip (no leakage)
   ok:   no-edge world: even the 'confident' calls do not beat a coin flip
