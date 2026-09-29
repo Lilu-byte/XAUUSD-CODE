@@ -184,7 +184,7 @@ int OnInit()
    return INIT_SUCCEEDED;
   }
 void OnTimer() { GlobalVariableSet(LOCK,(double)TimeLocal()); }
-void OnDeinit(const int r) { EventKillTimer(); GlobalVariableDel(LOCK); Rel(); Comment(""); }
+void OnDeinit(const int r) { EventKillTimer(); if(r!=REASON_INITFAILED) GlobalVariableDel(LOCK); Rel(); Comment(""); }   // a refused 2nd copy must not free the 1st copy's lock
 void OnTick()
   {
    double bank,leave; string say,w=State(bank,leave,say);
