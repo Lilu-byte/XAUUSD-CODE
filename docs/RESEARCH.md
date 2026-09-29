@@ -65,6 +65,7 @@ volatility clustering, GMT-hour volatility profile, market hours). Results are i
 | Analog forecaster (see FORECASTING.md) | No-edge world: 49.9% next bar, 51.4% confident +4 bars (coin flip, no leakage). Structured worlds 53-60%. Old drift forecaster: 36% in the mean-reverting world |
 | Pattern veto A/B | trend +0.09R to +0.12R, alternating +0.04R to +0.05R, mean-reverting -0.56R to -0.50R, no-edge unchanged; 10-40% fewer trades |
 | Demo turbo thresholds | about 10x trades (3-4/day); simulated expectancy about 0.06-0.10R lower than defaults |
+| ORB (GOLD_ORB port), solo on M15 | no-edge -0.08R, trending +0.20R, mean-reverting -0.43R, alternating -0.11R; see GOLD_ORB.md |
 | Signal frequency | Roughly 0.5 composite trades per trading day on M15 |
 
 **The simulator is deliberately pessimistic.** A bar that touches both stop and target counts as stopped, and the runner cannot

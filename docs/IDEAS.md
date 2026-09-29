@@ -153,3 +153,8 @@ more like the trending or the mean-reverting world.** That is what the indicator
 | 95 | Pattern-match veto of trade setups | BUILT (on) | Small, consistent gain in simulation |
 | 96 | Green/red position box on the chart | BUILT | |
 | 97 | Demo mode that cannot lock the EA out | BUILT | Real accounts keep all protections |
+| 98 | Opening range breakout (GOLD_ORB rules: initial range, extension, settle count, close-beyond signal, wick guard) | BUILT | Module 9 and solo mode |
+| 99 | Paper-trade ledger to resume after a pause (GOLD_ORB virtual environment) | BUILT | |
+| 100 | One-long-one-short-per-day limit for breakouts | BUILT | Inside the ORB module |
+| 101 | Equity-slope detection to resume (GOLD_ORB) | REJECTED | Paper-trade recovery is simpler and uses the same simulator |
+| 102 | Fixed-point stops and targets | REJECTED | Not portable across price levels; ATR-scaled instead |

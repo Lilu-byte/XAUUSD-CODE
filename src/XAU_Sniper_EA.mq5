@@ -47,6 +47,7 @@ input int    InpMaxConsecLosses = 3;      // Pause for the rest of the day after
 input int    InpMaxTradesPerDay = 4;      // Entries per day
 input int    InpMaxPositions    = 1;      // Simultaneous EA positions
 input int    InpCooldownBars    = 4;      // Bars to wait after a losing trade
+input bool   InpPaperResume     = true;   // After a loss-streak pause, paper-trade the signals and resume as soon as they recover (else pause until tomorrow)
 input bool   InpOneTradePerSymbol = true; // Never open while ANY position (any magic, manual too) exists on this symbol
 input bool   InpDailyLossRealized = false;// Daily limit counts closed trades only (default: equity incl. floating)
 input bool   InpD1Scale         = true;   // Halve risk when the daily trend opposes the trade
@@ -65,6 +66,12 @@ input bool            InpModVwap       = true;
 input bool            InpModDiverge    = true;
 input bool            InpModFvg        = true;
 input bool            InpModRound      = true;
+input bool            InpModOrb        = true;    // Opening range breakout (GOLD_ORB rules)
+input double          InpOrbStartHour  = 1.0;     // Daily open on the SERVER clock (New-York-close brokers: 1)
+input int             InpOrbRangeMin   = 60;      // Minutes that form the opening range
+input int             InpOrbSettleMin  = 180;     // Quiet minutes before a side of the range is final
+input bool            InpOrbSolo       = false;   // Trade the opening-range breakout on its own (GOLD_ORB mode; use the H1 chart)
+input bool            InpOrbNeedBias   = false;   // ...only in the direction of the higher-timeframe trend
 input bool            InpAdaptiveGate  = false;   // Switch off modules whose recent trial is clearly negative (see docs: can hurt)
 input string          InpInterSymbol   = "";      // DXY-like symbol (blank = auto / EURUSD fallback)
 input bool            InpPatternVeto   = true;    // Skip setups that a confident pattern-match contradicts (tested: small gain, fewer trades)
@@ -122,6 +129,7 @@ int     g_st_n = 0;
 CXauEngine g_eng;
 CXauNews   g_news;
 CTrade     g_trade;
+CXPaper    g_paper;      // paper trades while a loss-streak pause is active
 XRATESARR(g_rates);
 XRATESARR(g_hrates);
 XRATESARR(g_irates);
@@ -194,6 +202,7 @@ int InputModuleOn(const int m)
       case XM_DIVERGE:  return InpModDiverge  ? 1 : 0;
       case XM_FVG:      return InpModFvg      ? 1 : 0;
       case XM_ROUND:    return InpModRound    ? 1 : 0;
+      case XM_ORB:      return InpModOrb      ? 1 : 0;
    }
    return 0;
 }
@@ -211,6 +220,11 @@ void ApplyConfig()
    c.adr_block = InpAdrBlock;
    c.regime_on = InpRegimeWeights ? 1 : 0;
    c.an_veto = InpPatternVeto ? 1 : 0;
+   c.orb_start_hour = InpOrbStartHour;
+   c.orb_range_min = InpOrbRangeMin;
+   c.orb_settle_min = InpOrbSettleMin;
+   c.orb_solo = InpOrbSolo ? 1 : 0;
+   c.orb_need_bias = InpOrbNeedBias ? 1 : 0;
    c.use_session_filter = InpSessionFilter;
    c.trade_start = InpTradeStartGMT;
    c.trade_end = InpTradeEndGMT;
@@ -672,6 +686,17 @@ void UpdateRisk()
    else if(g_day_block)  g_block_note = "paused: daily loss limit";
 }
 
+// A loss streak pauses trading for the rest of that day, or until the paper-traded signals recover.
+// (The earlier version counted the streak over 45 days of history, so once paused the EA could never
+// win a trade to end it.)
+bool StreakPauseActive()
+{
+   if(InpMaxConsecLosses <= 0 || g_consec_losses < InpMaxConsecLosses) return false;
+   if(g_last_loss_bar == 0 || (long)g_last_loss_bar / 86400 != (long)TimeTradeServer() / 86400) return false;   // a new day clears it
+   if(InpPaperResume && g_paper.Recovered()) return false;
+   return true;
+}
+
 // returns "" when a new entry is allowed
 string EntryBlocked(const XSignal &s)
 {
@@ -690,7 +715,9 @@ string EntryBlocked(const XSignal &s)
    if(g_kill) return "kill-switch active";
    if(g_week_block) return "weekly loss limit";
    if(g_day_block) return "daily loss limit";
-   if(InpMaxConsecLosses > 0 && g_consec_losses >= InpMaxConsecLosses) return "paused after " + IntegerToString(g_consec_losses) + " losses in a row";
+   if(StreakPauseActive())
+      return "paused after " + IntegerToString(g_consec_losses) + " losses in a row" +
+             (InpPaperResume ? " (paper trades so far: " + IntegerToString(g_paper.rn) + ", resumes when they recover)" : " (until tomorrow)");
    if(InpMaxTradesPerDay > 0 && g_trades_today >= InpMaxTradesPerDay) return "max trades today";
    if(CountPositions() >= XMaxI(1, InpMaxPositions)) return "position already open";
    if(InpOneTradePerSymbol && AnyPositionOnSymbol()) return "another position already open on this symbol";
@@ -806,6 +833,9 @@ void TryEnter()
    if(!has) return;
    g_last_sig = s;
 
+   // while a loss-streak pause is active, follow the signals on paper so we know when to resume
+   if(!DemoFree() && InpPaperResume && StreakPauseActive()) g_paper.Add(g_eng.m_t[i], s.dir, s.sl);
+
    const string blocked = EntryBlocked(s);
    if(StringLen(blocked) > 0) { g_skip_note = "signal skipped: " + blocked; Print("XAU Sniper: ", g_skip_note); return; }
 
@@ -854,6 +884,7 @@ void TryEnter()
             " entry ", DoubleToString(entry, _Digits), " SL ", DoubleToString(sl, _Digits), " TP2 ", DoubleToString(tp, _Digits),
             " risk ", DoubleToString(lp.risk_pct, 2), "% (", DoubleToString(lp.risk_money, 2), ")");
       g_stats_dirty = true;
+      g_paper.Reset();
    }
 }
 
@@ -881,6 +912,7 @@ void OnTick()
    RefreshNews();
    if(g_stats_dirty) RecomputeStats();
    if(!RefreshEngine()) return;
+   if(!DemoFree() && InpPaperResume && g_paper.pn > 0) g_paper.Update(g_eng);
    TryEnter();
    DrawPanel();
 }

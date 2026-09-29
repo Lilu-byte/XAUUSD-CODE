@@ -31,6 +31,7 @@ risk controls that stop a bad month from becoming a blown account.
 | Hold guidance | Typical time to first target (measured from the indicator's own trial), status: BUY NOW / IN TRADE / EXIT NOW / MISSED / WAIT / AVOID. |
 | Projected candles | Pattern-matching forecast: the real future candles of the most typical of the 25 most similar past situations, plus a range cone. Drawn only when the forecaster has *earned* it in a walk-forward audit; otherwise it says so. See [docs/FORECASTING.md](docs/FORECASTING.md) |
 | Trial on your data | Win-rate, TP1 hit-rate, profit factor, expectancy by grade and by strategy module, over the loaded history. |
+| Opening range box | Today's opening range (from the GOLD_ORB strategy) drawn as a box, coloured building / settling / FINAL |
 | Context | Higher-timeframe bias, M5-D1 trend strip, session, ATR, spread, prev-day high/low, Asian range, VWAP, news countdown. |
 | Alerts | Popup, sound, push, email. |
 
@@ -44,9 +45,9 @@ risk controls that stop a bad month from becoming a blown account.
 * Restart-safe (state kept in terminal global variables); Strategy Tester custom criterion for optimisation.
 
 ### The strategy in one paragraph
-Eight independent modules vote each closed bar: trend pullback, liquidity sweep, Asian-range breakout,
+Nine independent modules vote each closed bar: trend pullback, liquidity sweep, Asian-range breakout,
 volatility squeeze break, VWAP-extreme fade, RSI divergence, fair-value-gap retest, round-number
-rejection. The higher-timeframe trend and a DXY/EURUSD proxy add or subtract weight. A signal needs a
+rejection and the opening range breakout (ported from GOLD_ORB, [docs/GOLD_ORB.md](docs/GOLD_ORB.md)). The higher-timeframe trend and a DXY/EURUSD proxy add or subtract weight. A signal needs a
 minimum score **and** at least two agreeing modules, plus session, volatility and spread filters.
 The stop is structural (with ATR floor/ceiling); targets are multiples of that risk.
 Details: [docs/RESEARCH.md](docs/RESEARCH.md), [docs/IDEAS.md](docs/IDEAS.md) (90+ ideas, built/rejected and why), [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) (20 further improvements) and [docs/REFERENCE_REVIEW.md](docs/REFERENCE_REVIEW.md) and [docs/FORECASTING.md](docs/FORECASTING.md) (how the candle forecast works and how far to trust it).
@@ -62,7 +63,7 @@ Details: [docs/RESEARCH.md](docs/RESEARCH.md), [docs/IDEAS.md](docs/IDEAS.md) (9
 ```
 MQL5/Indicators/XAU_Oracle.mq5      the indicator (single self-contained file, generated)
 MQL5/Experts/XAU_Sniper_EA.mq5      the EA (single self-contained file, generated)
-MQL5/Presets/*.set                  six EA profiles (Conservative ... Aggressive, DemoTurbo)
+MQL5/Presets/*.set                  seven EA profiles (Conservative ... Aggressive, DemoTurbo, GoldORB)
 src/                                editable sources: XAU_Core.mqh (engine), XAU_Platform.mqh (MT5 glue), the two mains
 docs/                               ideas, research notes, risk maths, install/testing, reference review, improvements
 research/                           bundler, C++ harness, mock MT5 API, Monte Carlo, saved results

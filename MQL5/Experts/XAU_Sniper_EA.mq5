@@ -59,7 +59,7 @@
 #endif
 
 //--- strategy module ids
-#define XM_COUNT      8
+#define XM_COUNT      9
 #define XM_PULLBACK   0
 #define XM_SWEEP      1
 #define XM_BREAKOUT   2
@@ -68,11 +68,12 @@
 #define XM_DIVERGE    5
 #define XM_FVG        6
 #define XM_ROUND      7
+#define XM_ORB        8
 
 #define XHOLD_MAX     200
 
 //--- analog (nearest-neighbour) forecaster
-#define XA_F          37      // features per situation
+#define XA_F          38      // features per situation (29 context + one vote per module)
 #define XA_H          8       // bars of future kept per situation
 #define XA_K          25      // neighbours
 
@@ -123,6 +124,7 @@ string XModuleName(const int m)
       case XM_DIVERGE:  return "RSI Divergence";
       case XM_FVG:      return "FVG Retest";
       case XM_ROUND:    return "Round Level";
+      case XM_ORB:      return "Opening Range Breakout";
    }
    return "?";
 }
@@ -139,6 +141,7 @@ string XModuleShort(const int m)
       case XM_DIVERGE:  return "DV";
       case XM_FVG:      return "FG";
       case XM_ROUND:    return "RN";
+      case XM_ORB:      return "OR";
    }
    return "?";
 }
@@ -238,6 +241,13 @@ struct XConfig
    double an_edge;           // median 4-bar move (ATR) needed for a confident call
    double an_z;              // audit gate: hit-rate minus an_z standard errors must beat 50%
    int    an_veto;           // 1 = skip setups that a confident pattern match contradicts
+   // opening range breakout (ported from GOLD_ORB, distances scaled to ATR)
+   double orb_start_hour;    // hour of the daily open on the SERVER clock (New-York-close servers: 1.0)
+   int    orb_range_min;     // minutes that form the initial range
+   int    orb_settle_min;    // quiet minutes before a side of the range is final
+   double orb_wick_atr;      // a wick longer than this many ATR is ignored (the body edge is used instead)
+   int    orb_solo;          // 1 = an opening-range breakout alone is a signal (GOLD_ORB mode)
+   int    orb_need_bias;     // 1 = solo ORB only in the direction of the higher-timeframe trend
 
    // trade plan
    double sl_atr_min, sl_atr_max, sl_buffer_atr;
@@ -263,7 +273,7 @@ struct XConfig
       htf_adx_min = 15.0;  pb_adx_min = 18.0;
 
       w[XM_PULLBACK] = 1.0;  w[XM_SWEEP] = 1.0;   w[XM_BREAKOUT] = 0.8; w[XM_SQUEEZE] = 0.6;
-      w[XM_VWAP]     = 0.5;  w[XM_DIVERGE] = 0.5; w[XM_FVG] = 0.6;      w[XM_ROUND] = 0.3;
+      w[XM_VWAP]     = 0.5;  w[XM_DIVERGE] = 0.5; w[XM_FVG] = 0.6;      w[XM_ROUND] = 0.3;  w[XM_ORB] = 0.9;
       for(int m = 0; m < XM_COUNT; m++) en[m] = 1;
       w_htf = 0.8;  w_inter = 0.3;
       score_min = 1.7;  min_confluence = 2;  min_margin = 0.5;  min_grade = 1;
@@ -273,6 +283,7 @@ struct XConfig
       asia_compress = 0.7;  round_step = 10.0;
       adr_block = 0.90;  regime_on = 0;  er_lo = 0.20;  er_hi = 0.45;  reg_trend_lo = 0.5;  reg_mr_hi = 0.5;  fc_er_min = 0.12;
       an_conf = 0.62;  an_edge = 0.10;  an_z = 0.5;  an_veto = 0;
+      orb_start_hour = 1.0;  orb_range_min = 60;  orb_settle_min = 180;  orb_wick_atr = 0.5;  orb_solo = 0;  orb_need_bias = 0;
 
       sl_atr_min = 0.9;  sl_atr_max = 2.6;  sl_buffer_atr = 0.15;  sl_lookback = 3;
       tp1_r = 1.0;  tp2_r = 2.5;  partial_pct = 0.5;  trail_atr = 2.0;
@@ -639,6 +650,7 @@ public:
    XTARR(m_it); XDARR(m_ic); XDARR(m_iema1); XDARR(m_iema2); XIARR(m_idir0); XIARR(m_imap); XIARR(m_inter);
    // votes and scores
    XDARR(m_vote);
+   XDARR(m_orbhi); XDARR(m_orblo); XDARR(m_orbv); XIARR(m_orbst); XTARR(m_orbt0);   // opening range: levels, vote, state (0 none 1 building 2 settling 3 final), session start
    XDARR(m_scl); XDARR(m_scs); XIARR(m_nal); XIARR(m_nas); XIARR(m_mkl); XIARR(m_mks); XDARR(m_snet);
    // analog forecaster data
    XDARR(m_feat);    // n * XA_F situation descriptors
@@ -736,6 +748,7 @@ public:
       ComputeBaseIndicators();
       ComputeSessionLevels();
       ComputeHTF();
+      ComputeOrb();
       ComputeVotes();
       ComputeScores();
       ComputeAnalog();
@@ -808,6 +821,28 @@ public:
       if(i < 0 || i >= n) return false;
       const int fr = FilterReason(i);
       if(fr != XR_OK) { s.reason = fr; return false; }
+
+      if(cfg.orb_solo == 1)
+      {
+         // GOLD_ORB mode: a settled opening-range breakout is the whole strategy
+         const double v = m_vote[i * XM_COUNT + XM_ORB];
+         if(cfg.en[XM_ORB] == 0 || v == 0.0) { s.reason = XR_NOSETUP; return false; }
+         const int d = (v > 0.0) ? 1 : -1;
+         if(cfg.orb_need_bias == 1 && m_bias[i] * d <= 0) { s.reason = XR_NOSETUP; return false; }
+         s.dir = d;
+         s.n_agree = 1; s.primary = XM_ORB; s.mask = (1 << XM_ORB);
+         s.grade = (XAbs(v) >= 0.85) ? 2 : 1;
+         s.score = cfg.score_min + ((s.grade == 2) ? cfg.grade_a_add : 0.0);
+         if(s.grade < cfg.min_grade) { s.dir = 0; s.reason = XR_GRADE; return false; }
+         if(cfg.an_veto == 1)
+         {
+            XAnalog an0;
+            if(AnalogQuery(i, an0) && AnalogConfident(an0) && an0.dir4 != d) { s.dir = 0; s.reason = XR_ANALOG; return false; }
+         }
+         if(!BuildPlan(i, d, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
+         s.reason = XR_OK;
+         return true;
+      }
 
       const double sl = m_scl[i], ss = m_scs[i];
       int dir = 0;
@@ -1076,7 +1111,7 @@ public:
          m_aw[k * 4 + 0] = wk; m_aw[k * 4 + 1] = wk; m_aw[k * 4 + 2] = wk * 0.6; m_aw[k * 4 + 3] = wk * 0.6;
       }
       m_aw[14] = 0.6; m_aw[20] = 0.6; m_aw[22] = 0.6; m_aw[23] = 0.7; m_aw[24] = 0.7; m_aw[26] = 0.5; m_aw[27] = 0.6; m_aw[28] = 0.6;
-      for(int f = 29; f < 37; f++) m_aw[f] = 1.2;
+      for(int f = 29; f < XA_F; f++) m_aw[f] = 1.2;
       for(int f = 0; f < XA_F; f++) m_aw[f] = m_aw[f] * m_aw[f];
 
       for(int i = cfg.warmup; i < n; i++)
@@ -1305,6 +1340,7 @@ private:
       ArrayResize(m_hmap, n); ArrayResize(m_bias, n); ArrayResize(m_hadx, n);
       ArrayResize(m_imap, n); ArrayResize(m_inter, n);
       ArrayResize(m_vote, n * XM_COUNT);
+      ArrayResize(m_orbhi, n); ArrayResize(m_orblo, n); ArrayResize(m_orbv, n); ArrayResize(m_orbst, n); ArrayResize(m_orbt0, n);
       ArrayResize(m_scl, n);  ArrayResize(m_scs, n);  ArrayResize(m_nal, n); ArrayResize(m_nas, n);
       ArrayResize(m_mkl, n);  ArrayResize(m_mks, n);  ArrayResize(m_snet, n);
    }
@@ -1675,6 +1711,88 @@ private:
       return 0.0;
    }
 
+   //--- opening range breakout (port of GOLD_ORB) -------------------------
+   // Range = first `orb_range_min` minutes after the daily open (server clock). Each side then stays
+   // open for extension until it has been quiet for `orb_settle_min`; only a FINAL side can break.
+   // Signal: a closed candle in the breakout direction whose close is beyond the final level;
+   // at most one long and one short per session. Long wicks (> orb_wick_atr x ATR) are ignored.
+   void ComputeOrb()
+   {
+      const int settle = XMaxI(1, (int)MathCeil(cfg.orb_settle_min * 60.0 / (cfg.base_sec > 0 ? cfg.base_sec : 900)));
+      const long range_sec = (long)cfg.orb_range_min * 60;
+      int phase = 0;
+      datetime t0 = 0;
+      double o_first = 0.0, c_last = 0.0, hh = 0.0, ll = 0.0;
+      double hi_w = 0.0, hi_b = 0.0, lo_w = 0.0, lo_b = 0.0;
+      int cnt_hi = 0, cnt_lo = 0;
+      bool long_done = false, short_done = false;
+      double prev_sh = -1.0;
+      long prev_day = -1;
+      const double eps = 0.1;
+      for(int i = 0; i < n; i++)
+      {
+         m_orbv[i] = 0.0; m_orbhi[i] = 0.0; m_orblo[i] = 0.0; m_orbst[i] = 0; m_orbt0[i] = 0;
+         const long tl = (long)m_t[i];
+         const double sh = (double)(tl % 86400) / 3600.0;
+         const long day = tl / 86400;
+         const bool new_session = (cfg.base_sec <= 3600 * 4 && sh >= cfg.orb_start_hour && (day != prev_day || prev_sh < cfg.orb_start_hour));
+         prev_sh = sh; prev_day = day;
+         if(new_session)
+         {
+            phase = 1; t0 = m_t[i];
+            o_first = m_o[i]; c_last = m_c[i]; hh = m_h[i]; ll = m_l[i];
+            cnt_hi = 0; cnt_lo = 0; long_done = false; short_done = false;
+         }
+         else if(phase == 1)
+         {
+            if(tl < (long)t0 + range_sec) { if(m_h[i] > hh) hh = m_h[i]; if(m_l[i] < ll) ll = m_l[i]; c_last = m_c[i]; }
+            else
+            {
+               const double wmax = cfg.orb_wick_atr * m_atr[XMaxI(i - 1, 0)];
+               const double bhi = XMax(o_first, c_last), blo = XMin(o_first, c_last);
+               hi_b = bhi; hi_w = (hh - bhi > wmax) ? bhi : hh;
+               lo_b = blo; lo_w = (blo - ll > wmax) ? blo : ll;
+               phase = 2; cnt_hi = 1; cnt_lo = 1;
+            }
+         }
+         if(phase == 2 && !new_session)
+         {
+            const double a = m_atr[i];
+            const double wmax = cfg.orb_wick_atr * a;
+            const double bh = XMax(m_o[i], m_c[i]), bl = XMin(m_o[i], m_c[i]);
+            const bool bull = (m_c[i] > m_o[i]);
+            const bool bear = (m_c[i] < m_o[i]);
+            if(cnt_hi <= settle)
+            {
+               if(m_h[i] > hi_w + eps && bh > hi_b + eps) { hi_b = bh; hi_w = (m_h[i] - bh > wmax) ? bh : m_h[i]; cnt_hi = 1; }
+               else cnt_hi++;
+            }
+            if(cnt_lo <= settle)
+            {
+               if(m_l[i] < lo_w - eps && bl < lo_b - eps) { lo_b = bl; lo_w = (bl - m_l[i] > wmax) ? bl : m_l[i]; cnt_lo = 1; }
+               else cnt_lo++;
+            }
+            const double body = bh - bl;
+            double st = 0.65;
+            if(a > 0.0 && body >= 1.0 * a) st += 0.2;
+            if(Spike(i)) st += 0.15;
+            st = XMin(st, 1.0);
+            if(cnt_hi > settle && bull && bh > hi_w && !long_done)  { m_orbv[i] = st;  long_done = true; }
+            else if(cnt_lo > settle && bear && bl < lo_w && !short_done) { m_orbv[i] = -st; short_done = true; }
+         }
+         if(phase >= 1)
+         {
+            m_orbt0[i] = t0;
+            if(phase == 1) { m_orbst[i] = 1; m_orbhi[i] = hh; m_orblo[i] = ll; }
+            else
+            {
+               m_orbhi[i] = hi_w; m_orblo[i] = lo_w;
+               m_orbst[i] = (cnt_hi > settle && cnt_lo > settle) ? 3 : 2;
+            }
+         }
+      }
+   }
+
    void ComputeVotes()
    {
       ArrayInitialize(m_vote, 0.0);
@@ -1824,6 +1942,7 @@ private:
          m_vote[o + XM_DIVERGE]  = vdiv;
          m_vote[o + XM_FVG]      = vfvg;
          m_vote[o + XM_ROUND]    = VoteRound(i);
+         m_vote[o + XM_ORB]      = m_orbv[i];
          // late in the day, after most of the average daily range is spent, continuation setups are usually exhaustion
          if(cfg.adr_block > 0.0 && m_adru[i] >= cfg.adr_block)
          {
@@ -1832,6 +1951,75 @@ private:
             m_vote[o + XM_SQUEEZE]  = 0.0;
          }
       }
+   }
+};
+
+//+------------------------------------------------------------------+
+//| paper-trade ledger (idea from GOLD_ORB's virtual environment)     |
+//| While real trading is paused after a losing streak, the signals   |
+//| the EA WOULD have taken are simulated bar by bar. Trading resumes |
+//| when those paper trades recover.                                  |
+//+------------------------------------------------------------------+
+class CXPaper
+{
+public:
+   datetime pt[32];
+   int      pd[32];
+   double   ps[32];
+   int      pn;
+   double   res[16];
+   int      rn;
+
+   CXPaper() { pn = 0; rn = 0; }
+   void Reset() { pn = 0; rn = 0; }
+
+   void Add(const datetime signal_bar_time, const int dir, const double sl)
+   {
+      for(int k = 0; k < pn; k++) if(pt[k] == signal_bar_time) return;
+      if(pn >= 32)
+      {
+         for(int k = 1; k < pn; k++) { pt[k - 1] = pt[k]; pd[k - 1] = pd[k]; ps[k - 1] = ps[k]; }
+         pn--;
+      }
+      pt[pn] = signal_bar_time; pd[pn] = dir; ps[pn] = sl; pn++;
+   }
+
+   // Resolve every pending paper trade that has finished on closed bars.
+   void Update(const CXauEngine &e)
+   {
+      const int last = e.n - 2;
+      for(int k = pn - 1; k >= 0; k--)
+      {
+         int idx = -1;
+         for(int j = last; j >= 0 && j > last - 500; j--) if(e.m_t[j] == pt[k]) { idx = j; break; }
+         bool drop = (idx < 0);
+         if(!drop)
+         {
+            XTradeResult r;
+            if(e.SimulateTrade(idx, pd[k], ps[k], last, r) && r.closed)
+            {
+               if(rn >= 16) { for(int q = 1; q < rn; q++) res[q - 1] = res[q]; rn--; }
+               res[rn] = r.r_net; rn++;
+               drop = true;
+            }
+         }
+         if(drop)
+         {
+            for(int q = k + 1; q < pn; q++) { pt[q - 1] = pt[q]; pd[q - 1] = pd[q]; ps[q - 1] = ps[q]; }
+            pn--;
+         }
+      }
+   }
+
+   // Recovered: at least two finished paper trades, and of the last three not all lost and their sum is positive.
+   bool Recovered() const
+   {
+      if(rn < 2) return false;
+      const int m = (rn < 3) ? rn : 3;
+      double sum = 0.0;
+      int losses = 0;
+      for(int q = rn - m; q < rn; q++) { sum += res[q]; if(res[q] < -0.05) losses++; }
+      return (sum > 0.0 && losses < m);
    }
 };
 
@@ -2270,6 +2458,7 @@ input int    InpMaxConsecLosses = 3;      // Pause for the rest of the day after
 input int    InpMaxTradesPerDay = 4;      // Entries per day
 input int    InpMaxPositions    = 1;      // Simultaneous EA positions
 input int    InpCooldownBars    = 4;      // Bars to wait after a losing trade
+input bool   InpPaperResume     = true;   // After a loss-streak pause, paper-trade the signals and resume as soon as they recover (else pause until tomorrow)
 input bool   InpOneTradePerSymbol = true; // Never open while ANY position (any magic, manual too) exists on this symbol
 input bool   InpDailyLossRealized = false;// Daily limit counts closed trades only (default: equity incl. floating)
 input bool   InpD1Scale         = true;   // Halve risk when the daily trend opposes the trade
@@ -2288,6 +2477,12 @@ input bool            InpModVwap       = true;
 input bool            InpModDiverge    = true;
 input bool            InpModFvg        = true;
 input bool            InpModRound      = true;
+input bool            InpModOrb        = true;    // Opening range breakout (GOLD_ORB rules)
+input double          InpOrbStartHour  = 1.0;     // Daily open on the SERVER clock (New-York-close brokers: 1)
+input int             InpOrbRangeMin   = 60;      // Minutes that form the opening range
+input int             InpOrbSettleMin  = 180;     // Quiet minutes before a side of the range is final
+input bool            InpOrbSolo       = false;   // Trade the opening-range breakout on its own (GOLD_ORB mode; use the H1 chart)
+input bool            InpOrbNeedBias   = false;   // ...only in the direction of the higher-timeframe trend
 input bool            InpAdaptiveGate  = false;   // Switch off modules whose recent trial is clearly negative (see docs: can hurt)
 input string          InpInterSymbol   = "";      // DXY-like symbol (blank = auto / EURUSD fallback)
 input bool            InpPatternVeto   = true;    // Skip setups that a confident pattern-match contradicts (tested: small gain, fewer trades)
@@ -2345,6 +2540,7 @@ int     g_st_n = 0;
 CXauEngine g_eng;
 CXauNews   g_news;
 CTrade     g_trade;
+CXPaper    g_paper;      // paper trades while a loss-streak pause is active
 XRATESARR(g_rates);
 XRATESARR(g_hrates);
 XRATESARR(g_irates);
@@ -2417,6 +2613,7 @@ int InputModuleOn(const int m)
       case XM_DIVERGE:  return InpModDiverge  ? 1 : 0;
       case XM_FVG:      return InpModFvg      ? 1 : 0;
       case XM_ROUND:    return InpModRound    ? 1 : 0;
+      case XM_ORB:      return InpModOrb      ? 1 : 0;
    }
    return 0;
 }
@@ -2434,6 +2631,11 @@ void ApplyConfig()
    c.adr_block = InpAdrBlock;
    c.regime_on = InpRegimeWeights ? 1 : 0;
    c.an_veto = InpPatternVeto ? 1 : 0;
+   c.orb_start_hour = InpOrbStartHour;
+   c.orb_range_min = InpOrbRangeMin;
+   c.orb_settle_min = InpOrbSettleMin;
+   c.orb_solo = InpOrbSolo ? 1 : 0;
+   c.orb_need_bias = InpOrbNeedBias ? 1 : 0;
    c.use_session_filter = InpSessionFilter;
    c.trade_start = InpTradeStartGMT;
    c.trade_end = InpTradeEndGMT;
@@ -2895,6 +3097,17 @@ void UpdateRisk()
    else if(g_day_block)  g_block_note = "paused: daily loss limit";
 }
 
+// A loss streak pauses trading for the rest of that day, or until the paper-traded signals recover.
+// (The earlier version counted the streak over 45 days of history, so once paused the EA could never
+// win a trade to end it.)
+bool StreakPauseActive()
+{
+   if(InpMaxConsecLosses <= 0 || g_consec_losses < InpMaxConsecLosses) return false;
+   if(g_last_loss_bar == 0 || (long)g_last_loss_bar / 86400 != (long)TimeTradeServer() / 86400) return false;   // a new day clears it
+   if(InpPaperResume && g_paper.Recovered()) return false;
+   return true;
+}
+
 // returns "" when a new entry is allowed
 string EntryBlocked(const XSignal &s)
 {
@@ -2913,7 +3126,9 @@ string EntryBlocked(const XSignal &s)
    if(g_kill) return "kill-switch active";
    if(g_week_block) return "weekly loss limit";
    if(g_day_block) return "daily loss limit";
-   if(InpMaxConsecLosses > 0 && g_consec_losses >= InpMaxConsecLosses) return "paused after " + IntegerToString(g_consec_losses) + " losses in a row";
+   if(StreakPauseActive())
+      return "paused after " + IntegerToString(g_consec_losses) + " losses in a row" +
+             (InpPaperResume ? " (paper trades so far: " + IntegerToString(g_paper.rn) + ", resumes when they recover)" : " (until tomorrow)");
    if(InpMaxTradesPerDay > 0 && g_trades_today >= InpMaxTradesPerDay) return "max trades today";
    if(CountPositions() >= XMaxI(1, InpMaxPositions)) return "position already open";
    if(InpOneTradePerSymbol && AnyPositionOnSymbol()) return "another position already open on this symbol";
@@ -3029,6 +3244,9 @@ void TryEnter()
    if(!has) return;
    g_last_sig = s;
 
+   // while a loss-streak pause is active, follow the signals on paper so we know when to resume
+   if(!DemoFree() && InpPaperResume && StreakPauseActive()) g_paper.Add(g_eng.m_t[i], s.dir, s.sl);
+
    const string blocked = EntryBlocked(s);
    if(StringLen(blocked) > 0) { g_skip_note = "signal skipped: " + blocked; Print("XAU Sniper: ", g_skip_note); return; }
 
@@ -3077,6 +3295,7 @@ void TryEnter()
             " entry ", DoubleToString(entry, _Digits), " SL ", DoubleToString(sl, _Digits), " TP2 ", DoubleToString(tp, _Digits),
             " risk ", DoubleToString(lp.risk_pct, 2), "% (", DoubleToString(lp.risk_money, 2), ")");
       g_stats_dirty = true;
+      g_paper.Reset();
    }
 }
 
@@ -3104,6 +3323,7 @@ void OnTick()
    RefreshNews();
    if(g_stats_dirty) RecomputeStats();
    if(!RefreshEngine()) return;
+   if(!DemoFree() && InpPaperResume && g_paper.pn > 0) g_paper.Update(g_eng);
    TryEnter();
    DrawPanel();
 }

@@ -83,6 +83,13 @@ input bool            InpModVwap        = true;          // Module: VWAP extreme
 input bool            InpModDiverge     = true;          // Module: RSI divergence
 input bool            InpModFvg         = true;          // Module: fair value gap retest
 input bool            InpModRound       = true;          // Module: round-number rejection
+input bool            InpModOrb         = true;          // Module: opening range breakout (GOLD_ORB rules)
+input double          InpOrbStartHour   = 1.0;           // Daily open on the SERVER clock (New-York-close brokers: 1)
+input int             InpOrbRangeMin    = 60;            // Minutes that form the opening range
+input int             InpOrbSettleMin   = 180;           // Quiet minutes before a side of the range is final
+input bool            InpOrbSolo        = false;         // Trade the opening-range breakout on its own (GOLD_ORB mode)
+input bool            InpOrbNeedBias    = false;         // ...but only with the higher-timeframe trend
+input bool            InpShowOrb        = true;          // Draw the opening range box
 input bool            InpPatternVeto    = true;          // Skip setups that a confident pattern-match contradicts
 input double          InpAdrBlock       = 0.90;          // Block trend continuation after this share of avg daily range is used (0 = off)
 input bool            InpRegimeWeights  = false;         // Weight modules by efficiency-ratio regime (tested: no benefit, off)
@@ -265,6 +272,12 @@ void ApplyConfig()
    c.en[XM_DIVERGE]  = InpModDiverge  ? 1 : 0;
    c.en[XM_FVG]      = InpModFvg      ? 1 : 0;
    c.en[XM_ROUND]    = InpModRound    ? 1 : 0;
+   c.en[XM_ORB]      = InpModOrb      ? 1 : 0;
+   c.orb_start_hour = InpOrbStartHour;
+   c.orb_range_min = InpOrbRangeMin;
+   c.orb_settle_min = InpOrbSettleMin;
+   c.orb_solo = InpOrbSolo ? 1 : 0;
+   c.orb_need_bias = InpOrbNeedBias ? 1 : 0;
    c.tp1_r = InpTP1_R;
    c.tp2_r = XMax(InpTP2_R, InpTP1_R + 0.1);
    c.partial_pct = XClamp(InpPartialPct / 100.0, 0.0, 1.0);
@@ -537,6 +550,35 @@ void DrawTradeBox()
    XObjText("XO_BX_T2", tl, tp1, "TAKE HALF " + Px(tp1) + "  +" + DoubleToString(g_eng.cfg.tp1_r, 1) + "R", XRGB(90, 230, 160), 9);
    XObjText("XO_BX_T3", tl, tp2, "TARGET " + Px(tp2) + "  +" + DoubleToString(g_eng.cfg.tp2_r, 1) + "R", XRGB(90, 230, 160), 9);
    XObjText("XO_BX_T4", t0, tp2, "exit by " + TimeToString(g_eng.m_t[g_sig_i + 1] + (datetime)(g_eng.MaxHold() * period), TIME_MINUTES), XRGB(255, 200, 64), 8);
+}
+
+//+------------------------------------------------------------------+
+//| opening range box (GOLD_ORB)                                      |
+//+------------------------------------------------------------------+
+string OrbStateText()
+{
+   if(!g_ready || !InpModOrb) return "";
+   const int st = g_eng.m_orbst[g_n - 1];
+   if(st <= 0) return "";
+   const string lv = Px(g_eng.m_orblo[g_n - 1]) + " - " + Px(g_eng.m_orbhi[g_n - 1]);
+   if(st == 1) return "Opening range " + lv + ": building";
+   if(st == 2) return "Opening range " + lv + ": settling, not tradable yet";
+   return "Opening range " + lv + ": FINAL, a close outside it is a signal";
+}
+
+void DrawOrb()
+{
+   XObjDelete("XO_OR_BOX"); XObjDelete("XO_OR_H"); XObjDelete("XO_OR_L");
+   if(!InpShowOrb || !InpModOrb || !g_ready) return;
+   const int last = g_n - 1;
+   const int st = g_eng.m_orbst[last];
+   if(st <= 0 || g_eng.m_orbt0[last] == 0) return;
+   const int period = g_eng.cfg.base_sec;
+   const datetime t1 = g_eng.m_t[last] + (datetime)(period * 3);
+   const color cc = (st == 3) ? XRGB(70, 140, 255) : ((st == 2) ? XRGB(110, 150, 210) : XRGB(150, 160, 175));
+   XObjRect("XO_OR_BOX", g_eng.m_orbt0[last], g_eng.m_orblo[last], t1, g_eng.m_orbhi[last], cc, false);
+   XObjText("XO_OR_H", t1, g_eng.m_orbhi[last], " ORB high " + Px(g_eng.m_orbhi[last]) + ((st == 3) ? " (final)" : ""), cc, 8);
+   XObjText("XO_OR_L", t1, g_eng.m_orblo[last], " ORB low " + Px(g_eng.m_orblo[last]), cc, 8);
 }
 
 //+------------------------------------------------------------------+
@@ -845,6 +887,7 @@ void DrawPanelSimple()
    }
 
    const int tb = g_eng.m_bias[n - 1];
+   if(StringLen(OrbStateText()) > 0 && InpShowOrb) PutLine(row++, OrbStateText(), ClrDim());
    PutLine(row++, "Trend " + XTfName(g_htf) + ": " + (tb > 0 ? "UP" : (tb < 0 ? "DOWN" : "SIDEWAYS")) + "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%", ClrText());
    PutLine(row++, AnalogLine(), (g_an_state == 3) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
    if(g_trial.all.n > 0)
@@ -926,6 +969,7 @@ int OnCalculate(const int rates_total, const int prev_calculated, const datetime
          DrawTradeBox();
          DrawForecast();
          DrawLevels();
+         DrawOrb();
          DrawPanel();
          MaybeAlert();
          ChartRedraw(0);

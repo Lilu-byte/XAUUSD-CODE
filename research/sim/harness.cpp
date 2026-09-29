@@ -144,6 +144,7 @@ static std::vector<MqlRates> htf_upto(const Series &S, int last_base)
    return out;
 }
 
+static int    g_solo = 0;
 static int    g_veto = 0;
 static double g_score = -1.0;
 static int    g_conf = -1;
@@ -158,6 +159,7 @@ static void load(CXauEngine &e, const Series &S, int nbase)
    e.cfg.Defaults();
    e.cfg.regime_on = g_regime;
    e.cfg.an_veto = g_veto;
+   e.cfg.orb_solo = g_solo;
    if(g_score > 0.0) e.cfg.score_min = g_score;
    if(g_conf > 0) e.cfg.min_confluence = g_conf;
    if(g_sess >= 0) e.cfg.use_session_filter = (g_sess == 1);
@@ -373,6 +375,28 @@ static void run_turbo()
    }
 }
 
+
+static void run_orb_worlds()
+{
+   std::printf("\n== ORB (GOLD_ORB port) on synthetic M15 worlds: 8 seeds x 30000 bars ==\n");
+   struct W { World w; const char *n; };
+   const W worlds[] = {{W_NULL, "null"}, {W_TREND, "trend"}, {W_MEANREV, "meanrev"}, {W_MIXED, "mixed"}};
+   const double days = 8.0 * (30000 - 250) / 96.0 * 5.0 / 7.0;
+   for(const W &x : worlds)
+   {
+      g_solo = 1; g_sess = 0;
+      XStats solo = composite_stats(x.w, 0, 0.0, 8, 30000);
+      g_solo = 0; g_sess = -1;
+      std::printf("  %-8s ORB solo (no other rules) %.2f trades/day", x.n, solo.n / days);
+      print_stats("", solo);
+      if(x.w == W_NULL)
+      {
+         const double z = solo.Expectancy() / std::max(solo.ExpStdErr(), 1e-9);
+         CHECK(z < 3.0, "no-edge world: ORB solo is not significantly profitable (no look-ahead in the range logic)");
+      }
+   }
+}
+
 static void run_filter_ab()
 {
    std::printf("\n== A/B on synthetic worlds: efficiency-ratio regime weighting and ADR block (composite, 8 seeds x 40000 bars) ==\n");
@@ -384,6 +408,134 @@ static void run_filter_ab()
       print_stats((std::string(x.n) + ": ADR block 0.90").c_str(),     composite_stats(x.w, 0, 0.90, 8, 40000));
       print_stats((std::string(x.n) + ": regime weights").c_str(),      composite_stats(x.w, 1, 0.0, 8, 40000));
       print_stats((std::string(x.n) + ": both").c_str(),               composite_stats(x.w, 1, 0.90, 8, 40000));
+   }
+}
+
+
+// ---------------------------------------------------------------------------
+// GOLD_ORB port: scripted H1 days
+// ---------------------------------------------------------------------------
+struct ScriptBar { int hour; double o, h, l, c; };
+
+// 20 filler days of quiet H1 bars, then a scripted day starting at 01:00 server time.
+static void orb_engine(CXauEngine &e, const std::vector<ScriptBar> &day, int &first_script_idx)
+{
+   std::vector<MqlRates> v;
+   long long base = 1704067200LL + 86400LL * 7;   // a Monday, server clock == "GMT" in the harness
+   std::mt19937_64 rng(4);
+   std::normal_distribution<double> nd(0.0, 1.0);
+   double px = 4000.0;
+   for(int d = 0; d < 20; d++)
+      for(int h = 0; h < 24; h++)
+      {
+         MqlRates r{};
+         r.time = base + d * 86400LL + h * 3600LL;
+         r.open = px; px += nd(rng) * 3.0;
+         r.close = px; r.high = std::max(r.open, r.close) + 1.5; r.low = std::min(r.open, r.close) - 1.5; r.tick_volume = 100;
+         v.push_back(r);
+      }
+   first_script_idx = (int)v.size();
+   for(const ScriptBar &b : day)
+   {
+      MqlRates r{};
+      r.time = base + 20 * 86400LL + b.hour * 3600LL;
+      r.open = b.o; r.high = b.h; r.low = b.l; r.close = b.c; r.tick_volume = 100;
+      v.push_back(r);
+   }
+   // a few closing bars so the last scripted bar is "closed" for the engine
+   for(int k = 0; k < 3; k++)
+   {
+      MqlRates r{};
+      r.time = v.back().time + 3600; r.open = r.close = r.high = r.low = v.back().close; r.tick_volume = 100;
+      v.push_back(r);
+   }
+   e.cfg.Defaults();
+   e.cfg.base_sec = 3600; e.cfg.htf_sec = 14400;
+   e.cfg.orb_start_hour = 1.0; e.cfg.orb_range_min = 60; e.cfg.orb_settle_min = 180;
+   e.SetBase(v, (int)v.size());
+   e.Compute();
+}
+
+static void test_orb()
+{
+   std::printf("\n== GOLD_ORB port: opening-range breakout rules on scripted H1 days ==\n");
+   {  // A: range 01:00 (4000..4010 body 4000->4005), quiet 02-04, long breakout 05, no second long at 06, short breakout at 07
+      std::vector<ScriptBar> d = {
+         {1, 4000, 4010, 3996, 4005},
+         {2, 4004, 4008, 3998, 4003},
+         {3, 4003, 4008, 3999, 4004},
+         {4, 4004, 4007, 3998, 4002},
+         {5, 4003, 4016, 4002, 4015},     // bullish close above the 4010 high -> LONG
+         {6, 4015, 4020, 4013, 4018},     // another bullish break: must NOT signal again
+         {7, 4016, 4017, 3990, 3992}};    // bearish close below the 3996 low -> SHORT
+      CXauEngine e; int f0;
+      orb_engine(e, d, f0);
+      const int i1 = f0 + 4, i2 = f0 + 5, i3 = f0 + 6, ib = f0 + 2;
+      CHECK(e.m_orbst[f0] == 1 && near(e.m_orbhi[f0], 4010.0) && near(e.m_orblo[f0], 3996.0), "range is building on the first candle (4010 / 3996)");
+      CHECK(e.m_orbv[ib] == 0.0 && e.m_orbv[f0 + 3] == 0.0, "no signal while the range is still settling");
+      CHECK(e.m_orbv[i1] > 0.0, "settled range + bullish close above the high -> LONG");
+      CHECK(e.m_orbv[i2] == 0.0, "second bullish break the same day is ignored (one long per day)");
+      CHECK(e.m_orbv[i3] < 0.0, "bearish close below the low -> SHORT (one short per day allowed)");
+      CHECK(near(e.m_orbhi[i1], 4010.0), "final high level unchanged by the breakout candle");
+   }
+   {  // B: a breakout BEFORE the range has settled extends the range instead of signalling
+      std::vector<ScriptBar> d = {
+         {1, 4000, 4010, 3996, 4005},
+         {2, 4005, 4016, 4004, 4015},     // bullish new high while unsettled -> EXTENDS the range to 4016
+         {3, 4014, 4015, 4008, 4010},
+         {4, 4010, 4014, 4006, 4011},
+         {5, 4011, 4015, 4007, 4012},
+         {6, 4012, 4015, 4008, 4013},     // 4 quiet candles after the extension -> high side final at 4016
+         {7, 4013, 4022, 4012, 4020}};    // bullish close above 4016 -> LONG
+      CXauEngine e; int f0;
+      orb_engine(e, d, f0);
+      CHECK(near(e.m_orbhi[f0 + 2], 4016.0), "unsettled breakout extends the range high to 4016");
+      bool early = false;
+      for(int k = 1; k <= 5; k++) if(e.m_orbv[f0 + k] != 0.0) early = true;
+      CHECK(!early, "no signal until the extended range has been quiet long enough");
+      CHECK(e.m_orbv[f0 + 6] > 0.0, "signal once the extended range is final and price closes above 4016");
+   }
+   {  // C: spike-wick guard: a huge upper wick on the first candle is ignored (body edge used)
+      std::vector<ScriptBar> d = {
+         {1, 4000, 4030, 3996, 4005},     // wick to 4030 (25 above the body): far more than 0.5 ATR
+         {2, 4004, 4008, 3998, 4003},
+         {3, 4003, 4008, 3999, 4004},
+         {4, 4004, 4007, 3998, 4002},
+         {5, 4003, 4014, 4002, 4013}};    // close 4013: above the body high 4005, below the wick 4030
+      CXauEngine e; int f0;
+      orb_engine(e, d, f0);
+      CHECK(near(e.m_orbhi[f0 + 2], 4005.0), "spike wick ignored: range high = body high 4005, not 4030");
+      CHECK(e.m_orbv[f0 + 4] > 0.0, "breakout is measured from the body edge, so 4013 breaks out");
+   }
+   {  // D: solo mode turns the vote into a tradable signal with a full plan
+      std::vector<ScriptBar> d = {
+         {1, 4000, 4010, 3996, 4005}, {2, 4004, 4008, 3998, 4003}, {3, 4003, 4008, 3999, 4004},
+         {4, 4004, 4007, 3998, 4002}, {5, 4003, 4016, 4002, 4015}};
+      CXauEngine e; int f0;
+      orb_engine(e, d, f0);
+      e.cfg.orb_solo = 1; e.cfg.use_session_filter = false; e.cfg.min_grade = 1;
+      XSignal sg;
+      const bool ok = e.Evaluate(f0 + 4, sg);
+      CHECK(ok && sg.dir > 0 && sg.primary == XM_ORB && sg.risk > 0.0 && sg.sl < sg.entry && sg.tp2 > sg.tp1, "solo mode: ORB long becomes a signal with stop below and targets above");
+      e.cfg.orb_need_bias = 1;
+      CHECK(!e.Evaluate(f0 + 4, sg), "solo mode with 'need trend bias' rejects it when the higher timeframe is neutral");
+   }
+   {  // E: paper ledger resolves signals and reports recovery
+      CXPaper pl;
+      CHECK(!pl.Recovered(), "empty ledger has not recovered");
+      pl.rn = 3; pl.res[0] = -1.0; pl.res[1] = 0.5; pl.res[2] = 1.75;
+      CHECK(pl.Recovered(), "last three paper trades -1, +0.5, +1.75 -> recovered");
+      pl.res[0] = -1.0; pl.res[1] = -1.0; pl.res[2] = 0.5;
+      CHECK(!pl.Recovered(), "last three -1, -1, +0.5 -> not recovered");
+      // end-to-end: add a signal to the ledger and let a rising market resolve it
+      std::vector<ScriptBar> d = {{1, 4000, 4010, 3996, 4005}, {2, 4004, 4008, 3998, 4003}, {3, 4003, 4008, 3999, 4004},
+                                  {4, 4004, 4007, 3998, 4002}, {5, 4003, 4016, 4002, 4015}, {6, 4015, 4060, 4014, 4058}, {7, 4058, 4090, 4055, 4085}};
+      CXauEngine e; int f0;
+      orb_engine(e, d, f0);
+      CXPaper q;
+      q.Add(e.m_t[f0 + 4], 1, 4008.0);
+      q.Update(e);
+      CHECK(q.pn == 0 && q.rn == 1 && q.res[0] > 0.0, "paper long that runs to target is resolved as a winner and removed from the pending list");
    }
 }
 
@@ -614,12 +766,13 @@ int main(int argc, char **argv)
 {
    const char *mode = (argc > 1) ? argv[1] : "all";
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_platform(); test_time_and_filters(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_platform(); test_time_and_filters(); test_orb(); }
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);
    if(all || !std::strcmp(mode, "trend"))   run_world(W_TREND,   "TREND - persistent drift regimes (edge planted)", 6, 40000);
    if(all || !std::strcmp(mode, "meanrev")) run_world(W_MEANREV, "MEANREV - price pulled back to a moving anchor", 6, 40000);
    if(all || !std::strcmp(mode, "analog"))  test_analog();
+   if(all || !std::strcmp(mode, "orb"))     run_orb_worlds();
    if(all || !std::strcmp(mode, "veto"))    run_veto_ab();
    if(all || !std::strcmp(mode, "turbo"))   run_turbo();
    if(all || !std::strcmp(mode, "filters")) run_filter_ab();

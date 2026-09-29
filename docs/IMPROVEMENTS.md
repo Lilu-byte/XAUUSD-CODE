@@ -41,4 +41,7 @@ protect-profit move to break-even before red-folder news, an XAGUSD correlation 
 | 27 | **Small accounts: show minimum-lot risk instead of refusing** in the indicator (still refuses in a live EA) | DONE | Manual traders need the number, with a warning |
 | 28 | **Demo-unlocked EA**: guardrails only warn on demo accounts; stale kill-switch and equity peak cleared at start; up to 5 concurrent trades | DONE | The persisted kill-switch (tripped by floating loss on manual trades) locked the EA out |
 | 29 | **DemoTurbo preset**: about 10x the trades at lower quality (simulated -0.06R to -0.10R vs default) | DONE | Lets you watch a live test flow |
+| 31 | **Opening range breakout module + solo mode + range box** (ported from GOLD_ORB, ATR-scaled) | DONE | See GOLD_ORB.md; +0.20R trending / -0.43R mean-reverting in simulation |
+| 32 | **Paper-trade ledger** that resumes trading after a loss-streak pause | DONE | Idea from GOLD_ORB's virtual environment |
+| 33 | **Loss-streak deadlock fixed** (pause now ends at end of day or on paper recovery) | DONE | Bug in this project's earlier pause |
 | 30 | **Analog-only trade signals** (a proven, confident pattern match as its own setup source) | PROPOSED | Needs an incremental analog cache: per-bar queries over the full history are too slow to backtest inside the indicator |

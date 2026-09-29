@@ -36,7 +36,7 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
 ## 4. Expert Advisor
 1. Tools > Options > Expert Advisors: tick **Allow algorithmic trading**. Press the **AutoTrading** toolbar button.
 2. Attach `XAU_Sniper_EA` to an XAUUSD **M15** chart (one chart per symbol per magic number).
-3. Load a preset: inputs dialog > **Load** > `XAU_Sniper_Balanced.set` (or `XAU_Sniper_DemoTurbo.set` on a demo account to watch many trades).
+3. Load a preset: inputs dialog > **Load** > `XAU_Sniper_Balanced.set` (or `XAU_Sniper_DemoTurbo.set` on a demo account to watch many trades, or `XAU_Sniper_GoldORB.set` on an **H1** chart for the opening-range strategy alone).
 4. **Start on a demo account.** See [TESTING.md](TESTING.md).
 5. Optional: add a DXY-like symbol (`USDX`, `DXY`, ...) to Market Watch. Without it the EA uses EURUSD as a proxy.
 
