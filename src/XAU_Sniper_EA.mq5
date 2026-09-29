@@ -33,6 +33,10 @@ input double InpMaxLots         = 0.0;    // Absolute lot cap (0 = none)
 input double InpMarginUsePct    = 50.0;   // Max % of free margin one trade may use
 input double InpMaxRiskOverrun  = 1.5;    // Refuse trade if min lot risks more than this x requested
 
+input group "=== Demo testing ==="
+input bool   InpDemoUnlocked    = true;   // On a DEMO account every protection below only WARNS - nothing can lock the EA out. Ignored on real accounts
+input int    InpDemoMaxPositions = 5;     // Simultaneous EA trades allowed while demo-unlocked
+
 input group "=== Account protection ==="
 input double InpDailyLossPct    = 3.0;    // Stop for the day at this equity loss (0 = off)
 input double InpWeeklyLossPct   = 6.0;    // Stop for the week at this equity loss (0 = off)
@@ -63,6 +67,7 @@ input bool            InpModFvg        = true;
 input bool            InpModRound      = true;
 input bool            InpAdaptiveGate  = false;   // Switch off modules whose recent trial is clearly negative (see docs: can hurt)
 input string          InpInterSymbol   = "";      // DXY-like symbol (blank = auto / EURUSD fallback)
+input bool            InpPatternVeto   = true;    // Skip setups that a confident pattern-match contradicts (tested: small gain, fewer trades)
 input double          InpAdrBlock      = 0.90;    // Block trend continuation once this share of avg daily range is used (0 = off)
 input bool            InpRegimeWeights = false;   // Efficiency-ratio regime weighting (tested: no benefit, off)
 
@@ -101,7 +106,7 @@ input group "=== Display ==="
 input bool   InpShowPanel     = true;
 input int    InpPanelX        = 12;
 input int    InpPanelY        = 24;
-input int    InpFontSize      = 9;
+input int    InpFontSize      = 10;
 
 //--- position bookkeeping ----------------------------------------------
 #define XS_MAXPOS 16
@@ -133,6 +138,8 @@ int      g_gate_off = 0;
 long     g_gate_day = -1;
 int      g_gate_en[XM_COUNT];
 int      g_rows_prev = 20;
+int      g_pheight = 200;
+int      g_py = 0;
 
 void DrawPanel();
 
@@ -161,6 +168,12 @@ string GvName(const string tag)
 string GvPos(const ulong ticket, const string tag)
 {
    return "XSP_" + IntegerToString((long)ticket) + "_" + tag;
+}
+
+// True only on a DEMO account with the unlock switched on. Real accounts always keep every protection.
+bool DemoFree()
+{
+   return InpDemoUnlocked && (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_DEMO);
 }
 
 double RiskCapped()
@@ -197,6 +210,7 @@ void ApplyConfig()
    c.london_sessions = InpLondonSessions;
    c.adr_block = InpAdrBlock;
    c.regime_on = InpRegimeWeights ? 1 : 0;
+   c.an_veto = InpPatternVeto ? 1 : 0;
    c.use_session_filter = InpSessionFilter;
    c.trade_start = InpTradeStartGMT;
    c.trade_end = InpTradeEndGMT;
@@ -249,6 +263,13 @@ int OnInit()
       GlobalVariableDel(GvName("KILL"));
       GlobalVariableDel(GvName("PEAK"));
       Print("XAU Sniper: kill-switch and peak equity reset.");
+   }
+   if(DemoFree())
+   {
+      // demo: never start locked out by an old kill-switch or a stale equity peak
+      GlobalVariableDel(GvName("KILL"));
+      GlobalVariableDel(GvName("PEAK"));
+      Print("XAU Sniper: DEMO account - guardrails are warnings only (InpDemoUnlocked). Real accounts keep every protection.");
    }
    g_kill = GlobalVariableCheck(GvName("KILL"));
    g_peak_eq = GlobalVariableCheck(GvName("PEAK")) ? GlobalVariableGet(GvName("PEAK")) : eq;
@@ -626,7 +647,8 @@ void UpdateRisk()
       GlobalVariableSet(GvName("PEAK"), g_peak_eq);
    }
    g_block_note = "";
-   if(!g_kill && InpMaxDDPct > 0.0 && g_peak_eq > 0.0 && 100.0 * (g_peak_eq - eq) / g_peak_eq >= InpMaxDDPct)
+   if(DemoFree()) g_kill = false;
+   if(!g_kill && !DemoFree() && InpMaxDDPct > 0.0 && g_peak_eq > 0.0 && 100.0 * (g_peak_eq - eq) / g_peak_eq >= InpMaxDDPct)
    {
       g_kill = true;
       GlobalVariableSet(GvName("KILL"), 1.0);
@@ -635,12 +657,12 @@ void UpdateRisk()
    }
    const double day_loss_pct = InpDailyLossRealized ? (-100.0 * g_day_pl / MathMax(g_day_start_eq, 1.0))
                                                      : (100.0 * (g_day_start_eq - eq) / MathMax(g_day_start_eq, 1.0));
-   if(!g_day_block && InpDailyLossPct > 0.0 && g_day_start_eq > 0.0 && day_loss_pct >= InpDailyLossPct)
+   if(!g_day_block && !DemoFree() && InpDailyLossPct > 0.0 && g_day_start_eq > 0.0 && day_loss_pct >= InpDailyLossPct)
    {
       g_day_block = true;
       Print("XAU Sniper: daily loss limit reached - no new trades today.");
    }
-   if(!g_week_block && InpWeeklyLossPct > 0.0 && g_week_start_eq > 0.0 && 100.0 * (g_week_start_eq - eq) / g_week_start_eq >= InpWeeklyLossPct)
+   if(!g_week_block && !DemoFree() && InpWeeklyLossPct > 0.0 && g_week_start_eq > 0.0 && 100.0 * (g_week_start_eq - eq) / g_week_start_eq >= InpWeeklyLossPct)
    {
       g_week_block = true;
       Print("XAU Sniper: weekly loss limit reached - no new trades this week.");
@@ -653,6 +675,18 @@ void UpdateRisk()
 // returns "" when a new entry is allowed
 string EntryBlocked(const XSignal &s)
 {
+   if(DemoFree())
+   {
+      // demo: only hard technical limits apply; every risk rule is a warning
+      if(CountPositions() >= XMaxI(1, InpDemoMaxPositions)) return "demo position limit (" + IntegerToString(InpDemoMaxPositions) + ") reached";
+      if(!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) || !MQLInfoInteger(MQL_TRADE_ALLOWED)) return "auto-trading disabled";
+      if(SymbolInfoInteger(_Symbol, SYMBOL_TRADE_MODE) != SYMBOL_TRADE_MODE_FULL) return "symbol not fully tradable now";
+      const double dpt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+      const double dsp = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
+      if(InpMaxSpreadPts > 0 && dsp > InpMaxSpreadPts) return "spread " + DoubleToString(dsp * dpt, 2) + " too wide";
+      if(InpUseNews && g_news_blocked) return "news: " + g_news_note;
+      return "";
+   }
    if(g_kill) return "kill-switch active";
    if(g_week_block) return "weekly loss limit";
    if(g_day_block) return "daily loss limit";
@@ -800,8 +834,9 @@ void TryEnter()
    risk = XMin(risk, XS_MAX_RISK_PCT);
 
    XLotPlan lp;
-   XPlanLots(_Symbol, AccountInfoDouble(ACCOUNT_EQUITY), risk, dist, buy, entry, InpMaxRiskOverrun,
-             InpMaxLots, AccountInfoDouble(ACCOUNT_MARGIN_FREE), XClamp(InpMarginUsePct, 5.0, 95.0) / 100.0, lp);
+   const bool demo = DemoFree();
+   XPlanLots(_Symbol, AccountInfoDouble(ACCOUNT_EQUITY), risk, dist, buy, entry, demo ? 1000.0 : InpMaxRiskOverrun,
+             InpMaxLots, AccountInfoDouble(ACCOUNT_MARGIN_FREE), demo ? 0.95 : XClamp(InpMarginUsePct, 5.0, 95.0) / 100.0, lp);
    if(!lp.ok)
    {
       g_skip_note = "signal skipped: " + lp.note;
@@ -813,6 +848,8 @@ void TryEnter()
    const string cmt = InpComment + " " + XGradeName(s.grade) + " " + (s.primary >= 0 ? XModuleShort(s.primary) : "-");
    if(SendOrder(buy, lp.lots, sl, tp, cmt))
    {
+      if(demo && lp.risk_pct > risk * 1.5)
+         Print("XAU Sniper: DEMO note - minimum lot risks ", DoubleToString(lp.risk_pct, 1), "% (target ", DoubleToString(risk, 2), "%). A live account would have refused this trade.");
       Print("XAU Sniper: ", (buy ? "BUY " : "SELL "), DoubleToString(lp.lots, 2), " ", _Symbol, " grade ", XGradeName(s.grade),
             " entry ", DoubleToString(entry, _Digits), " SL ", DoubleToString(sl, _Digits), " TP2 ", DoubleToString(tp, _Digits),
             " risk ", DoubleToString(lp.risk_pct, 2), "% (", DoubleToString(lp.risk_money, 2), ")");
@@ -880,8 +917,10 @@ double OnTester()
 //+------------------------------------------------------------------+
 void PutLine(const int row, const string text, const color clr, const int extra = 0)
 {
-   const int lh = InpFontSize + 6;
-   XObjLabel("XS_P_" + IntegerToString(row), InpPanelX + 10, InpPanelY + 8 + row * lh, text, clr, InpFontSize + extra, "Consolas", CORNER_LEFT_UPPER);
+   const int fs = InpFontSize + extra;
+   if(row == 0) g_py = InpPanelY + 8;
+   XObjLabel("XS_P_" + IntegerToString(row), InpPanelX + 10, g_py, text, clr, fs, "Consolas", CORNER_LEFT_UPPER);
+   g_py += fs + 7;
 }
 
 void DrawPanel()
@@ -890,57 +929,40 @@ void DrawPanel()
    const color cText = XRGB(214, 222, 235), cDim = XRGB(132, 142, 158), cGreen = XRGB(0, 222, 132);
    const color cRed = XRGB(255, 92, 92), cGold = XRGB(255, 200, 64), cCyan = XRGB(64, 200, 255);
    const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
-   const int lh0 = InpFontSize + 6;
-   XObjRectLabel("XS_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, g_rows_prev * lh0 + 18, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
-   int row = 0;
-   PutLine(row++, "XAU SNIPER   " + _Symbol + " " + XTfName((ENUM_TIMEFRAMES)_Period) + "   magic " + IntegerToString(InpMagic), cGold);
-
-   string status = "SCANNING";
-   color sc = cCyan;
-   string sub = "waiting for a graded setup";
    const int np = CountPositions();
-   if(g_kill)            { status = "STOPPED - KILL-SWITCH"; sc = cRed; sub = g_block_note; }
-   else if(g_week_block || g_day_block) { status = "PAUSED"; sc = cGold; sub = g_block_note; }
-   else if(np > 0)       { status = "IN TRADE (" + IntegerToString(np) + ")"; sc = cGreen; sub = "managing: partial, break-even, trail, time stop"; }
-   else if(g_news_blocked) { status = "PAUSED - NEWS"; sc = cGold; sub = g_news_note; }
-   else if(g_engine_ok)  sub = StringLen(g_skip_note) > 0 ? g_skip_note : XReasonText(g_last_reason);
-   PutLine(row++, status, sc, 2);
+   XObjRectLabel("XS_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   int row = 0;
+   PutLine(row++, "XAU SNIPER  " + XTfName((ENUM_TIMEFRAMES)_Period) + (DemoFree() ? "   [DEMO - free run]" : "   [LIVE rules]"), cGold);
+
+   string status = "LOOKING FOR A SETUP";
+   color sc = cCyan;
+   string sub = StringLen(g_skip_note) > 0 ? g_skip_note : XReasonText(g_last_reason);
+   if(g_kill)                            { status = "STOPPED - loss limit hit"; sc = cRed; sub = "set InpResetKill = true for one start to resume"; }
+   else if(g_week_block || g_day_block)  { status = "PAUSED"; sc = cGold; sub = g_block_note; }
+   else if(np > 0)                       { status = "IN " + IntegerToString(np) + " TRADE" + (np > 1 ? "S" : ""); sc = cGreen; sub = "managing exits: half at target 1, stop to entry, trail, time stop"; }
+   else if(g_news_blocked)               { status = "PAUSED - NEWS"; sc = cGold; sub = g_news_note; }
+   else if(!g_engine_ok)                 { sub = "loading history"; }
+   PutLine(row++, status, sc, 3);
    PutLine(row++, sub, cDim);
 
-   PutLine(row++, "----------------------------------------", cDim);
-   const double dd = (g_peak_eq > 0.0) ? 100.0 * (g_peak_eq - eq) / g_peak_eq : 0.0;
    const double dpl = (g_day_start_eq > 0.0) ? 100.0 * (eq - g_day_start_eq) / g_day_start_eq : 0.0;
-   PutLine(row++, "Equity " + DoubleToString(eq, 2) + "   today " + StringFormat("%+.2f%%", dpl) + "   DD " + DoubleToString(dd, 1) + "%", cText);
-   PutLine(row++, "Risk/trade " + DoubleToString(RiskCapped(), 2) + "%   limits: day " + DoubleToString(InpDailyLossPct, 1) + "%  week "
-                  + DoubleToString(InpWeeklyLossPct, 1) + "%  DD " + DoubleToString(InpMaxDDPct, 0) + "%", cDim);
-   PutLine(row++, "Trades today " + IntegerToString(g_trades_today) + "/" + IntegerToString(InpMaxTradesPerDay) + "   loss streak " + IntegerToString(g_consec_losses), cText);
-
+   PutLine(row++, "Equity " + DoubleToString(eq, 2) + "   today " + StringFormat("%+.2f%%", dpl) + "   trades today " + IntegerToString(g_trades_today), cText);
    if(g_tot_n > 0)
    {
       const double pf = (g_tot_gross_loss > 1e-9) ? g_tot_gross_win / g_tot_gross_loss : 99.0;
-      PutLine(row++, "Live (45d): " + IntegerToString(g_tot_n) + " trades  win " + DoubleToString(100.0 * g_tot_win / g_tot_n, 0) + "%  PF "
-                     + DoubleToString(pf, 2) + "  P/L " + DoubleToString(g_tot_profit, 2), g_tot_profit >= 0.0 ? cGreen : cRed);
+      PutLine(row++, "Results (45d): " + IntegerToString(g_tot_n) + " trades, " + DoubleToString(100.0 * g_tot_win / g_tot_n, 0) + "% won, profit factor "
+                     + DoubleToString(pf, 2) + ", P/L " + DoubleToString(g_tot_profit, 2), g_tot_profit >= 0.0 ? cGreen : cRed);
    }
-   else PutLine(row++, "Live (45d): no closed trades yet", cDim);
-
+   else PutLine(row++, "Results: no closed trades yet", cDim);
    if(g_engine_ok)
    {
-      const int n = g_eng.n;
-      const int tb = g_eng.m_bias[n - 1];
-      PutLine(row++, "Bias " + XTfName(g_htf) + ": " + (tb > 0 ? "BULL" : (tb < 0 ? "BEAR" : "NEUTRAL")) + "   ATR " + DoubleToString(g_eng.m_atr[n - 2], 2)
-                     + "   spread " + DoubleToString((double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * SymbolInfoDouble(_Symbol, SYMBOL_POINT), 2), cText);
-      string cl = "Votes:";
-      for(int m = 0; m < XM_COUNT; m++)
-      {
-         const double v = g_eng.m_vote[(n - 2) * XM_COUNT + m];
-         cl += " " + XModuleShort(m) + (v > 0.0 ? "+" : (v < 0.0 ? "-" : "."));
-      }
-      PutLine(row++, cl, cDim);
-      if(InpAdaptiveGate) PutLine(row++, "Adaptive gate: " + IntegerToString(g_gate_off) + " module(s) off today", cDim);
+      const int tb = g_eng.m_bias[g_eng.n - 1];
+      PutLine(row++, "Trend " + XTfName(g_htf) + ": " + (tb > 0 ? "UP" : (tb < 0 ? "DOWN" : "SIDEWAYS")) + "   spread "
+                     + DoubleToString((double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * SymbolInfoDouble(_Symbol, SYMBOL_POINT), 2), cDim);
    }
-   if(InpUseNews) PutLine(row++, "News: " + g_news_note, g_news_blocked ? cRed : cDim);
+   if(InpUseNews && StringFind(g_news_note, " in ") >= 0) PutLine(row++, "News: " + g_news_note, g_news_blocked ? cRed : cDim);
 
-   g_rows_prev = row;
-   XObjRectLabel("XS_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, row * lh0 + 18, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
-   for(int k = row; k < row + 6; k++) XObjDelete("XS_P_" + IntegerToString(k));
+   g_pheight = g_py - InpPanelY + 8;
+   XObjRectLabel("XS_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   for(int k = row; k < 30; k++) XObjDelete("XS_P_" + IntegerToString(k));
 }

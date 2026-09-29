@@ -144,6 +144,10 @@ static std::vector<MqlRates> htf_upto(const Series &S, int last_base)
    return out;
 }
 
+static int    g_veto = 0;
+static double g_score = -1.0;
+static int    g_conf = -1;
+static int    g_sess = -1;
 static int    g_regime = 0;
 static double g_adr = 0.90;
 
@@ -153,6 +157,10 @@ static void load(CXauEngine &e, const Series &S, int nbase)
    std::vector<MqlRates> h = htf_upto(S, nbase - 1);
    e.cfg.Defaults();
    e.cfg.regime_on = g_regime;
+   e.cfg.an_veto = g_veto;
+   if(g_score > 0.0) e.cfg.score_min = g_score;
+   if(g_conf > 0) e.cfg.min_confluence = g_conf;
+   if(g_sess >= 0) e.cfg.use_session_filter = (g_sess == 1);
    e.cfg.adr_block = g_adr;
    e.SetBase(base, nbase);
    e.SetHTF(h, (int)h.size());
@@ -328,6 +336,43 @@ static XStats composite_stats(World w, int regime, double adr, int seeds, int nb
    return agg;
 }
 
+
+static void run_veto_ab()
+{
+   std::printf("\n== A/B: pattern-match veto of setups (composite, 6 seeds x 20000 bars) ==\n");
+   struct W { World w; const char *n; };
+   const W worlds[] = {{W_NULL, "null"}, {W_TREND, "trend"}, {W_MEANREV, "meanrev"}, {W_MIXED, "mixed"}};
+   for(const W &x : worlds)
+   {
+      g_veto = 0; XStats base = composite_stats(x.w, 0, 0.90, 6, 20000);
+      g_veto = 1; XStats vet  = composite_stats(x.w, 0, 0.90, 6, 20000);
+      g_veto = 0;
+      print_stats((std::string(x.n) + ": without veto").c_str(), base);
+      print_stats((std::string(x.n) + ": with veto").c_str(), vet);
+   }
+}
+
+
+static void run_turbo()
+{
+   std::printf("\n== trade frequency vs quality: default thresholds vs demo-turbo (6 seeds x 20000 bars, veto on) ==\n");
+   struct W { World w; const char *n; };
+   const W worlds[] = {{W_NULL, "null"}, {W_TREND, "trend"}, {W_MIXED, "mixed"}};
+   const double days = 6.0 * (20000 - 250) / 96.0 * 5.0 / 7.0;
+   for(const W &x : worlds)
+   {
+      g_veto = 1;
+      XStats d = composite_stats(x.w, 0, 0.90, 6, 20000);
+      g_score = 1.2; g_conf = 1; g_sess = 0;
+      XStats t = composite_stats(x.w, 0, 0.90, 6, 20000);
+      g_score = -1.0; g_conf = -1; g_sess = -1; g_veto = 0;
+      std::printf("  %-6s default: %.2f trades/day", x.n, d.n / days);
+      print_stats("", d);
+      std::printf("  %-6s turbo:   %.2f trades/day", x.n, t.n / days);
+      print_stats("", t);
+   }
+}
+
 static void run_filter_ab()
 {
    std::printf("\n== A/B on synthetic worlds: efficiency-ratio regime weighting and ADR block (composite, 8 seeds x 40000 bars) ==\n");
@@ -410,6 +455,70 @@ static void test_window_consistency()
    CHECK(sig >= 40, "enough signals for the comparison to mean something");
    CHECK(m6 == 0, "6000-bar window (indicator) gives identical signals to full history");
    CHECK(m3 == 0, "3000-bar window (EA) gives identical signals over the newest 1500 bars (15 trading days)");
+}
+
+
+#include <chrono>
+
+static double zscore(int hit, int n) { return n > 0 ? (hit - 0.5 * n) / std::sqrt(0.25 * n) : 0.0; }
+
+static void test_analog()
+{
+   std::printf("\n== analog (pattern-matching) forecaster ==\n");
+   // causality: the forecast at bar q must not change when later bars are added
+   {
+      Series S = make_series(W_TREND, 24000, 9);
+      CXauEngine full, part;
+      load(full, S, 24000);
+      load(part, S, 17000);
+      int diff = 0, tested = 0;
+      for(int q = 12000; q < 16990; q += 331)
+      {
+         XAnalog a, b;
+         full.AnalogQuery(q, a); part.AnalogQuery(q, b);
+         tested++;
+         if(a.ok != b.ok || a.medoid != b.medoid || std::fabs(a.med4 - b.med4) > 1e-12 || a.dir4 != b.dir4) diff++;
+      }
+      std::printf("  causality: %d queries compared on truncated vs full history, %d differ\n", tested, diff);
+      CHECK(diff == 0, "analog forecast identical on truncated vs full history (no look-ahead)");
+   }
+   // speed at indicator scale (6000 bars, audit over the last 1000 bars every 4th bar)
+   {
+      Series S = make_series(W_TREND, 6000, 3);
+      CXauEngine e; load(e, S, 6000);
+      XAnalogAudit r;
+      auto t0 = std::chrono::steady_clock::now();
+      e.AnalogAudit(5998, 1000, 4, r);
+      XAnalog a; e.AnalogQuery(5998, a);
+      auto t1 = std::chrono::steady_clock::now();
+      std::printf("  audit + live query on 6000 bars: %.0f ms\n", std::chrono::duration<double, std::milli>(t1 - t0).count());
+   }
+   struct W { World w; const char *n; };
+   const W worlds[] = {{W_NULL, "NULL (no edge: must be ~50%)"}, {W_TREND, "TREND"}, {W_MEANREV, "MEANREV"}, {W_MIXED, "MIXED"}};
+   for(const W &x : worlds)
+   {
+      long n1 = 0, h1 = 0, nc1 = 0, hc1 = 0, n4 = 0, h4 = 0, nc4 = 0, hc4 = 0, bn4 = 0, bh4 = 0, bn1 = 0, bh1 = 0;
+      for(int sd = 1; sd <= 5; sd++)
+      {
+         Series S = make_series(x.w, 14000, 500 + sd);
+         CXauEngine e; load(e, S, 14000);
+         XAnalogAudit r;
+         e.AnalogAudit(13990, 12000, 3, r);
+         n1 += r.n1; h1 += r.hit1; nc1 += r.nc1; hc1 += r.hitc1; n4 += r.n4; h4 += r.hit4; nc4 += r.nc4; hc4 += r.hitc4;
+         int tn, th;
+         e.ForecastAudit(4, 1.0, 2000, 13990, tn, th); bn4 += tn; bh4 += th;
+         e.ForecastAudit(1, 1.0, 2000, 13990, tn, th); bn1 += tn; bh1 += th;
+      }
+      std::printf("  %-32s next bar: all %.1f%% (n=%ld) confident %.1f%% (n=%ld) | +4 bars: all %.1f%% confident %.1f%% (n=%ld, z=%+.1f) | old drift model: next %.1f%%, +4 %.1f%%\n",
+                  x.n, 100.0 * h1 / std::max(1L, n1), n1, 100.0 * hc1 / std::max(1L, nc1), nc1,
+                  100.0 * h4 / std::max(1L, n4), 100.0 * hc4 / std::max(1L, nc4), nc4, zscore((int)hc4, (int)nc4),
+                  100.0 * bh1 / std::max(1L, bn1), 100.0 * bh4 / std::max(1L, bn4));
+      if(x.w == W_NULL)
+      {
+         CHECK(std::fabs(zscore((int)h4, (int)n4)) < 3.5 && std::fabs(zscore((int)h1, (int)n1)) < 3.5, "no-edge world: analog hit-rate is a coin flip (no leakage)");
+         CHECK(zscore((int)hc4, (int)nc4) < 3.5, "no-edge world: even the 'confident' calls do not beat a coin flip");
+      }
+   }
 }
 
 static void print_stats(const char *name, const XStats &s)
@@ -510,6 +619,9 @@ int main(int argc, char **argv)
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);
    if(all || !std::strcmp(mode, "trend"))   run_world(W_TREND,   "TREND - persistent drift regimes (edge planted)", 6, 40000);
    if(all || !std::strcmp(mode, "meanrev")) run_world(W_MEANREV, "MEANREV - price pulled back to a moving anchor", 6, 40000);
+   if(all || !std::strcmp(mode, "analog"))  test_analog();
+   if(all || !std::strcmp(mode, "veto"))    run_veto_ab();
+   if(all || !std::strcmp(mode, "turbo"))   run_turbo();
    if(all || !std::strcmp(mode, "filters")) run_filter_ab();
    if(all || !std::strcmp(mode, "gating"))
    {

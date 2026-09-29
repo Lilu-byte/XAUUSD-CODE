@@ -114,6 +114,11 @@
 
 #define XHOLD_MAX     200
 
+//--- analog (nearest-neighbour) forecaster
+#define XA_F          37      // features per situation
+#define XA_H          8       // bars of future kept per situation
+#define XA_K          25      // neighbours
+
 //--- reason codes when a bar produces no tradable signal
 //--- how a simulated trade ended
 #define XE_NONE       0
@@ -132,6 +137,7 @@
 #define XR_NOSETUP    6
 #define XR_SL_WIDE    7
 #define XR_GRADE      8
+#define XR_ANALOG     9
 
 //+------------------------------------------------------------------+
 //| small math helpers (avoid MathMax/MathMin overload ambiguity)    |
@@ -192,15 +198,16 @@ string XReasonText(const int r)
 {
    switch(r)
    {
-      case XR_OK:       return "ready";
-      case XR_SESSION:  return "outside trading session";
-      case XR_FRIDAY:   return "Friday cut-off";
+      case XR_OK:       return "setup ready";
+      case XR_SESSION:  return "outside your trading hours";
+      case XR_FRIDAY:   return "Friday close-out, no new trades";
       case XR_VOL_LOW:  return "market too quiet";
-      case XR_VOL_HIGH: return "volatility spike - stand aside";
+      case XR_VOL_HIGH: return "market too wild right now";
       case XR_WARMUP:   return "loading history";
-      case XR_NOSETUP:  return "no confluence yet";
-      case XR_SL_WIDE:  return "stop too wide for a clean setup";
-      case XR_GRADE:    return "setup below minimum grade";
+      case XR_NOSETUP:  return "no good setup yet";
+      case XR_SL_WIDE:  return "stop would be too wide";
+      case XR_GRADE:    return "setup not strong enough";
+      case XR_ANALOG:   return "pattern match disagrees with the setup";
    }
    return "";
 }
@@ -270,6 +277,10 @@ struct XConfig
    double reg_trend_lo;      // trend-module weight multiplier in a choppy regime
    double reg_mr_hi;         // mean-reversion-module weight multiplier in a strongly trending regime
    double fc_er_min;         // below this efficiency ratio the forecast is 'no map' (range only)
+   double an_conf;           // neighbours agreeing needed for a 'confident' analog call
+   double an_edge;           // median 4-bar move (ATR) needed for a confident call
+   double an_z;              // audit gate: hit-rate minus an_z standard errors must beat 50%
+   int    an_veto;           // 1 = skip setups that a confident pattern match contradicts
 
    // trade plan
    double sl_atr_min, sl_atr_max, sl_buffer_atr;
@@ -304,6 +315,7 @@ struct XConfig
       atr_ratio_min = 0.6;  atr_ratio_max = 2.6;  min_atr_price = 0.0;
       asia_compress = 0.7;  round_step = 10.0;
       adr_block = 0.90;  regime_on = 0;  er_lo = 0.20;  er_hi = 0.45;  reg_trend_lo = 0.5;  reg_mr_hi = 0.5;  fc_er_min = 0.12;
+      an_conf = 0.62;  an_edge = 0.10;  an_z = 0.5;  an_veto = 0;
 
       sl_atr_min = 0.9;  sl_atr_max = 2.6;  sl_buffer_atr = 0.15;  sl_lookback = 3;
       tp1_r = 1.0;  tp2_r = 2.5;  partial_pct = 0.5;  trail_atr = 2.0;
@@ -430,6 +442,42 @@ struct XTrial
       all.Reset();
       for(int m = 0; m < XM_COUNT; m++) mod[m].Reset();
       for(int g = 0; g < 4; g++) grade[g].Reset();
+   }
+};
+
+struct XAnalog
+{
+   bool   ok;
+   int    k;
+   int    dir1, dir4;            // +1 up, -1 down, 0 undecided (sign of the neighbours' median move)
+   double conf1, conf4;          // share of neighbours agreeing with that sign (0.5 .. 1)
+   double med1, med4, med8;      // median cumulative move in ATR units after 1, 4, 8 bars
+   double atr;                   // ATR of the query bar
+   double cq_lo[XA_H];           // 20th percentile of the cumulative move per step (ATR units)
+   double cq_md[XA_H];           // median
+   double cq_hi[XA_H];           // 80th percentile
+   int    medoid;                // bar index of the most typical neighbour
+   double mean_dist;
+   void Reset()
+   {
+      ok = false; k = 0; dir1 = 0; dir4 = 0; conf1 = 0.5; conf4 = 0.5; med1 = 0.0; med4 = 0.0; med8 = 0.0;
+      atr = 0.0; medoid = -1; mean_dist = 0.0;
+      for(int s = 0; s < XA_H; s++) { cq_lo[s] = 0.0; cq_md[s] = 0.0; cq_hi[s] = 0.0; }
+   }
+};
+
+struct XAnalogAudit
+{
+   int n1, hit1, nc1, hitc1;     // next bar: all calls / confident calls
+   int n4, hit4, nc4, hitc4;     // 4 bars ahead
+   void Reset() { n1 = 0; hit1 = 0; nc1 = 0; hitc1 = 0; n4 = 0; hit4 = 0; nc4 = 0; hitc4 = 0; }
+   double Rate(const int hit, const int nn) const { return (nn > 0) ? (double)hit / nn : 0.0; }
+   // hit-rate minus z standard errors: a deliberately cautious estimate of real skill
+   double LowerBound(const int hit, const int nn, const double z) const
+   {
+      if(nn < 1) return 0.0;
+      const double p = (double)hit / nn;
+      return p - z * MathSqrt(0.25 / nn);
    }
 };
 
@@ -635,6 +683,10 @@ public:
    // votes and scores
    XDARR(m_vote);
    XDARR(m_scl); XDARR(m_scs); XIARR(m_nal); XIARR(m_nas); XIARR(m_mkl); XIARR(m_mks); XDARR(m_snet);
+   // analog forecaster data
+   XDARR(m_feat);    // n * XA_F situation descriptors
+   XDARR(m_fut);     // n * XA_H * 4 relative future candles (o,h,l,c) in ATR units
+   XDARR(m_aw);      // squared feature weights
    // seasonality (mean range by GMT hour, normalised)
    double  season[24];
    // forecast output
@@ -729,6 +781,7 @@ public:
       ComputeHTF();
       ComputeVotes();
       ComputeScores();
+      ComputeAnalog();
       return true;
    }
 
@@ -821,6 +874,11 @@ public:
       if(s.score >= cfg.score_min + cfg.grade_a_add) s.grade = 2;
       if(s.score >= cfg.score_min + cfg.grade_ap_add && s.n_agree >= 3) s.grade = 3;
       if(s.grade < cfg.min_grade) { s.dir = 0; s.reason = XR_GRADE; return false; }
+      if(cfg.an_veto == 1)
+      {
+         XAnalog an;
+         if(AnalogQuery(i, an) && AnalogConfident(an) && an.dir4 != dir) { s.dir = 0; s.reason = XR_ANALOG; return false; }
+      }
       if(!BuildPlan(i, dir, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
       s.reason = XR_OK;
       return true;
@@ -1042,6 +1100,222 @@ public:
          decay *= cfg.fc_decay;
       }
       fc_n = steps;
+   }
+
+   //--- analog forecaster ------------------------------------------------
+   // Describe the situation at closed bar i as XA_F numbers. Uses only data <= i.
+   void ComputeAnalog()
+   {
+      ArrayResize(m_feat, n * XA_F);
+      ArrayResize(m_fut, n * XA_H * 4);
+      ArrayResize(m_aw, XA_F);
+      ArrayInitialize(m_feat, 0.0);
+      ArrayInitialize(m_fut, 0.0);
+      // weights (squared below): candle shape recent > older, context 1, votes strongest
+      for(int f = 0; f < XA_F; f++) m_aw[f] = 1.0;
+      for(int k = 0; k < 3; k++)
+      {
+         const double wk = (k == 0) ? 0.6 : ((k == 1) ? 0.4 : 0.3);
+         m_aw[k * 4 + 0] = wk; m_aw[k * 4 + 1] = wk; m_aw[k * 4 + 2] = wk * 0.6; m_aw[k * 4 + 3] = wk * 0.6;
+      }
+      m_aw[14] = 0.6; m_aw[20] = 0.6; m_aw[22] = 0.6; m_aw[23] = 0.7; m_aw[24] = 0.7; m_aw[26] = 0.5; m_aw[27] = 0.6; m_aw[28] = 0.6;
+      for(int f = 29; f < 37; f++) m_aw[f] = 1.2;
+      for(int f = 0; f < XA_F; f++) m_aw[f] = m_aw[f] * m_aw[f];
+
+      for(int i = cfg.warmup; i < n; i++)
+      {
+         const double a = m_atr[i];
+         if(a <= 0.0) continue;
+         const int b = i * XA_F;
+         for(int k = 0; k < 3; k++)
+         {
+            const int x = i - k;
+            const double rng = m_h[x] - m_l[x];
+            m_feat[b + k * 4 + 0] = XClamp((m_c[x] - m_o[x]) / a, -2.0, 2.0);
+            if(rng > 0.0)
+            {
+               m_feat[b + k * 4 + 1] = 2.0 * (m_c[x] - m_l[x]) / rng - 1.0;
+               m_feat[b + k * 4 + 2] = (m_h[x] - XMax(m_o[x], m_c[x])) / rng;
+               m_feat[b + k * 4 + 3] = (XMin(m_o[x], m_c[x]) - m_l[x]) / rng;
+            }
+         }
+         m_feat[b + 12] = XClamp((m_c[i] - m_ema1[i]) / a, -4.0, 4.0) / 2.0;
+         m_feat[b + 13] = XClamp((m_c[i] - m_ema2[i]) / a, -6.0, 6.0) / 3.0;
+         m_feat[b + 14] = XClamp((m_c[i] - m_ema3[i]) / a, -12.0, 12.0) / 6.0;
+         m_feat[b + 15] = XClamp((m_ema1[i] - m_ema1[i - 5]) / a, -2.0, 2.0);
+         m_feat[b + 16] = (m_rsi[i] - 50.0) / 25.0;
+         m_feat[b + 17] = m_er[i] * 2.0;
+         m_feat[b + 18] = XClamp(m_adx[i] / 40.0, 0.0, 1.5);
+         m_feat[b + 19] = (m_atrref[i] > 0.0) ? XClamp(a / m_atrref[i], 0.0, 3.0) - 1.0 : 0.0;
+         m_feat[b + 20] = m_bbp[i];
+         m_feat[b + 21] = (m_daybars[i] >= 15) ? XClamp((m_c[i] - m_vwap[i]) / a, -4.0, 4.0) / 2.0 : 0.0;
+         m_feat[b + 22] = XClamp(m_adru[i], 0.0, 1.5);
+         const double ang = 6.283185307179586 * m_hour[i] / 24.0;
+         m_feat[b + 23] = MathSin(ang);
+         m_feat[b + 24] = MathCos(ang);
+         m_feat[b + 25] = (double)m_bias[i];
+         m_feat[b + 26] = (double)m_inter[i];
+         m_feat[b + 27] = (m_pdh[i] > 0.0) ? XClamp((m_pdh[i] - m_c[i]) / a, -3.0, 6.0) / 3.0 : 2.0;
+         m_feat[b + 28] = (m_pdl[i] > 0.0) ? XClamp((m_c[i] - m_pdl[i]) / a, -3.0, 6.0) / 3.0 : 2.0;
+         for(int m = 0; m < XM_COUNT; m++) m_feat[b + 29 + m] = m_vote[i * XM_COUNT + m];
+         // what happened next, in ATR units relative to this bar's close (only where the future exists)
+         if(i + XA_H < n)
+         {
+            for(int s = 1; s <= XA_H; s++)
+            {
+               const int x = i + s;
+               const int o = (i * XA_H + (s - 1)) * 4;
+               m_fut[o + 0] = (m_o[x] - m_c[i]) / a;
+               m_fut[o + 1] = (m_h[x] - m_c[i]) / a;
+               m_fut[o + 2] = (m_l[x] - m_c[i]) / a;
+               m_fut[o + 3] = (m_c[x] - m_c[i]) / a;
+            }
+         }
+      }
+   }
+
+   // Find the XA_K past situations most similar to closed bar q and summarise what followed.
+   // Only situations whose future is fully known BEFORE q are eligible (no look-ahead).
+   bool AnalogQuery(const int q, XAnalog &a) const
+   {
+      a.Reset();
+      const int lib_first = cfg.warmup;
+      const int lib_last = q - XA_H;
+      if(q < 0 || q >= n || lib_last - lib_first < 250) return false;
+      const int qb = q * XA_F;
+      int bi[XA_K];
+      double bd[XA_K];
+      int cnt = 0;
+      double worst = 1e300;
+      for(int j = lib_first; j <= lib_last; j++)
+      {
+         const int jb = j * XA_F;
+         double acc = 0.0;
+         bool skip = false;
+         for(int f = 0; f < XA_F; f++)
+         {
+            const double d = m_feat[jb + f] - m_feat[qb + f];
+            acc += m_aw[f] * d * d;
+            if(cnt == XA_K && acc >= worst) { skip = true; break; }
+         }
+         if(skip) continue;
+         int pos = (cnt < XA_K) ? cnt : XA_K - 1;
+         if(cnt < XA_K) cnt++;
+         while(pos > 0 && bd[pos - 1] > acc) { bd[pos] = bd[pos - 1]; bi[pos] = bi[pos - 1]; pos--; }
+         bd[pos] = acc; bi[pos] = j;
+         if(cnt == XA_K) worst = bd[XA_K - 1];
+      }
+      if(cnt < XA_K) return false;
+
+      double dsum = 0.0;
+      for(int k = 0; k < cnt; k++) dsum += MathSqrt(bd[k]);
+      a.mean_dist = dsum / cnt;
+      a.k = cnt;
+      a.atr = m_atr[q];
+      double med[XA_H];
+      for(int st = 0; st < XA_H; st++)
+      {
+         double v[XA_K];
+         for(int k = 0; k < cnt; k++) v[k] = m_fut[(bi[k] * XA_H + st) * 4 + 3];
+         for(int x = 1; x < cnt; x++)
+         {
+            const double key = v[x];
+            int y = x - 1;
+            while(y >= 0 && v[y] > key) { v[y + 1] = v[y]; y--; }
+            v[y + 1] = key;
+         }
+         a.cq_lo[st] = v[(int)MathFloor(0.2 * (cnt - 1) + 0.5)];
+         a.cq_md[st] = v[cnt / 2];
+         a.cq_hi[st] = v[(int)MathFloor(0.8 * (cnt - 1) + 0.5)];
+         med[st] = a.cq_md[st];
+      }
+      a.med1 = med[0]; a.med4 = med[3]; a.med8 = med[XA_H - 1];
+      a.dir1 = (a.med1 > 0.0) ? 1 : ((a.med1 < 0.0) ? -1 : 0);
+      a.dir4 = (a.med4 > 0.0) ? 1 : ((a.med4 < 0.0) ? -1 : 0);
+      int ag1 = 0, ag4 = 0;
+      for(int k = 0; k < cnt; k++)
+      {
+         const double m1 = m_fut[(bi[k] * XA_H + 0) * 4 + 3];
+         const double m4 = m_fut[(bi[k] * XA_H + 3) * 4 + 3];
+         if((m1 > 0.0 ? 1 : (m1 < 0.0 ? -1 : 0)) == a.dir1) ag1++;
+         if((m4 > 0.0 ? 1 : (m4 < 0.0 ? -1 : 0)) == a.dir4) ag4++;
+      }
+      a.conf1 = (double)ag1 / cnt;
+      a.conf4 = (double)ag4 / cnt;
+      // most typical neighbour = the one whose path is closest to the median path
+      double best = 1e300;
+      for(int k = 0; k < cnt; k++)
+      {
+         double dev = 0.0;
+         for(int st = 0; st < XA_H; st++) dev += XAbs(m_fut[(bi[k] * XA_H + st) * 4 + 3] - med[st]);
+         if(dev < best) { best = dev; a.medoid = bi[k]; }
+      }
+      a.ok = true;
+      return true;
+   }
+
+   bool AnalogConfident(const XAnalog &a) const
+   {
+      return a.ok && a.dir4 != 0 && a.conf4 >= cfg.an_conf && XAbs(a.med4) >= cfg.an_edge;
+   }
+
+   // Walk-forward audit: at each sampled past bar b, forecast using ONLY situations known before b,
+   // then compare with what really happened. Tells the user how much to trust the picture.
+   void AnalogAudit(const int q, const int span, const int stride, XAnalogAudit &r) const
+   {
+      r.Reset();
+      const int b0 = XMaxI(cfg.warmup + XA_H + 260, q - span);
+      XAnalog a;
+      for(int b = b0; b + 4 <= q; b += stride)
+      {
+         if(!AnalogQuery(b, a)) continue;
+         const double d1 = m_c[b + 1] - m_c[b];
+         const double d4 = m_c[b + 4] - m_c[b];
+         if(a.dir1 != 0 && d1 != 0.0)
+         {
+            r.n1++;
+            const bool h1 = ((d1 > 0.0) == (a.dir1 > 0));
+            if(h1) r.hit1++;
+            if(a.conf1 >= cfg.an_conf) { r.nc1++; if(h1) r.hitc1++; }
+         }
+         if(a.dir4 != 0 && d4 != 0.0)
+         {
+            r.n4++;
+            const bool h4 = ((d4 > 0.0) == (a.dir4 > 0));
+            if(h4) r.hit4++;
+            if(AnalogConfident(a)) { r.nc4++; if(h4) r.hitc4++; }
+         }
+      }
+   }
+
+   // Ghost candles = the real future candles of the most typical neighbour, scaled to today's ATR and
+   // re-anchored on the current price (step 1 is the still-forming bar, so drawing starts at step 2).
+   // The cone is the 20-80% spread of all neighbours.
+   void ForecastAnalog(const XAnalog &a, const double price_now, const datetime t_first, const int steps)
+   {
+      fc_n = 0;
+      if(!a.ok || a.medoid < 0 || steps < 1) return;
+      const int cnt = XMinI(steps, XA_H - 1);
+      ArrayResize(fc_t, cnt); ArrayResize(fc_o, cnt); ArrayResize(fc_h, cnt);
+      ArrayResize(fc_l, cnt); ArrayResize(fc_c, cnt); ArrayResize(fc_up, cnt); ArrayResize(fc_dn, cnt);
+      const double sc = a.atr;
+      const int mo = a.medoid * XA_H;
+      const double c1 = m_fut[(mo + 0) * 4 + 3];
+      const double m1 = a.cq_md[0];
+      for(int j = 0; j < cnt; j++)
+      {
+         const int st = j + 1;                          // 0-based step index (step 2 is the first future bar)
+         const int o = (mo + st) * 4;
+         const double base = price_now - c1 * sc;       // anchor so that step 1 ends at the live price
+         fc_t[j] = t_first + (datetime)j * cfg.base_sec;
+         fc_o[j] = base + m_fut[o + 0] * sc;
+         fc_c[j] = base + m_fut[o + 3] * sc;
+         fc_h[j] = XMax(base + m_fut[o + 1] * sc, XMax(fc_o[j], fc_c[j]));
+         fc_l[j] = XMin(base + m_fut[o + 2] * sc, XMin(fc_o[j], fc_c[j]));
+         fc_up[j] = price_now + (a.cq_hi[st] - m1) * sc;
+         fc_dn[j] = price_now + (a.cq_lo[st] - m1) * sc;
+      }
+      fc_n = cnt;
    }
 
    // How often did the sign of the score predict the direction `horizon` bars later?
@@ -2029,6 +2303,7 @@ input bool            InpModVwap        = true;          // Module: VWAP extreme
 input bool            InpModDiverge     = true;          // Module: RSI divergence
 input bool            InpModFvg         = true;          // Module: fair value gap retest
 input bool            InpModRound       = true;          // Module: round-number rejection
+input bool            InpPatternVeto    = true;          // Skip setups that a confident pattern-match contradicts
 input double          InpAdrBlock       = 0.90;          // Block trend continuation after this share of avg daily range is used (0 = off)
 input bool            InpRegimeWeights  = false;         // Weight modules by efficiency-ratio regime (tested: no benefit, off)
 
@@ -2053,11 +2328,13 @@ input double          InpRiskPct        = 1.0;           // Risk per trade, % of
 
 input group "=== Visuals ==="
 input bool            InpShowPanel      = true;          // Dashboard
+input bool            InpPanelDetail    = false;         // Full technical panel instead of the simple one
+input bool            InpShowTradeBox   = true;          // Green (profit) / red (risk) box when a setup is worth trading
 input int             InpPanelX         = 12;            // Panel X offset
 input int             InpPanelY         = 24;            // Panel Y offset
-input int             InpFontSize       = 9;             // Panel font size
+input int             InpFontSize       = 10;            // Panel font size
 input bool            InpShowForecast   = true;          // Projected candles
-input int             InpForecastBars   = 8;             // Bars to project
+input int             InpForecastBars   = 6;             // Bars to project (max 7)
 input bool            InpShowCone       = true;          // Expected range cone
 input bool            InpShowLevels     = true;          // Prev-day high/low + Asian range
 input bool            InpShowExits      = true;          // Mark where past trades would have ended
@@ -2097,7 +2374,9 @@ int        g_start        = 0;      // chart index of engine bar 0
 int        g_n            = 0;      // engine bars
 ENUM_TIMEFRAMES g_htf     = PERIOD_H1;
 bool       g_ready        = false;
-int        g_rows_prev    = 34;     // panel rows drawn last time (background is created first)
+int        g_rows_prev    = 34;     // panel rows drawn last time
+int        g_pheight      = 420;    // panel height drawn last time (background is created first)
+int        g_py           = 0;      // running y position while drawing the panel
 bool       g_htf_missing  = false;  // higher-TF history not loaded yet -> retry
 ulong      g_last_try     = 0;
 
@@ -2116,6 +2395,11 @@ string       g_news_block = "";
 bool         g_news_blocked = false;
 int          g_trial_days = 0;
 int          g_fa_n = 0, g_fa_hit = 0, g_fa1_n = 0, g_fa1_hit = 0;
+XAnalog      g_an;                     // pattern-matching forecast for the newest closed bar
+XAnalogAudit g_aud;                    // how that forecaster did in the past (walk-forward)
+bool         g_an_show = false;        // draw directional ghost candles?
+int          g_an_state = 0;           // 0 learning, 1 no clear direction, 2 leaning but unproven, 3 shown
+int          g_an_up = 0, g_an_dn = 0; // neighbours that went up / down over 4 bars
 
 //+------------------------------------------------------------------+
 color ClrText()  { return XRGB(214, 222, 235); }
@@ -2185,6 +2469,7 @@ void ApplyConfig()
    c.london_sessions = InpLondonSessions;
    c.adr_block = InpAdrBlock;
    c.regime_on = InpRegimeWeights ? 1 : 0;
+   c.an_veto = InpPatternVeto ? 1 : 0;
    c.use_session_filter = InpSessionFilter;
    c.trade_start = InpTradeStartGMT;
    c.trade_end = InpTradeEndGMT;
@@ -2218,6 +2503,7 @@ void ApplyConfig()
 //| full rebuild: engine, buffers, trial, plan, projection            |
 //+------------------------------------------------------------------+
 void FillBuffers(const int rates_total);
+void AnalogRefresh();
 
 bool Rebuild(const int rates_total, const datetime &time[], const double &open[], const double &high[],
              const double &low[], const double &close[], const long &tick_volume[], const int &spread[])
@@ -2262,6 +2548,7 @@ bool Rebuild(const int rates_total, const datetime &time[], const double &open[]
    g_eng.RunTrial(g_eng.cfg.warmup, n - 2, g_trial);
    g_eng.ForecastAudit(4, 1.0, g_eng.cfg.warmup, n - 2, g_fa_n, g_fa_hit);
    g_eng.ForecastAudit(1, 1.0, g_eng.cfg.warmup, n - 2, g_fa1_n, g_fa1_hit);
+   AnalogRefresh();
    g_trial_days = (int)((g_eng.m_t[n - 1] - g_eng.m_t[g_eng.cfg.warmup]) / 86400);
    return true;
 }
@@ -2354,62 +2641,92 @@ string SessionName(const datetime t)
 }
 
 //+------------------------------------------------------------------+
+//| pattern-matching forecast: run it, audit it, decide whether to show|
+//+------------------------------------------------------------------+
+void AnalogRefresh()
+{
+   g_an_show = false;
+   g_an_state = 0;
+   g_an_up = 0; g_an_dn = 0;
+   if(!g_ready) return;
+   const int n = g_n;
+   g_eng.AnalogQuery(n - 2, g_an);
+   g_eng.AnalogAudit(n - 2, 1000, 4, g_aud);
+   if(!g_an.ok) return;
+   const int agree = (int)MathRound(g_an.conf4 * g_an.k);
+   g_an_up = (g_an.dir4 > 0) ? agree : g_an.k - agree;
+   g_an_dn = g_an.k - g_an_up;
+   const bool confident = g_eng.AnalogConfident(g_an);
+   const bool proven = (g_aud.nc4 >= 25 && g_aud.LowerBound(g_aud.hitc4, g_aud.nc4, g_eng.cfg.an_z) >= 0.5);
+   if(!confident)            g_an_state = 1;
+   else if(!proven)          g_an_state = 2;
+   else                      { g_an_state = 3; g_an_show = true; }
+}
+
+string AnalogLine()
+{
+   if(!g_an.ok) return "Next candles: still learning from history";
+   const string dir = (g_an.dir4 > 0) ? "UP" : "DOWN";
+   const int agree = (g_an.dir4 > 0) ? g_an_up : g_an_dn;
+   if(g_an_state == 3)
+      return "Next candles: " + dir + " (" + IntegerToString(agree) + " of " + IntegerToString(g_an.k) + " similar cases; such calls right "
+             + DoubleToString(100.0 * g_aud.Rate(g_aud.hitc4, g_aud.nc4), 0) + "%)";
+   if(g_an_state == 2)
+      return "Next candles: leaning " + dir + " but NOT proven (such calls right " + DoubleToString(100.0 * g_aud.Rate(g_aud.hitc4, g_aud.nc4), 0) + "%)";
+   return "Next candles: no clear direction (" + IntegerToString(g_an_up) + " up / " + IntegerToString(g_an_dn) + " down of " + IntegerToString(g_an.k) + ")";
+}
+
+//+------------------------------------------------------------------+
 //| projected candles + cone                                          |
 //+------------------------------------------------------------------+
 void DrawForecast()
 {
-   for(int j = 0; j < 40; j++)
+   for(int j = 0; j < 12; j++)
    {
       XObjDelete("XO_FB" + IntegerToString(j));
       XObjDelete("XO_FW" + IntegerToString(j));
       XObjDelete("XO_FU" + IntegerToString(j));
       XObjDelete("XO_FD" + IntegerToString(j));
    }
-   if(!InpShowForecast || !g_ready) return;
+   XObjDelete("XO_FT");
+   if(!InpShowForecast || !g_ready || !g_an.ok) return;
    const int n = g_n;
    const int period = g_eng.cfg.base_sec;
-   const int steps = XMinI(XMaxI(InpForecastBars, 1), 30);
-   g_eng.Forecast(n - 2, g_eng.m_c[n - 1], g_eng.m_t[n - 1] + period, steps);
-   const bool up = (g_eng.fc_c[g_eng.fc_n - 1] >= g_eng.fc_o[0]);
-   const color cu = XRGB(60, 190, 130), cd = XRGB(230, 90, 90);
+   const int steps = XMinI(XMaxI(InpForecastBars, 1), 7);
+   g_eng.ForecastAnalog(g_an, g_eng.m_c[n - 1], g_eng.m_t[n - 1] + period, steps);
+   if(g_eng.fc_n < 1) return;
+   const color cu = XRGB(70, 175, 130), cd = XRGB(215, 95, 95), cc = XRGB(140, 150, 175);
    for(int j = 0; j < g_eng.fc_n; j++)
    {
       const string sj = IntegerToString(j);
-      if(g_eng.fc_nomap)
-      {
-         // choppy or spiking market: no directional path is honest, show only the expected range
-         if(InpShowCone && j + 1 < g_eng.fc_n)
-         {
-            const datetime tt0 = g_eng.fc_t[j], tt1 = g_eng.fc_t[j + 1];
-            XObjTrend("XO_FU" + sj, tt0 + (datetime)(period * 0.5), g_eng.fc_up[j], tt1 + (datetime)(period * 0.5), g_eng.fc_up[j + 1], XRGB(120, 120, 140), STYLE_DOT, 1, false);
-            XObjTrend("XO_FD" + sj, tt0 + (datetime)(period * 0.5), g_eng.fc_dn[j], tt1 + (datetime)(period * 0.5), g_eng.fc_dn[j + 1], XRGB(120, 120, 140), STYLE_DOT, 1, false);
-         }
-         continue;
-      }
-      const bool bull = (g_eng.fc_c[j] >= g_eng.fc_o[j]);
-      const color cl = bull ? cu : cd;
       const datetime t0 = g_eng.fc_t[j];
-      XObjRect("XO_FB" + sj, t0 + (datetime)(period * 0.15), g_eng.fc_o[j], t0 + (datetime)(period * 0.85), g_eng.fc_c[j], cl, false);
-      XObjTrend("XO_FW" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_l[j], t0 + (datetime)(period * 0.5), g_eng.fc_h[j], cl, STYLE_SOLID, 1, false);
+      if(g_an_show)
+      {
+         const color cl = (g_eng.fc_c[j] >= g_eng.fc_o[j]) ? cu : cd;
+         XObjRect("XO_FB" + sj, t0 + (datetime)(period * 0.12), g_eng.fc_o[j], t0 + (datetime)(period * 0.88), g_eng.fc_c[j], cl, true);
+         XObjTrend("XO_FW" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_l[j], t0 + (datetime)(period * 0.5), g_eng.fc_h[j], cl, STYLE_SOLID, 1, false);
+      }
       if(InpShowCone && j + 1 < g_eng.fc_n)
       {
          const datetime t1 = g_eng.fc_t[j + 1];
-         const color cc = up ? XRGB(70, 130, 110) : XRGB(140, 80, 80);
-         XObjTrend("XO_FU" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_up[j], t1 + (datetime)(period * 0.5), g_eng.fc_up[j + 1], cc, STYLE_DOT, 1, false);
-         XObjTrend("XO_FD" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_dn[j], t1 + (datetime)(period * 0.5), g_eng.fc_dn[j + 1], cc, STYLE_DOT, 1, false);
+         XObjTrend("XO_FU" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_up[j], t1 + (datetime)(period * 0.5), g_eng.fc_up[j + 1], cc, STYLE_SOLID, 1, false);
+         XObjTrend("XO_FD" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_dn[j], t1 + (datetime)(period * 0.5), g_eng.fc_dn[j + 1], cc, STYLE_SOLID, 1, false);
       }
    }
+   const double top = g_eng.fc_up[g_eng.fc_n - 1];
+   string lab = g_an_show ? ((g_an.dir4 > 0) ? "PREDICTED: UP" : "PREDICTED: DOWN") : "range only (no reliable direction)";
+   XObjText("XO_FT", g_eng.fc_t[0], top, lab, g_an_show ? ((g_an.dir4 > 0) ? cu : cd) : cc, 8);
 }
 
 //+------------------------------------------------------------------+
-//| trade plan lines                                                  |
+//| the green / red trade box                                         |
 //+------------------------------------------------------------------+
-void DrawPlan()
+void DrawTradeBox()
 {
-   const string nm[7] = {"XO_PL_E", "XO_PL_S", "XO_PL_T1", "XO_PL_T2", "XO_PL_TR", "XO_PL_X", "XO_PL_TX"};
-   for(int k = 0; k < 7; k++) XObjDelete(nm[k]);
-   for(int k = 0; k < 5; k++) XObjDelete("XO_PL_L" + IntegerToString(k));
-   if(!g_ready || g_sig_i < 0) return;
+   const string nm[9] = {"XO_BX_R", "XO_BX_G1", "XO_BX_G2", "XO_BX_E", "XO_BX_TR", "XO_BX_T0", "XO_BX_T1", "XO_BX_T2", "XO_BX_T3"};
+   for(int k = 0; k < 9; k++) XObjDelete(nm[k]);
+   XObjDelete("XO_BX_T4");
+   if(!InpShowTradeBox || !g_ready || g_sig_i < 0) return;
    const int n = g_n;
    const int period = g_eng.cfg.base_sec;
 
@@ -2419,29 +2736,27 @@ void DrawPlan()
    if(!show) return;
 
    const datetime t0 = g_eng.m_t[g_sig_i + 1];
-   const int maxh = g_eng.MaxHold();
-   const datetime t_end = t0 + (datetime)(maxh * period);
-   const datetime t_lbl = g_eng.m_t[n - 1] + (datetime)(period * 1);
+   const int span = XMinI(g_eng.MaxHold(), 30);
+   const datetime t_end = t0 + (datetime)(span * period);
    const bool buy = (g_sig.dir > 0);
    const double entry = g_sig.entry;
    const double risk = g_sig.risk;
    const double tp1 = entry + g_sig.dir * g_eng.cfg.tp1_r * risk;
    const double tp2 = entry + g_sig.dir * g_eng.cfg.tp2_r * risk;
 
-   XObjTrend("XO_PL_E", t0, entry, t_end, entry, XRGB(230, 230, 240), STYLE_SOLID, 1, false);
-   XObjTrend("XO_PL_S", t0, g_sig.sl, t_end, g_sig.sl, XRGB(255, 92, 92), STYLE_SOLID, 2, false);
-   XObjTrend("XO_PL_T1", t0, tp1, t_end, tp1, XRGB(0, 222, 132), STYLE_DASH, 1, false);
-   XObjTrend("XO_PL_T2", t0, tp2, t_end, tp2, XRGB(0, 180, 110), STYLE_DASH, 1, false);
-   XObjVLine("XO_PL_X", t_end, XRGB(255, 200, 64));
-
-   const string side = buy ? "BUY " : "SELL ";
-   XObjText("XO_PL_L0", t_lbl, entry, side + XGradeName(g_sig.grade) + "  entry " + Px(entry), XRGB(230, 230, 240), 8);
-   XObjText("XO_PL_L1", t_lbl, g_sig.sl, "STOP " + Px(g_sig.sl), XRGB(255, 92, 92), 8);
-   XObjText("XO_PL_L2", t_lbl, tp1, "TP1 " + Px(tp1) + "  take " + DoubleToString(g_eng.cfg.partial_pct * 100.0, 0) + "%", XRGB(0, 222, 132), 8);
-   XObjText("XO_PL_L3", t_lbl, tp2, "TP2 " + Px(tp2), XRGB(0, 180, 110), 8);
-   XObjText("XO_PL_L4", t_end, entry, " time stop " + TimeToString(t_end, TIME_MINUTES), XRGB(255, 200, 64), 8);
+   XObjRect("XO_BX_R",  t0, entry, t_end, g_sig.sl, XRGB(110, 34, 38), true);      // risk: red
+   XObjRect("XO_BX_G1", t0, entry, t_end, tp1,      XRGB(28, 110, 72), true);      // to first target: green
+   XObjRect("XO_BX_G2", t0, tp1,   t_end, tp2,      XRGB(20, 84, 56), true);       // to runner target: deeper green
+   XObjTrend("XO_BX_E", t0, entry, t_end, entry, XRGB(235, 235, 245), STYLE_SOLID, 1, false);
    if(g_live_ok && !g_live.closed && g_live.stage == 1)
-      XObjTrend("XO_PL_TR", t0, g_live.cur_sl, t_end, g_live.cur_sl, XRGB(255, 160, 40), STYLE_DASHDOT, 1, false);
+      XObjTrend("XO_BX_TR", t0, g_live.cur_sl, t_end, g_live.cur_sl, XRGB(255, 170, 60), STYLE_SOLID, 1, false);
+
+   const datetime tl = t_end + (datetime)(period);
+   XObjText("XO_BX_T0", tl, entry,   (buy ? "BUY " : "SELL ") + Px(entry) + "  (" + XGradeName(g_sig.grade) + ")", XRGB(235, 235, 245), 9);
+   XObjText("XO_BX_T1", tl, g_sig.sl, "STOP " + Px(g_sig.sl) + "  -1R", XRGB(255, 120, 120), 9);
+   XObjText("XO_BX_T2", tl, tp1, "TAKE HALF " + Px(tp1) + "  +" + DoubleToString(g_eng.cfg.tp1_r, 1) + "R", XRGB(90, 230, 160), 9);
+   XObjText("XO_BX_T3", tl, tp2, "TARGET " + Px(tp2) + "  +" + DoubleToString(g_eng.cfg.tp2_r, 1) + "R", XRGB(90, 230, 160), 9);
+   XObjText("XO_BX_T4", t0, tp2, "exit by " + TimeToString(g_eng.m_t[g_sig_i + 1] + (datetime)(g_eng.MaxHold() * period), TIME_MINUTES), XRGB(255, 200, 64), 8);
 }
 
 //+------------------------------------------------------------------+
@@ -2502,11 +2817,12 @@ string MtfChar(const double d) { return (d > 0.0) ? "UP" : ((d < 0.0) ? "DN" : "
 void PutLine(const int row, const string text, const color clr, const int extra = 0)
 {
    const int fs = InpFontSize + extra;
-   const int lh = InpFontSize + 6;
-   XObjLabel("XO_P_" + IntegerToString(row), InpPanelX + 10, InpPanelY + 8 + row * lh, text, clr, fs, "Consolas", CORNER_LEFT_UPPER);
+   if(row == 0) g_py = InpPanelY + 8;
+   XObjLabel("XO_P_" + IntegerToString(row), InpPanelX + 10, g_py, text, clr, fs, "Consolas", CORNER_LEFT_UPPER);
+   g_py += fs + 7;
 }
 
-void DrawPanel()
+void DrawPanelDetail()
 {
    if(!InpShowPanel || !g_ready)
    {
@@ -2516,7 +2832,7 @@ void DrawPanel()
    }
    const int lh0 = InpFontSize + 6;
    // background first so it sits UNDER the text (objects draw in creation order)
-   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, g_rows_prev * lh0 + 18,
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, g_pheight,
                  XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
    const int n = g_n;
    const datetime now = TimeCurrent();
@@ -2657,9 +2973,118 @@ void DrawPanel()
    PutLine(row++, g_eng.fc_nomap ? "NO MAP: choppy/spiking market, projection shows range only." : "Projection = statistical expectation, not a promise.", g_eng.fc_nomap ? ClrGold() : ClrDim());
 
    g_rows_prev = row;
-   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, row * lh0 + 18, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   g_pheight = g_py - InpPanelY + 10;
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, g_py - InpPanelY + 10, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
    // clear stale rows from a longer previous layout
    for(int k = row; k < row + 6; k++) XObjDelete("XO_P_" + IntegerToString(k));
+}
+
+//+------------------------------------------------------------------+
+//| simple panel: what to do, at what price, how much, and how much   |
+//| to trust it. Nothing else.                                        |
+//+------------------------------------------------------------------+
+void DrawPanelSimple()
+{
+   if(!InpShowPanel || !g_ready)
+   {
+      ObjectsDeleteAll(0, "XO_P_");
+      ObjectsDeleteAll(0, "XO_PB");
+      return;
+   }
+   const int n = g_n;
+   const datetime now = TimeCurrent();
+   const double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   const bool fresh = (g_sig_i == n - 2);
+   const bool running = (g_live_ok && !g_live.closed && g_sig_i >= 0);
+   const bool ended = (g_live_ok && g_live.closed && g_live.exit_idx == n - 1 && g_sig_i >= 0);
+   const bool buy = (g_sig_i >= 0 && g_sig.dir > 0);
+
+   string status = "WAIT";
+   color  sc = ClrDim();
+   string sub = XReasonText(g_reason);
+   color  bg = XRGB(16, 20, 28);
+   bool plan = false;
+
+   if(g_news_blocked) { status = "STAY OUT - NEWS"; sc = ClrRed(); sub = g_news_block; }
+   else if(fresh && g_live_ok)
+   {
+      const double dist = buy ? (bid - g_sig.entry) : (g_sig.entry - bid);
+      if(dist > 0.35 * g_sig.atr) { status = "MISSED - don't chase"; sc = ClrGold(); sub = "price already ran away from the entry"; }
+      else
+      {
+         status = buy ? "BUY NOW" : "SELL NOW";
+         sc = buy ? ClrGreen() : ClrRed();
+         bg = buy ? XRGB(10, 46, 32) : XRGB(56, 20, 24);
+         plan = true;
+      }
+   }
+   else if(running)
+   {
+      status = (buy ? "HOLD BUY  " : "HOLD SELL  ") + StringFormat("%+.1fR", g_live.float_r);
+      sc = ClrCyan();
+      plan = true;
+   }
+   else if(ended)
+   {
+      status = "EXIT NOW";
+      sc = ClrGold();
+      if(g_live.exit_kind == XE_STOP)       sub = "stop level was hit";
+      else if(g_live.exit_kind == XE_TRAIL) sub = "protective stop was hit";
+      else if(g_live.exit_kind == XE_TP2)   sub = "target reached - take the profit";
+      else if(g_live.exit_kind == XE_TIME)  sub = "trade went nowhere - close it";
+      else                                  sub = "target reached";
+   }
+   if(g_opp_dir != 0) sub = "warning: opposite setup appeared - consider closing";
+
+   int row = 0;
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, bg, XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   PutLine(row++, "XAU ORACLE  " + XTfName((ENUM_TIMEFRAMES)_Period) + "   " + Px(bid), ClrGold());
+   PutLine(row++, status, sc, 3);
+   PutLine(row++, sub, ClrDim());
+
+   if(plan)
+   {
+      const double risk = g_sig.risk;
+      const double tp1 = g_sig.entry + g_sig.dir * g_eng.cfg.tp1_r * risk;
+      const double tp2 = g_sig.entry + g_sig.dir * g_eng.cfg.tp2_r * risk;
+      PutLine(row++, (buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Target " + Px(tp2), ClrText());
+      const double equity = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_EQUITY);
+      double freeM = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+      XLotPlan lp;
+      XPlanLots(_Symbol, equity, InpRiskPct, risk, buy, g_sig.entry, 1000.0, 0.0, freeM, 1.0, lp);
+      if(lp.ok)
+      {
+         const bool over = (lp.risk_pct > InpRiskPct * 1.5);
+         PutLine(row++, "Size " + DoubleToString(lp.lots, 2) + " lot: lose " + DoubleToString(lp.risk_money, 2) + " if stopped, win up to "
+                        + DoubleToString(lp.risk_money * g_eng.cfg.tp2_r, 2), over ? ClrGold() : ClrGreen());
+         if(over) PutLine(row++, "Small account: this is " + DoubleToString(lp.risk_pct, 1) + "% risk, above your " + DoubleToString(InpRiskPct, 1) + "% target", ClrGold());
+      }
+      else PutLine(row++, "Size: " + lp.note, ClrRed());
+      if(running && g_live.stage == 0)      PutLine(row++, "Close half at " + Px(tp1) + ", then move the stop to your entry.", ClrDim());
+      else if(running && g_live.stage == 1) PutLine(row++, "Half banked. Stop now " + Px(g_live.cur_sl) + ". Let the rest run.", ClrDim());
+   }
+
+   const int tb = g_eng.m_bias[n - 1];
+   PutLine(row++, "Trend " + XTfName(g_htf) + ": " + (tb > 0 ? "UP" : (tb < 0 ? "DOWN" : "SIDEWAYS")) + "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%", ClrText());
+   PutLine(row++, AnalogLine(), (g_an_state == 3) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
+   if(g_trial.all.n > 0)
+      PutLine(row++, "Track record (" + IntegerToString(g_trial_days) + " days): " + IntegerToString(g_trial.all.n) + " trades, "
+                     + DoubleToString(g_trial.all.WinRate(), 0) + "% won, avg " + StringFormat("%+.2f", g_trial.all.Expectancy()) + "R",
+                     g_trial.all.Expectancy() > 0.0 ? ClrGreen() : ClrRed());
+   else PutLine(row++, "Track record: no finished trades in the loaded history yet", ClrDim());
+   if(InpUseNews && !g_news_blocked && StringFind(g_news_text, " in ") >= 0)
+      PutLine(row++, "News: " + g_news_text, ClrDim());
+
+   g_rows_prev = row;
+   g_pheight = g_py - InpPanelY + 8;
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, bg, XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   for(int k = row; k < 45; k++) XObjDelete("XO_P_" + IntegerToString(k));
+}
+
+void DrawPanel()
+{
+   if(InpPanelDetail) DrawPanelDetail();
+   else               DrawPanelSimple();
 }
 
 //+------------------------------------------------------------------+
@@ -2718,7 +3143,7 @@ int OnCalculate(const int rates_total, const int prev_calculated, const datetime
          RefreshNews();
          RefreshMTF();
          RefreshLive();
-         DrawPlan();
+         DrawTradeBox();
          DrawForecast();
          DrawLevels();
          DrawPanel();
@@ -2737,7 +3162,7 @@ int OnCalculate(const int rates_total, const int prev_calculated, const datetime
       g_last_ui = now_ms;
       UpdateForming(rates_total, high, low, close);
       RefreshLive();
-      DrawPlan();
+      DrawTradeBox();
       DrawPanel();
       ChartRedraw(0);
    }

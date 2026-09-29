@@ -62,6 +62,9 @@ volatility clustering, GMT-hour volatility profile, market hours). Results are i
 | Composite vs single modules | In the trending world the composite (+0.06R) is *weaker* than the trend modules alone (+0.16 to +0.19R): counter-trend modules dilute it |
 | ADR block / efficiency-ratio regime weights (A/B, 8 seeds, 4 worlds) | ADR block: neutral within noise, ~9% fewer trades. Regime weights: **no measurable benefit** (mean-reverting world -0.45R vs -0.43R), off by default |
 | DST maths | US and EU transition instants unit-tested for 2024 and 2026 |
+| Analog forecaster (see FORECASTING.md) | No-edge world: 49.9% next bar, 51.4% confident +4 bars (coin flip, no leakage). Structured worlds 53-60%. Old drift forecaster: 36% in the mean-reverting world |
+| Pattern veto A/B | trend +0.09R to +0.12R, alternating +0.04R to +0.05R, mean-reverting -0.56R to -0.50R, no-edge unchanged; 10-40% fewer trades |
+| Demo turbo thresholds | about 10x trades (3-4/day); simulated expectancy about 0.06-0.10R lower than defaults |
 | Signal frequency | Roughly 0.5 composite trades per trading day on M15 |
 
 **The simulator is deliberately pessimistic.** A bar that touches both stop and target counts as stopped, and the runner cannot

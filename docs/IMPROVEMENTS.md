@@ -28,3 +28,17 @@ Status: **DONE** = implemented and tested in this round. **TESTED-OFF** = implem
 
 Further candidates: M1 sub-bar simulation in the trial (removes the pessimistic tie-break bias), trade journal CSV with a weekly R report,
 protect-profit move to break-even before red-folder news, an XAGUSD correlation vote, prop-firm rule pack (trailing drawdown, consistency).
+
+## Round 3 (from live screenshots)
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 21 | **Analog pattern-matching forecaster** (37 features, 25 neighbours, medoid ghost candles, 20-80% cone) replacing the trend-score drift | DONE | Old model was 36% right in a mean-reverting world and faded every spike |
+| 22 | **Walk-forward audit + confidence gate**: candles drawn only if confident calls have beaten a coin flip on this chart | DONE | Honest about when it has no edge |
+| 23 | **Pattern-match veto** on trade setups | DONE (on) | A/B: small consistent gain, no harm on noise |
+| 24 | **Green/red trade box** (risk zone red, profit zones green, labels, exit-by time) | DONE | Requested |
+| 25 | **Simple panel** (5-7 lines) and optional detailed panel; EA panel likewise | DONE | Requested; the old panel was 25 lines of jargon |
+| 26 | **Solid line styles**; removed the dotted vertical time-stop line | DONE | Dotted lines rendered as chains of diamonds |
+| 27 | **Small accounts: show minimum-lot risk instead of refusing** in the indicator (still refuses in a live EA) | DONE | Manual traders need the number, with a warning |
+| 28 | **Demo-unlocked EA**: guardrails only warn on demo accounts; stale kill-switch and equity peak cleared at start; up to 5 concurrent trades | DONE | The persisted kill-switch (tripped by floating loss on manual trades) locked the EA out |
+| 29 | **DemoTurbo preset**: about 10x the trades at lower quality (simulated -0.06R to -0.10R vs default) | DONE | Lets you watch a live test flow |
+| 30 | **Analog-only trade signals** (a proven, confident pattern match as its own setup source) | PROPOSED | Needs an incremental analog cache: per-bar queries over the full history are too slow to backtest inside the indicator |

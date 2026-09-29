@@ -83,6 +83,7 @@ input bool            InpModVwap        = true;          // Module: VWAP extreme
 input bool            InpModDiverge     = true;          // Module: RSI divergence
 input bool            InpModFvg         = true;          // Module: fair value gap retest
 input bool            InpModRound       = true;          // Module: round-number rejection
+input bool            InpPatternVeto    = true;          // Skip setups that a confident pattern-match contradicts
 input double          InpAdrBlock       = 0.90;          // Block trend continuation after this share of avg daily range is used (0 = off)
 input bool            InpRegimeWeights  = false;         // Weight modules by efficiency-ratio regime (tested: no benefit, off)
 
@@ -107,11 +108,13 @@ input double          InpRiskPct        = 1.0;           // Risk per trade, % of
 
 input group "=== Visuals ==="
 input bool            InpShowPanel      = true;          // Dashboard
+input bool            InpPanelDetail    = false;         // Full technical panel instead of the simple one
+input bool            InpShowTradeBox   = true;          // Green (profit) / red (risk) box when a setup is worth trading
 input int             InpPanelX         = 12;            // Panel X offset
 input int             InpPanelY         = 24;            // Panel Y offset
-input int             InpFontSize       = 9;             // Panel font size
+input int             InpFontSize       = 10;            // Panel font size
 input bool            InpShowForecast   = true;          // Projected candles
-input int             InpForecastBars   = 8;             // Bars to project
+input int             InpForecastBars   = 6;             // Bars to project (max 7)
 input bool            InpShowCone       = true;          // Expected range cone
 input bool            InpShowLevels     = true;          // Prev-day high/low + Asian range
 input bool            InpShowExits      = true;          // Mark where past trades would have ended
@@ -151,7 +154,9 @@ int        g_start        = 0;      // chart index of engine bar 0
 int        g_n            = 0;      // engine bars
 ENUM_TIMEFRAMES g_htf     = PERIOD_H1;
 bool       g_ready        = false;
-int        g_rows_prev    = 34;     // panel rows drawn last time (background is created first)
+int        g_rows_prev    = 34;     // panel rows drawn last time
+int        g_pheight      = 420;    // panel height drawn last time (background is created first)
+int        g_py           = 0;      // running y position while drawing the panel
 bool       g_htf_missing  = false;  // higher-TF history not loaded yet -> retry
 ulong      g_last_try     = 0;
 
@@ -170,6 +175,11 @@ string       g_news_block = "";
 bool         g_news_blocked = false;
 int          g_trial_days = 0;
 int          g_fa_n = 0, g_fa_hit = 0, g_fa1_n = 0, g_fa1_hit = 0;
+XAnalog      g_an;                     // pattern-matching forecast for the newest closed bar
+XAnalogAudit g_aud;                    // how that forecaster did in the past (walk-forward)
+bool         g_an_show = false;        // draw directional ghost candles?
+int          g_an_state = 0;           // 0 learning, 1 no clear direction, 2 leaning but unproven, 3 shown
+int          g_an_up = 0, g_an_dn = 0; // neighbours that went up / down over 4 bars
 
 //+------------------------------------------------------------------+
 color ClrText()  { return XRGB(214, 222, 235); }
@@ -239,6 +249,7 @@ void ApplyConfig()
    c.london_sessions = InpLondonSessions;
    c.adr_block = InpAdrBlock;
    c.regime_on = InpRegimeWeights ? 1 : 0;
+   c.an_veto = InpPatternVeto ? 1 : 0;
    c.use_session_filter = InpSessionFilter;
    c.trade_start = InpTradeStartGMT;
    c.trade_end = InpTradeEndGMT;
@@ -272,6 +283,7 @@ void ApplyConfig()
 //| full rebuild: engine, buffers, trial, plan, projection            |
 //+------------------------------------------------------------------+
 void FillBuffers(const int rates_total);
+void AnalogRefresh();
 
 bool Rebuild(const int rates_total, const datetime &time[], const double &open[], const double &high[],
              const double &low[], const double &close[], const long &tick_volume[], const int &spread[])
@@ -316,6 +328,7 @@ bool Rebuild(const int rates_total, const datetime &time[], const double &open[]
    g_eng.RunTrial(g_eng.cfg.warmup, n - 2, g_trial);
    g_eng.ForecastAudit(4, 1.0, g_eng.cfg.warmup, n - 2, g_fa_n, g_fa_hit);
    g_eng.ForecastAudit(1, 1.0, g_eng.cfg.warmup, n - 2, g_fa1_n, g_fa1_hit);
+   AnalogRefresh();
    g_trial_days = (int)((g_eng.m_t[n - 1] - g_eng.m_t[g_eng.cfg.warmup]) / 86400);
    return true;
 }
@@ -408,62 +421,92 @@ string SessionName(const datetime t)
 }
 
 //+------------------------------------------------------------------+
+//| pattern-matching forecast: run it, audit it, decide whether to show|
+//+------------------------------------------------------------------+
+void AnalogRefresh()
+{
+   g_an_show = false;
+   g_an_state = 0;
+   g_an_up = 0; g_an_dn = 0;
+   if(!g_ready) return;
+   const int n = g_n;
+   g_eng.AnalogQuery(n - 2, g_an);
+   g_eng.AnalogAudit(n - 2, 1000, 4, g_aud);
+   if(!g_an.ok) return;
+   const int agree = (int)MathRound(g_an.conf4 * g_an.k);
+   g_an_up = (g_an.dir4 > 0) ? agree : g_an.k - agree;
+   g_an_dn = g_an.k - g_an_up;
+   const bool confident = g_eng.AnalogConfident(g_an);
+   const bool proven = (g_aud.nc4 >= 25 && g_aud.LowerBound(g_aud.hitc4, g_aud.nc4, g_eng.cfg.an_z) >= 0.5);
+   if(!confident)            g_an_state = 1;
+   else if(!proven)          g_an_state = 2;
+   else                      { g_an_state = 3; g_an_show = true; }
+}
+
+string AnalogLine()
+{
+   if(!g_an.ok) return "Next candles: still learning from history";
+   const string dir = (g_an.dir4 > 0) ? "UP" : "DOWN";
+   const int agree = (g_an.dir4 > 0) ? g_an_up : g_an_dn;
+   if(g_an_state == 3)
+      return "Next candles: " + dir + " (" + IntegerToString(agree) + " of " + IntegerToString(g_an.k) + " similar cases; such calls right "
+             + DoubleToString(100.0 * g_aud.Rate(g_aud.hitc4, g_aud.nc4), 0) + "%)";
+   if(g_an_state == 2)
+      return "Next candles: leaning " + dir + " but NOT proven (such calls right " + DoubleToString(100.0 * g_aud.Rate(g_aud.hitc4, g_aud.nc4), 0) + "%)";
+   return "Next candles: no clear direction (" + IntegerToString(g_an_up) + " up / " + IntegerToString(g_an_dn) + " down of " + IntegerToString(g_an.k) + ")";
+}
+
+//+------------------------------------------------------------------+
 //| projected candles + cone                                          |
 //+------------------------------------------------------------------+
 void DrawForecast()
 {
-   for(int j = 0; j < 40; j++)
+   for(int j = 0; j < 12; j++)
    {
       XObjDelete("XO_FB" + IntegerToString(j));
       XObjDelete("XO_FW" + IntegerToString(j));
       XObjDelete("XO_FU" + IntegerToString(j));
       XObjDelete("XO_FD" + IntegerToString(j));
    }
-   if(!InpShowForecast || !g_ready) return;
+   XObjDelete("XO_FT");
+   if(!InpShowForecast || !g_ready || !g_an.ok) return;
    const int n = g_n;
    const int period = g_eng.cfg.base_sec;
-   const int steps = XMinI(XMaxI(InpForecastBars, 1), 30);
-   g_eng.Forecast(n - 2, g_eng.m_c[n - 1], g_eng.m_t[n - 1] + period, steps);
-   const bool up = (g_eng.fc_c[g_eng.fc_n - 1] >= g_eng.fc_o[0]);
-   const color cu = XRGB(60, 190, 130), cd = XRGB(230, 90, 90);
+   const int steps = XMinI(XMaxI(InpForecastBars, 1), 7);
+   g_eng.ForecastAnalog(g_an, g_eng.m_c[n - 1], g_eng.m_t[n - 1] + period, steps);
+   if(g_eng.fc_n < 1) return;
+   const color cu = XRGB(70, 175, 130), cd = XRGB(215, 95, 95), cc = XRGB(140, 150, 175);
    for(int j = 0; j < g_eng.fc_n; j++)
    {
       const string sj = IntegerToString(j);
-      if(g_eng.fc_nomap)
-      {
-         // choppy or spiking market: no directional path is honest, show only the expected range
-         if(InpShowCone && j + 1 < g_eng.fc_n)
-         {
-            const datetime tt0 = g_eng.fc_t[j], tt1 = g_eng.fc_t[j + 1];
-            XObjTrend("XO_FU" + sj, tt0 + (datetime)(period * 0.5), g_eng.fc_up[j], tt1 + (datetime)(period * 0.5), g_eng.fc_up[j + 1], XRGB(120, 120, 140), STYLE_DOT, 1, false);
-            XObjTrend("XO_FD" + sj, tt0 + (datetime)(period * 0.5), g_eng.fc_dn[j], tt1 + (datetime)(period * 0.5), g_eng.fc_dn[j + 1], XRGB(120, 120, 140), STYLE_DOT, 1, false);
-         }
-         continue;
-      }
-      const bool bull = (g_eng.fc_c[j] >= g_eng.fc_o[j]);
-      const color cl = bull ? cu : cd;
       const datetime t0 = g_eng.fc_t[j];
-      XObjRect("XO_FB" + sj, t0 + (datetime)(period * 0.15), g_eng.fc_o[j], t0 + (datetime)(period * 0.85), g_eng.fc_c[j], cl, false);
-      XObjTrend("XO_FW" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_l[j], t0 + (datetime)(period * 0.5), g_eng.fc_h[j], cl, STYLE_SOLID, 1, false);
+      if(g_an_show)
+      {
+         const color cl = (g_eng.fc_c[j] >= g_eng.fc_o[j]) ? cu : cd;
+         XObjRect("XO_FB" + sj, t0 + (datetime)(period * 0.12), g_eng.fc_o[j], t0 + (datetime)(period * 0.88), g_eng.fc_c[j], cl, true);
+         XObjTrend("XO_FW" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_l[j], t0 + (datetime)(period * 0.5), g_eng.fc_h[j], cl, STYLE_SOLID, 1, false);
+      }
       if(InpShowCone && j + 1 < g_eng.fc_n)
       {
          const datetime t1 = g_eng.fc_t[j + 1];
-         const color cc = up ? XRGB(70, 130, 110) : XRGB(140, 80, 80);
-         XObjTrend("XO_FU" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_up[j], t1 + (datetime)(period * 0.5), g_eng.fc_up[j + 1], cc, STYLE_DOT, 1, false);
-         XObjTrend("XO_FD" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_dn[j], t1 + (datetime)(period * 0.5), g_eng.fc_dn[j + 1], cc, STYLE_DOT, 1, false);
+         XObjTrend("XO_FU" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_up[j], t1 + (datetime)(period * 0.5), g_eng.fc_up[j + 1], cc, STYLE_SOLID, 1, false);
+         XObjTrend("XO_FD" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_dn[j], t1 + (datetime)(period * 0.5), g_eng.fc_dn[j + 1], cc, STYLE_SOLID, 1, false);
       }
    }
+   const double top = g_eng.fc_up[g_eng.fc_n - 1];
+   string lab = g_an_show ? ((g_an.dir4 > 0) ? "PREDICTED: UP" : "PREDICTED: DOWN") : "range only (no reliable direction)";
+   XObjText("XO_FT", g_eng.fc_t[0], top, lab, g_an_show ? ((g_an.dir4 > 0) ? cu : cd) : cc, 8);
 }
 
 //+------------------------------------------------------------------+
-//| trade plan lines                                                  |
+//| the green / red trade box                                         |
 //+------------------------------------------------------------------+
-void DrawPlan()
+void DrawTradeBox()
 {
-   const string nm[7] = {"XO_PL_E", "XO_PL_S", "XO_PL_T1", "XO_PL_T2", "XO_PL_TR", "XO_PL_X", "XO_PL_TX"};
-   for(int k = 0; k < 7; k++) XObjDelete(nm[k]);
-   for(int k = 0; k < 5; k++) XObjDelete("XO_PL_L" + IntegerToString(k));
-   if(!g_ready || g_sig_i < 0) return;
+   const string nm[9] = {"XO_BX_R", "XO_BX_G1", "XO_BX_G2", "XO_BX_E", "XO_BX_TR", "XO_BX_T0", "XO_BX_T1", "XO_BX_T2", "XO_BX_T3"};
+   for(int k = 0; k < 9; k++) XObjDelete(nm[k]);
+   XObjDelete("XO_BX_T4");
+   if(!InpShowTradeBox || !g_ready || g_sig_i < 0) return;
    const int n = g_n;
    const int period = g_eng.cfg.base_sec;
 
@@ -473,29 +516,27 @@ void DrawPlan()
    if(!show) return;
 
    const datetime t0 = g_eng.m_t[g_sig_i + 1];
-   const int maxh = g_eng.MaxHold();
-   const datetime t_end = t0 + (datetime)(maxh * period);
-   const datetime t_lbl = g_eng.m_t[n - 1] + (datetime)(period * 1);
+   const int span = XMinI(g_eng.MaxHold(), 30);
+   const datetime t_end = t0 + (datetime)(span * period);
    const bool buy = (g_sig.dir > 0);
    const double entry = g_sig.entry;
    const double risk = g_sig.risk;
    const double tp1 = entry + g_sig.dir * g_eng.cfg.tp1_r * risk;
    const double tp2 = entry + g_sig.dir * g_eng.cfg.tp2_r * risk;
 
-   XObjTrend("XO_PL_E", t0, entry, t_end, entry, XRGB(230, 230, 240), STYLE_SOLID, 1, false);
-   XObjTrend("XO_PL_S", t0, g_sig.sl, t_end, g_sig.sl, XRGB(255, 92, 92), STYLE_SOLID, 2, false);
-   XObjTrend("XO_PL_T1", t0, tp1, t_end, tp1, XRGB(0, 222, 132), STYLE_DASH, 1, false);
-   XObjTrend("XO_PL_T2", t0, tp2, t_end, tp2, XRGB(0, 180, 110), STYLE_DASH, 1, false);
-   XObjVLine("XO_PL_X", t_end, XRGB(255, 200, 64));
-
-   const string side = buy ? "BUY " : "SELL ";
-   XObjText("XO_PL_L0", t_lbl, entry, side + XGradeName(g_sig.grade) + "  entry " + Px(entry), XRGB(230, 230, 240), 8);
-   XObjText("XO_PL_L1", t_lbl, g_sig.sl, "STOP " + Px(g_sig.sl), XRGB(255, 92, 92), 8);
-   XObjText("XO_PL_L2", t_lbl, tp1, "TP1 " + Px(tp1) + "  take " + DoubleToString(g_eng.cfg.partial_pct * 100.0, 0) + "%", XRGB(0, 222, 132), 8);
-   XObjText("XO_PL_L3", t_lbl, tp2, "TP2 " + Px(tp2), XRGB(0, 180, 110), 8);
-   XObjText("XO_PL_L4", t_end, entry, " time stop " + TimeToString(t_end, TIME_MINUTES), XRGB(255, 200, 64), 8);
+   XObjRect("XO_BX_R",  t0, entry, t_end, g_sig.sl, XRGB(110, 34, 38), true);      // risk: red
+   XObjRect("XO_BX_G1", t0, entry, t_end, tp1,      XRGB(28, 110, 72), true);      // to first target: green
+   XObjRect("XO_BX_G2", t0, tp1,   t_end, tp2,      XRGB(20, 84, 56), true);       // to runner target: deeper green
+   XObjTrend("XO_BX_E", t0, entry, t_end, entry, XRGB(235, 235, 245), STYLE_SOLID, 1, false);
    if(g_live_ok && !g_live.closed && g_live.stage == 1)
-      XObjTrend("XO_PL_TR", t0, g_live.cur_sl, t_end, g_live.cur_sl, XRGB(255, 160, 40), STYLE_DASHDOT, 1, false);
+      XObjTrend("XO_BX_TR", t0, g_live.cur_sl, t_end, g_live.cur_sl, XRGB(255, 170, 60), STYLE_SOLID, 1, false);
+
+   const datetime tl = t_end + (datetime)(period);
+   XObjText("XO_BX_T0", tl, entry,   (buy ? "BUY " : "SELL ") + Px(entry) + "  (" + XGradeName(g_sig.grade) + ")", XRGB(235, 235, 245), 9);
+   XObjText("XO_BX_T1", tl, g_sig.sl, "STOP " + Px(g_sig.sl) + "  -1R", XRGB(255, 120, 120), 9);
+   XObjText("XO_BX_T2", tl, tp1, "TAKE HALF " + Px(tp1) + "  +" + DoubleToString(g_eng.cfg.tp1_r, 1) + "R", XRGB(90, 230, 160), 9);
+   XObjText("XO_BX_T3", tl, tp2, "TARGET " + Px(tp2) + "  +" + DoubleToString(g_eng.cfg.tp2_r, 1) + "R", XRGB(90, 230, 160), 9);
+   XObjText("XO_BX_T4", t0, tp2, "exit by " + TimeToString(g_eng.m_t[g_sig_i + 1] + (datetime)(g_eng.MaxHold() * period), TIME_MINUTES), XRGB(255, 200, 64), 8);
 }
 
 //+------------------------------------------------------------------+
@@ -556,11 +597,12 @@ string MtfChar(const double d) { return (d > 0.0) ? "UP" : ((d < 0.0) ? "DN" : "
 void PutLine(const int row, const string text, const color clr, const int extra = 0)
 {
    const int fs = InpFontSize + extra;
-   const int lh = InpFontSize + 6;
-   XObjLabel("XO_P_" + IntegerToString(row), InpPanelX + 10, InpPanelY + 8 + row * lh, text, clr, fs, "Consolas", CORNER_LEFT_UPPER);
+   if(row == 0) g_py = InpPanelY + 8;
+   XObjLabel("XO_P_" + IntegerToString(row), InpPanelX + 10, g_py, text, clr, fs, "Consolas", CORNER_LEFT_UPPER);
+   g_py += fs + 7;
 }
 
-void DrawPanel()
+void DrawPanelDetail()
 {
    if(!InpShowPanel || !g_ready)
    {
@@ -570,7 +612,7 @@ void DrawPanel()
    }
    const int lh0 = InpFontSize + 6;
    // background first so it sits UNDER the text (objects draw in creation order)
-   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, g_rows_prev * lh0 + 18,
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, g_pheight,
                  XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
    const int n = g_n;
    const datetime now = TimeCurrent();
@@ -711,9 +753,118 @@ void DrawPanel()
    PutLine(row++, g_eng.fc_nomap ? "NO MAP: choppy/spiking market, projection shows range only." : "Projection = statistical expectation, not a promise.", g_eng.fc_nomap ? ClrGold() : ClrDim());
 
    g_rows_prev = row;
-   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, row * lh0 + 18, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   g_pheight = g_py - InpPanelY + 10;
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 470 + (InpFontSize - 9) * 30, g_py - InpPanelY + 10, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
    // clear stale rows from a longer previous layout
    for(int k = row; k < row + 6; k++) XObjDelete("XO_P_" + IntegerToString(k));
+}
+
+//+------------------------------------------------------------------+
+//| simple panel: what to do, at what price, how much, and how much   |
+//| to trust it. Nothing else.                                        |
+//+------------------------------------------------------------------+
+void DrawPanelSimple()
+{
+   if(!InpShowPanel || !g_ready)
+   {
+      ObjectsDeleteAll(0, "XO_P_");
+      ObjectsDeleteAll(0, "XO_PB");
+      return;
+   }
+   const int n = g_n;
+   const datetime now = TimeCurrent();
+   const double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   const bool fresh = (g_sig_i == n - 2);
+   const bool running = (g_live_ok && !g_live.closed && g_sig_i >= 0);
+   const bool ended = (g_live_ok && g_live.closed && g_live.exit_idx == n - 1 && g_sig_i >= 0);
+   const bool buy = (g_sig_i >= 0 && g_sig.dir > 0);
+
+   string status = "WAIT";
+   color  sc = ClrDim();
+   string sub = XReasonText(g_reason);
+   color  bg = XRGB(16, 20, 28);
+   bool plan = false;
+
+   if(g_news_blocked) { status = "STAY OUT - NEWS"; sc = ClrRed(); sub = g_news_block; }
+   else if(fresh && g_live_ok)
+   {
+      const double dist = buy ? (bid - g_sig.entry) : (g_sig.entry - bid);
+      if(dist > 0.35 * g_sig.atr) { status = "MISSED - don't chase"; sc = ClrGold(); sub = "price already ran away from the entry"; }
+      else
+      {
+         status = buy ? "BUY NOW" : "SELL NOW";
+         sc = buy ? ClrGreen() : ClrRed();
+         bg = buy ? XRGB(10, 46, 32) : XRGB(56, 20, 24);
+         plan = true;
+      }
+   }
+   else if(running)
+   {
+      status = (buy ? "HOLD BUY  " : "HOLD SELL  ") + StringFormat("%+.1fR", g_live.float_r);
+      sc = ClrCyan();
+      plan = true;
+   }
+   else if(ended)
+   {
+      status = "EXIT NOW";
+      sc = ClrGold();
+      if(g_live.exit_kind == XE_STOP)       sub = "stop level was hit";
+      else if(g_live.exit_kind == XE_TRAIL) sub = "protective stop was hit";
+      else if(g_live.exit_kind == XE_TP2)   sub = "target reached - take the profit";
+      else if(g_live.exit_kind == XE_TIME)  sub = "trade went nowhere - close it";
+      else                                  sub = "target reached";
+   }
+   if(g_opp_dir != 0) sub = "warning: opposite setup appeared - consider closing";
+
+   int row = 0;
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, bg, XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   PutLine(row++, "XAU ORACLE  " + XTfName((ENUM_TIMEFRAMES)_Period) + "   " + Px(bid), ClrGold());
+   PutLine(row++, status, sc, 3);
+   PutLine(row++, sub, ClrDim());
+
+   if(plan)
+   {
+      const double risk = g_sig.risk;
+      const double tp1 = g_sig.entry + g_sig.dir * g_eng.cfg.tp1_r * risk;
+      const double tp2 = g_sig.entry + g_sig.dir * g_eng.cfg.tp2_r * risk;
+      PutLine(row++, (buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Target " + Px(tp2), ClrText());
+      const double equity = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_EQUITY);
+      double freeM = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+      XLotPlan lp;
+      XPlanLots(_Symbol, equity, InpRiskPct, risk, buy, g_sig.entry, 1000.0, 0.0, freeM, 1.0, lp);
+      if(lp.ok)
+      {
+         const bool over = (lp.risk_pct > InpRiskPct * 1.5);
+         PutLine(row++, "Size " + DoubleToString(lp.lots, 2) + " lot: lose " + DoubleToString(lp.risk_money, 2) + " if stopped, win up to "
+                        + DoubleToString(lp.risk_money * g_eng.cfg.tp2_r, 2), over ? ClrGold() : ClrGreen());
+         if(over) PutLine(row++, "Small account: this is " + DoubleToString(lp.risk_pct, 1) + "% risk, above your " + DoubleToString(InpRiskPct, 1) + "% target", ClrGold());
+      }
+      else PutLine(row++, "Size: " + lp.note, ClrRed());
+      if(running && g_live.stage == 0)      PutLine(row++, "Close half at " + Px(tp1) + ", then move the stop to your entry.", ClrDim());
+      else if(running && g_live.stage == 1) PutLine(row++, "Half banked. Stop now " + Px(g_live.cur_sl) + ". Let the rest run.", ClrDim());
+   }
+
+   const int tb = g_eng.m_bias[n - 1];
+   PutLine(row++, "Trend " + XTfName(g_htf) + ": " + (tb > 0 ? "UP" : (tb < 0 ? "DOWN" : "SIDEWAYS")) + "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%", ClrText());
+   PutLine(row++, AnalogLine(), (g_an_state == 3) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
+   if(g_trial.all.n > 0)
+      PutLine(row++, "Track record (" + IntegerToString(g_trial_days) + " days): " + IntegerToString(g_trial.all.n) + " trades, "
+                     + DoubleToString(g_trial.all.WinRate(), 0) + "% won, avg " + StringFormat("%+.2f", g_trial.all.Expectancy()) + "R",
+                     g_trial.all.Expectancy() > 0.0 ? ClrGreen() : ClrRed());
+   else PutLine(row++, "Track record: no finished trades in the loaded history yet", ClrDim());
+   if(InpUseNews && !g_news_blocked && StringFind(g_news_text, " in ") >= 0)
+      PutLine(row++, "News: " + g_news_text, ClrDim());
+
+   g_rows_prev = row;
+   g_pheight = g_py - InpPanelY + 8;
+   XObjRectLabel("XO_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, bg, XRGB(58, 68, 88), CORNER_LEFT_UPPER);
+   for(int k = row; k < 45; k++) XObjDelete("XO_P_" + IntegerToString(k));
+}
+
+void DrawPanel()
+{
+   if(InpPanelDetail) DrawPanelDetail();
+   else               DrawPanelSimple();
 }
 
 //+------------------------------------------------------------------+
@@ -772,7 +923,7 @@ int OnCalculate(const int rates_total, const int prev_calculated, const datetime
          RefreshNews();
          RefreshMTF();
          RefreshLive();
-         DrawPlan();
+         DrawTradeBox();
          DrawForecast();
          DrawLevels();
          DrawPanel();
@@ -791,7 +942,7 @@ int OnCalculate(const int rates_total, const int prev_calculated, const datetime
       g_last_ui = now_ms;
       UpdateForming(rates_total, high, low, close);
       RefreshLive();
-      DrawPlan();
+      DrawTradeBox();
       DrawPanel();
       ChartRedraw(0);
    }

@@ -1,0 +1,54 @@
+; XAU_Sniper_DemoTurbo
+; DEMO WATCHING ONLY. Roughly 10x the trades of the default (about 3-4 a day on M15 in simulation) at somewhat lower quality (about -0.06R to -0.10R per trade versus the default thresholds).
+; Needs a demo account: the guardrails only warn there. On a real account every protection stays on and this preset is far too loose. Small demo balances: 0.01 lot may risk several % per trade.
+; Load via the EA inputs dialog: Load. Symbol XAUUSD, timeframe M5 or M15.
+InpRiskPct=1.0
+InpGradeScaling=false
+InpStreakScale=0.5
+InpMaxLots=0.0
+InpMarginUsePct=50.0
+InpMaxRiskOverrun=1.5
+InpDailyLossPct=3.0
+InpWeeklyLossPct=6.0
+InpMaxDDPct=15.0
+InpKillFlatten=true
+InpResetKill=false
+InpMaxConsecLosses=0
+InpMaxTradesPerDay=50
+InpMaxPositions=5
+InpCooldownBars=0
+InpHistoryBars=3000
+InpScoreMin=1.2
+InpMinConfluence=1
+InpMinGrade=1
+InpAdaptiveGate=false
+InpTP1_R=1.0
+InpTP2_R=2.5
+InpPartialPct=50.0
+InpTrailATR=2.0
+InpSLMinATR=0.9
+InpSLMaxATR=2.6
+InpHoldMinutes=240
+InpSessionFilter=false
+InpTradeStartGMT=7.0
+InpTradeEndGMT=20.0
+InpFridayCutGMT=19.0
+InpFridayFlatten=true
+InpFlattenGMT=20.5
+InpMaxSpreadPts=60
+InpMaxSpreadATR=12.0
+InpUseNews=true
+InpNewsBefore=30
+InpNewsAfter=30
+InpManualGmt=false
+InpGmtOffsetHrs=2.0
+InpServerDst=1
+InpLondonSessions=true
+InpAdrBlock=0.9
+InpRegimeWeights=false
+InpOneTradePerSymbol=true
+InpDailyLossRealized=false
+InpD1Scale=true
+InpDemoUnlocked=true
+InpDemoMaxPositions=5
+InpPatternVeto=true

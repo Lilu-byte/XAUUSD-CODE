@@ -144,3 +144,12 @@ Nothing here is proven on real XAUUSD; "BUILT" means it exists and behaves as sp
 
 The takeaway is uncomfortable but useful: **the outcome depends on whether real XAUUSD, on your timeframe and broker, behaves
 more like the trending or the mean-reverting world.** That is what the indicator's Trial block and the Strategy Tester tell you.
+
+## Round 3 additions
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 93 | Data-driven pattern recognition (nearest-neighbour analogs over 37 features) instead of fixed candlestick patterns | BUILT | Candlestick patterns alone mostly fail after costs (see FORECASTING.md); they live on as context features |
+| 94 | Forecast confidence gate from a walk-forward audit | BUILT | |
+| 95 | Pattern-match veto of trade setups | BUILT (on) | Small, consistent gain in simulation |
+| 96 | Green/red position box on the chart | BUILT | |
+| 97 | Demo mode that cannot lock the EA out | BUILT | Real accounts keep all protections |

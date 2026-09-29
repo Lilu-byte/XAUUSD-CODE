@@ -23,11 +23,13 @@ risk controls that stop a bad month from becoming a blown account.
 ### `XAU_Oracle` (indicator)
 | Feature | Detail |
 |---|---|
+| Simple panel | Five lines: what to do (BUY NOW / HOLD / EXIT NOW / WAIT), price, stop and target, lot size in money, and how much to trust the forecast. A full technical panel is one switch away |
+| Green/red trade box | When a setup is worth trading a TradingView-style box appears: **red = risk to the stop, green = profit to the targets**, with labels and an exit-by time |
 | Graded entries | Buy/Sell arrows graded **B / A / A+** by confluence score. Closed-bar logic: **never repaints**. |
 | Full trade plan | Entry, stop, TP1, TP2 drawn on the chart, plus a **time-stop line** ("exit by 14:30"). |
 | Position size | Lots, money at risk and margin for *your* balance and risk %. Refuses to over-risk tiny accounts. |
 | Hold guidance | Typical time to first target (measured from the indicator's own trial), status: BUY NOW / IN TRADE / EXIT NOW / MISSED / WAIT / AVOID. |
-| Projected candles | Next N candles as ghost candles with an expected-range cone (statistical expectation, with its own hit-rate audit shown). |
+| Projected candles | Pattern-matching forecast: the real future candles of the most typical of the 25 most similar past situations, plus a range cone. Drawn only when the forecaster has *earned* it in a walk-forward audit; otherwise it says so. See [docs/FORECASTING.md](docs/FORECASTING.md) |
 | Trial on your data | Win-rate, TP1 hit-rate, profit factor, expectancy by grade and by strategy module, over the loaded history. |
 | Context | Higher-timeframe bias, M5-D1 trend strip, session, ATR, spread, prev-day high/low, Asian range, VWAP, news countdown. |
 | Alerts | Popup, sound, push, email. |
@@ -38,6 +40,7 @@ risk controls that stop a bad month from becoming a blown account.
 * Account protection: daily loss limit, weekly loss limit, **drawdown kill-switch**, max trades/day, pause after N losses, cooldown.
 * Filters: spread (absolute and vs ATR), session window, high-impact USD news (MT5 calendar), Friday cut-off and weekend flatten.
 * Management: partial close at TP1, stop to break-even, ATR chandelier trail, time stop, retry on requotes.
+* **Demo mode**: on a demo account every protection only warns, so nothing can lock the EA out and you can watch many trades (`XAU_Sniper_DemoTurbo.set`). On a real account all protections stay on.
 * Restart-safe (state kept in terminal global variables); Strategy Tester custom criterion for optimisation.
 
 ### The strategy in one paragraph
@@ -46,7 +49,7 @@ volatility squeeze break, VWAP-extreme fade, RSI divergence, fair-value-gap rete
 rejection. The higher-timeframe trend and a DXY/EURUSD proxy add or subtract weight. A signal needs a
 minimum score **and** at least two agreeing modules, plus session, volatility and spread filters.
 The stop is structural (with ATR floor/ceiling); targets are multiples of that risk.
-Details: [docs/RESEARCH.md](docs/RESEARCH.md), [docs/IDEAS.md](docs/IDEAS.md) (90+ ideas, built/rejected and why), [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) (20 further improvements) and [docs/REFERENCE_REVIEW.md](docs/REFERENCE_REVIEW.md).
+Details: [docs/RESEARCH.md](docs/RESEARCH.md), [docs/IDEAS.md](docs/IDEAS.md) (90+ ideas, built/rejected and why), [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) (20 further improvements) and [docs/REFERENCE_REVIEW.md](docs/REFERENCE_REVIEW.md) and [docs/FORECASTING.md](docs/FORECASTING.md) (how the candle forecast works and how far to trust it).
 
 ## Quick start
 1. Copy the two files `MQL5/Indicators/XAU_Oracle.mq5` and `MQL5/Experts/XAU_Sniper_EA.mq5` into your terminal's data folder (File > Open Data Folder > MQL5). Nothing else to install. See [docs/INSTALL.md](docs/INSTALL.md).
@@ -59,7 +62,7 @@ Details: [docs/RESEARCH.md](docs/RESEARCH.md), [docs/IDEAS.md](docs/IDEAS.md) (9
 ```
 MQL5/Indicators/XAU_Oracle.mq5      the indicator (single self-contained file, generated)
 MQL5/Experts/XAU_Sniper_EA.mq5      the EA (single self-contained file, generated)
-MQL5/Presets/*.set                  five EA risk profiles
+MQL5/Presets/*.set                  six EA profiles (Conservative ... Aggressive, DemoTurbo)
 src/                                editable sources: XAU_Core.mqh (engine), XAU_Platform.mqh (MT5 glue), the two mains
 docs/                               ideas, research notes, risk maths, install/testing, reference review, improvements
 research/                           bundler, C++ harness, mock MT5 API, Monte Carlo, saved results

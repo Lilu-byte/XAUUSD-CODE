@@ -48,3 +48,6 @@ InpRegimeWeights=false
 InpOneTradePerSymbol=true
 InpDailyLossRealized=false
 InpD1Scale=true
+InpDemoUnlocked=true
+InpDemoMaxPositions=5
+InpPatternVeto=true

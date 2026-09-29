@@ -75,6 +75,8 @@ inline double MathCeil(double x) { return std::ceil(x); }
 inline double MathRound(double x) { return std::round(x); }
 inline double MathPow(double a, double b) { return std::pow(a, b); }
 inline double MathLog(double x) { return std::log(x); }
+inline double MathSin(double x) { return std::sin(x); }
+inline double MathCos(double x) { return std::cos(x); }
 inline double MathExp(double x) { return std::exp(x); }
 inline double MathMod(double a, double b) { return std::fmod(a, b); }
 inline bool   MathIsValidNumber(double x) { return std::isfinite(x); }
@@ -208,6 +210,7 @@ enum { SYMBOL_TRADE_TICK_VALUE = 1, SYMBOL_TRADE_TICK_VALUE_LOSS, SYMBOL_TRADE_T
        SYMBOL_SPREAD, SYMBOL_TRADE_STOPS_LEVEL, SYMBOL_TRADE_MODE, SYMBOL_DIGITS };
 enum { SYMBOL_TRADE_MODE_FULL = 4 };
 enum { ORDER_TYPE_BUY = 0, ORDER_TYPE_SELL = 1 };
+enum { ACCOUNT_TRADE_MODE = 50, ACCOUNT_TRADE_MODE_DEMO = 0 };
 enum { ACCOUNT_LOGIN = 1, ACCOUNT_MARGIN_MODE, ACCOUNT_EQUITY, ACCOUNT_MARGIN_FREE, ACCOUNT_BALANCE };
 enum { ACCOUNT_MARGIN_MODE_RETAIL_HEDGING = 2 };
 enum { TERMINAL_TRADE_ALLOWED = 1 };
@@ -223,7 +226,7 @@ inline double SymbolInfoDouble(const string &, int p)
 inline long SymbolInfoInteger(const string &, int p) { return p == SYMBOL_SPREAD ? 30 : (p == SYMBOL_TRADE_MODE ? 4 : (p == SYMBOL_DIGITS ? 2 : 0)); }
 inline bool SymbolSelect(const string &, bool) { return true; }
 inline double AccountInfoDouble(int p) { return p == ACCOUNT_MARGIN_FREE ? 9000.0 : 10000.0; }
-inline long AccountInfoInteger(int p) { return p == ACCOUNT_MARGIN_MODE ? ACCOUNT_MARGIN_MODE_RETAIL_HEDGING : 1; }
+inline long AccountInfoInteger(int p) { return p == ACCOUNT_MARGIN_MODE ? ACCOUNT_MARGIN_MODE_RETAIL_HEDGING : (p == ACCOUNT_TRADE_MODE ? 0 : 1); }
 inline long TerminalInfoInteger(int) { return 1; }
 inline long MQLInfoInteger(int) { return 1; }
 inline bool OrderCalcMargin(int, const string &, double v, double px, double &m) { m = v * px * 100.0 / 100.0; return true; }

@@ -36,7 +36,7 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
 ## 4. Expert Advisor
 1. Tools > Options > Expert Advisors: tick **Allow algorithmic trading**. Press the **AutoTrading** toolbar button.
 2. Attach `XAU_Sniper_EA` to an XAUUSD **M15** chart (one chart per symbol per magic number).
-3. Load a preset: inputs dialog > **Load** > `XAU_Sniper_Balanced.set`.
+3. Load a preset: inputs dialog > **Load** > `XAU_Sniper_Balanced.set` (or `XAU_Sniper_DemoTurbo.set` on a demo account to watch many trades).
 4. **Start on a demo account.** See [TESTING.md](TESTING.md).
 5. Optional: add a DXY-like symbol (`USDX`, `DXY`, ...) to Market Watch. Without it the EA uses EURUSD as a proxy.
 
@@ -47,12 +47,17 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
 * **State.** The EA keeps its peak equity, kill-switch flag and per-position management state in terminal global variables. To clear a kill-switch, start the EA once with *InpResetKill = true*, then turn it off again.
 * Only one instance of the EA per symbol/magic number; change `InpMagic` if you run several.
 
+## Demo accounts
+With *Demo testing > InpDemoUnlocked* on (default) and a **demo** account, every protection only warns: no kill-switch, no daily limits, up to 5 concurrent EA trades, minimum-lot trades allowed even if they risk several percent. On a real account the switch is ignored.
+Two practical limits still apply: your free margin (manual positions use it too; 0.01 lot of gold needs roughly $40 of margin at 1:100) and the spread filter.
+
 ## Troubleshooting
 | Symptom | Likely cause |
 |---|---|
 | Panel says "loading history" | Not enough bars yet; scroll back or wait for the terminal to download history |
 | No projections visible | Chart shift is off or the chart is scrolled away from the newest bar |
 | EA logs "signal skipped: ..." | Working as designed; the reason is in the message (spread, news, daily limit, ...) |
+| Panel says STOPPED - loss limit hit (old version) | Update the EA; on a demo account it now clears the stale kill-switch at start. On a real account set *InpResetKill* for one start |
 | EA never trades | Check AutoTrading is on, the panel status line, and the Experts tab of the Toolbox |
 | Signals appear at odd hours | Broker clock setting wrong (fixed / US / EU DST) or winter offset wrong; set it manually |
 | EA logs "another instance is already running" | A second chart with the same magic (or a crashed run; wait 15 seconds and reattach) |
