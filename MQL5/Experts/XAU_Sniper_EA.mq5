@@ -765,7 +765,7 @@ public:
    XDARR(m_hpdi); XDARR(m_hmdi); XDARR(m_hadx0); XIARR(m_hbias0);
    XIARR(m_hmap); XIARR(m_bias); XDARR(m_hadx);
    // daily series (for the daily trend filter)
-   int     dn;
+   int     d1n;
    XTARR(m_dt); XDARR(m_dc); XIARR(m_dreg);
    // intermarket proxy
    XTARR(m_it); XDARR(m_ic); XDARR(m_iema1); XDARR(m_iema2); XIARR(m_idir0); XIARR(m_imap); XIARR(m_inter);
@@ -794,7 +794,7 @@ public:
    double  fc_rmse;      // realised one-step error of the drift model (calibrates the cone)
    bool    fc_nomap;     // choppy / spiking market: show range only, no directional path
 
-   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; dn = 0; fc_cal_ok = false; fc_krange = 1.0; rg_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false;
+   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; d1n = 0; fc_cal_ok = false; fc_krange = 1.0; rg_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false;
                   lab_buffer = 3.0; lab_window = 0; lab_recent = 1; lab_se_k = 1.0; lab_k = 0; lab_pick_s = -1; lab_pick_p = -1; lab_qualified = 0;
                   lab_auto_folds = 0; lab_first = 0; lab_last = 0; lab_target = 60.0; }
 
@@ -822,10 +822,10 @@ public:
    // Optional daily bars for the daily trend filter (cfg.d1_mode). Without them the filter is off.
    bool SetDaily(XCRATES(r), const int cnt)
    {
-      dn = (cnt < 0) ? 0 : cnt;
-      ArrayResize(m_dt, dn); ArrayResize(m_dc, dn);
-      for(int i = 0; i < dn; i++) { m_dt[i] = r[i].time; m_dc[i] = r[i].close; }
-      return dn > 0;
+      d1n = (cnt < 0) ? 0 : cnt;
+      ArrayResize(m_dt, d1n); ArrayResize(m_dc, d1n);
+      for(int i = 0; i < d1n; i++) { m_dt[i] = r[i].time; m_dc[i] = r[i].close; }
+      return d1n > 0;
    }
    // Optional proxy series (e.g. DXY or EURUSD) on the SAME timeframe as the base.
    // invert = true when the proxy moves opposite to gold (DXY), false for EURUSD-like.
@@ -1259,11 +1259,11 @@ public:
       ArrayResize(m_dreg, n);
       for(int i = 0; i < n; i++) m_dreg[i] = 0;
       const int L = XMaxI(cfg.d1_sma, 2);
-      if(dn < L + 1) return;
+      if(d1n < L + 1) return;
       XDARR(sm);
-      ArrayResize(sm, dn);
+      ArrayResize(sm, d1n);
       double sum = 0.0;
-      for(int k = 0; k < dn; k++)
+      for(int k = 0; k < d1n; k++)
       {
          sum += m_dc[k];
          if(k >= L) sum -= m_dc[k - L];
@@ -1273,7 +1273,7 @@ public:
       for(int i = 0; i < n; i++)
       {
          const datetime done = m_t[i] + (datetime)cfg.base_sec;
-         while(j + 1 < dn && m_dt[j + 1] + 86400 <= done) j++;
+         while(j + 1 < d1n && m_dt[j + 1] + 86400 <= done) j++;
          if(j >= L - 1) m_dreg[i] = (m_dc[j] > sm[j]) ? 1 : -1;
       }
    }
@@ -1293,7 +1293,7 @@ public:
    {
       const int d = StrategyDirRaw(st, i);
       if(d == 0) return 0;
-      if(cfg.d1_mode > 0 && dn > 0 && i < ArraySize(m_dreg))
+      if(cfg.d1_mode > 0 && d1n > 0 && i < ArraySize(m_dreg))
       {
          const int r = m_dreg[i];
          if(cfg.d1_mode == 1 && r != d) return 0;

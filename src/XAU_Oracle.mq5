@@ -930,7 +930,7 @@ void DrawMainPanel()
    if(tb > 0) tr = "UP";
    if(tb < 0) tr = "DOWN";
    string trl = "Trend " + XTfName(g_htf) + ": " + tr;
-   if(g_eng.cfg.d1_mode > 0 && g_eng.dn > 0)
+   if(g_eng.cfg.d1_mode > 0 && g_eng.d1n > 0)
    {
       const int dr = g_eng.m_dreg[n - 1];
       string dtx = "Daily: ?";

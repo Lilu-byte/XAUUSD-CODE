@@ -2,7 +2,8 @@
 """Syntax/type-check MQL5 sources by translating them to C++ and compiling with g++ -fsyntax-only.
 
 Only a first-pass net: catches typos, undeclared identifiers, wrong arity and type errors.
-It cannot know MetaEditor-specific rules. Always compile in MetaEditor too.
+It cannot know every MetaEditor rule (-Wshadow mirrors MetaEditor's "declaration hides ..." warning).
+Always compile in MetaEditor too.
 
 usage: check_mq5.py file.mq5 [file2.mq5 ...]
 """
@@ -51,7 +52,7 @@ def main(files):
         with tempfile.NamedTemporaryFile("w", suffix=".cpp", delete=False) as tmp:
             tmp.write(prelude + body + tail)
             path = tmp.name
-        r = subprocess.run(["g++", "-std=c++17", "-fsyntax-only", "-Wall", "-Wextra", "-Wno-unused-parameter",
+        r = subprocess.run(["g++", "-std=c++17", "-fsyntax-only", "-Wall", "-Wextra", "-Wshadow", "-Wno-unused-parameter",
                             "-Wno-unused-variable", "-Wno-unused-function", path], capture_output=True, text=True)
         name = os.path.basename(f)
         if r.returncode != 0:
