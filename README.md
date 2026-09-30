@@ -15,6 +15,14 @@ every day a **Strategy Lab** tests 8 strategies x 4 exit styles on your chart's 
   (the EA's default *Demo mode = Rehearsal*), and judge it after 100+ trades, not after 3.
 * **"Double every month" needs about 10% risk per trade** and fails most months even with a strong edge ([docs/RISK_MATH.md](docs/RISK_MATH.md)). The EA caps risk at 5% per trade.
 
+## What changed in round 9 (short timeframes)
+* The single MetaEditor warning in each program ("declaration of 'dn' hides member") is fixed.
+* 21 ideas for more precise M5/M15/M30 trades and predictions were tested on your data (limit entries, confirmation candles, 11 direction
+  predictors including a learning model, the US jobs report, M30, cheaper spreads). **None beats the spread**; details in
+  [docs/REAL_DATA.md](docs/REAL_DATA.md), section 9. Best short chart: **M15**; M30 is the weakest. What short charts *can* predict is the
+  size of the move: the indicator's calibrated range and candle sizes.
+* The export script now also saves 1-minute gold, related markets and the US calendar, so the last promising ideas can be tested.
+
 ## What changed in round 8 (screenshots of the 3,000 USD demo)
 | Seen on your screen | Changed |
 |---|---|
@@ -67,7 +75,9 @@ would really deposit, or use a cent account.
 * Cost guard, margin and spread checks before every entry; optional stops for your own trades that have none.
 
 ### `XAU_DataExport` (script)
-Saves your broker's XAUUSD history (M5 to D1) and contract details to CSV. Share the folder and every test in `research/` can be re-run on real data.
+Saves your broker's XAUUSD history (M1 to D1), related markets (EURUSD, silver, dollar index, stock index, yields where the broker has
+them), the US economic calendar with actual/forecast values, and the contract details to CSV. Share the folder and every test in
+`research/` can be re-run on real data, including the lead-lag and news-surprise ideas that are still untested.
 
 ## Quick start
 1. Copy `MQL5/Indicators/XAU_Oracle.mq5`, `MQL5/Experts/XAU_Sniper_EA.mq5` and `MQL5/Scripts/XAU_DataExport.mq5` into your terminal's `MQL5` folder (File > Open Data Folder). Each is one self-contained file. See [docs/INSTALL.md](docs/INSTALL.md).

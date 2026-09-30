@@ -1,4 +1,4 @@
-# 225+ ideas, and what happened to each
+# 250+ ideas, and what happened to each
 
 Status key: **BUILT** = in the code and on by default. **BUILT (off)** = in the code, off by default. **TESTED - rejected** = tried,
 did not survive. **BACKLOG** = sensible, not done. **REJECTED** = deliberately not done, with the reason.
@@ -350,3 +350,34 @@ Numbers: [REAL_DATA.md section 8](REAL_DATA.md#8-round-8-one-perfect-strategy-an
 | 224 | Pyramiding into winners in a daily uptrend | REJECTED | Too much risk for small accounts |
 | 225 | COT / options-implied volatility filters | REJECTED | Not available in an MT5 feed |
 | 226 | Grid / martingale to raise the win-rate | REJECTED | Hides losses until one wipes the account |
+
+## Round 9: more precise short-timeframe trades and predictions
+Numbers: [REAL_DATA.md section 9](REAL_DATA.md#9-round-9-more-precise-trades-on-m5-m15-and-m30).
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 227 | Limit entry 0.10 ATR better than the signal | TESTED - rejected | Adverse selection: lower on M5, M15, M30, H1 |
+| 228 | Limit entry 0.25 ATR better | TESTED - rejected | Same |
+| 229 | Limit entry 0.40 ATR better | TESTED - rejected | Same, and fills only 25-50% of signals |
+| 230 | Wait for a confirming candle, then enter | TESTED - rejected | Half the trades, no better |
+| 231 | Candle over 1.5 ATR, then fade it | TESTED - rejected | 50-56% right, loses after cost |
+| 232 | Big candle with double volume, then follow it | TESTED - rejected | |
+| 233 | Volume flow of the last 12 bars | TESTED - rejected | 48-49% right |
+| 234 | Trending/choppy regime (variance ratio): momentum or reversal | TESTED - rejected | 49-51% |
+| 235 | Timeframes agree (fast trend = higher-timeframe trend) | TESTED - rejected | 49-54% |
+| 236 | Follow the London open's first 30 minutes | TESTED - rejected | |
+| 237 | Follow New York's first 30 minutes | TESTED - rejected | |
+| 238 | Rejection of yesterday's high / low | TESTED - rejected | |
+| 239 | Rejection of a $10 round number | TESTED - rejected | |
+| 240 | Inside bar, then close beyond the mother bar | TESTED - rejected | |
+| 241 | Logistic learning model refitted daily (10 inputs) | TESTED - rejected | 50.5-52.2% right: real but smaller than the spread |
+| 242 | Follow the first 15 minutes after the US jobs report | TESTED - rejected | 46.9% over 49 reports |
+| 243 | M30 as the trading chart | TESTED | Weakest short chart: -0.11R at this broker's cost |
+| 244 | A cheaper broker (0.15-0.25 per trade) | TESTED | More trades and winners (64-68%), still about 0R |
+| 245 | Markets that move before gold (dollar index, EURUSD, silver, US yields, stock index) on M1-M5 | ENABLED | The export script now saves them (`InpExtraSymbols`); test after the next export |
+| 246 | Surprise in US data (actual vs forecast) and the next hour of gold | ENABLED | The export script now saves the US calendar with actual/forecast/previous |
+| 247 | 1-minute candles for exact fills on M5 | ENABLED | `InpBarsM1` in the export script |
+| 248 | Depth of market imbalance | PROPOSED | Only where the broker shows a real order book; most gold CFD books are synthetic |
+| 249 | Tick spread filter (trade only when the spread is below its median) | PROPOSED | Needs tick data |
+| 250 | Exchange (COMEX) volume instead of tick volume | REJECTED | Not in a retail MT5 feed |
+| 251 | Engine entry at a chosen bar and price (`SimulateTradeAt`) | BUILT | Used by the research; tested against the old simulator |
+| 252 | MetaEditor "hides member" warning check in the offline checker (-Wshadow) | BUILT | The last build's single warning came from this |

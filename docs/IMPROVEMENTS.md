@@ -90,3 +90,12 @@ protect-profit move to break-even before red-folder news, an XAGUSD correlation 
 | 64 | Calibrated forecast cone and candle size (`CalibrateForecast`, `ForecastRange`) | DONE | Cone 59-61% instead of 51-55%; size error -14 to -19% |
 | 65 | Presets for three EA copies (M15, H1, H4) | DONE | More trades from independent Labs |
 | 66 | Research programs `meta.cpp`, `drift.cpp`, `forecast.cpp` in `run_checks.sh` | DONE | |
+
+## Round 9
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 67 | Engine member `dn` renamed `d1n` | DONE | MetaEditor warning "declaration of 'dn' hides member" (1 warning in each program) |
+| 68 | Offline checker uses -Wshadow and handles local string arrays | DONE | Catches that class of MetaEditor warning here |
+| 69 | `SimulateTradeAt`: entry at any bar and price, limit fills handled | DONE | Needed to test precision entries honestly |
+| 70 | Export script: 1-minute gold, related markets, US economic calendar | DONE | The only short-timeframe ideas left need that data |
+| 71 | M30 replay, entries and short-term direction programs in `run_checks.sh` | DONE | |

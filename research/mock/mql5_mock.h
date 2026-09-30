@@ -252,8 +252,20 @@ template<typename T> inline int CopyRates(const string &, int, int, int, std::ve
 template<typename T> inline int CopyRates(const string &, int, datetime, int, std::vector<T> &) { return 0; }
 
 // ---- calendar -------------------------------------------------------------------
-struct MqlCalendarValue { ulong id, event_id; datetime time; };
+struct MqlCalendarValue { ulong id, event_id; datetime time; long actual_value, forecast_value, prev_value; };
 struct MqlCalendarEvent { int importance; string name; };
+#ifndef LONG_MIN
+#define LONG_MIN (-9223372036854775807LL - 1)
+#endif
+inline int StringSplit(const string &s, ushort sep, std::vector<string> &out)
+{
+   out.clear(); std::string cur;
+   for(char ch : s) { if((ushort)(unsigned char)ch == sep) { out.push_back(cur); cur.clear(); } else cur += ch; }
+   out.push_back(cur);
+   return (int)out.size();
+}
+inline int StringTrimLeft(string &s) { const size_t a = s.find_first_not_of(" \t"); const int k = (int)(a == std::string::npos ? s.size() : a); s.erase(0, (size_t)k); return k; }
+inline int StringTrimRight(string &s) { const size_t b = s.find_last_not_of(" \t"); const size_t keep = (b == std::string::npos) ? 0 : b + 1; const int k = (int)(s.size() - keep); s.erase(keep); return k; }
 #define XCALARR(name) std::vector<MqlCalendarValue> name
 inline bool CalendarValueHistory(std::vector<MqlCalendarValue> &, datetime, datetime, const char *, const string &) { return false; }
 inline bool CalendarEventById(ulong, MqlCalendarEvent &) { return false; }

@@ -63,6 +63,9 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
 
 ## Export your data (optional, recommended)
 Navigator > Scripts > **XAU_DataExport**, drag onto the XAUUSD chart, OK. Files appear in `<Data Folder>\MQL5\Files\XAU_Export\`. Zip that folder and share it: the whole Strategy Lab and the live replay can then be run on your real broker data.
+Since round 9 it also saves 1-minute gold (*InpBarsM1*), related markets on M5/M15 (*InpExtraSymbols*: symbols your broker does not offer
+are skipped; add the exact names from your Market Watch if they differ, e.g. `DXY.cash`) and the US economic calendar (*InpCalendarYears*,
+needs a connected terminal). Run it with the terminal online.
 
 ## Demo accounts
 *Demo accounts > Demo mode*:

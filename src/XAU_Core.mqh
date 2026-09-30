@@ -1032,11 +1032,18 @@ public:
    // Gaps through a level fill at the open. The trail moves at bar closes only.
    bool SimulateTradeEx(const int i, const int dir, const double sl_price, const int last_idx, const XExit &x, XTradeResult &r) const
    {
+      if(i + 1 >= n) { r.Reset(); return false; }
+      return SimulateTradeAt(i, i + 1, m_o[i + 1], false, dir, sl_price, last_idx, x, r);
+   }
+
+   // Entry at `entry` during bar e (signal bar i). limit_fill = a limit order filled inside bar e: the bar's open is
+   // not a gap through the stop, and only the part of the bar after the fill counts (fill -> low/high -> close).
+   bool SimulateTradeAt(const int i, const int e, const double entry, const bool limit_fill, const int dir, const double sl_price,
+                        const int last_idx, const XExit &x, XTradeResult &r) const
+   {
       r.Reset();
-      const int e = i + 1;
-      if(e > last_idx || e >= n || dir == 0) return false;
+      if(e > last_idx || e >= n || dir == 0 || i < 0) return false;
       const double a = m_atr[i];
-      const double entry = m_o[e];
       const double risk = (dir > 0) ? (entry - sl_price) : (sl_price - entry);
       if(risk < 0.4 * a || risk <= 0.0) return false;
 
@@ -1065,8 +1072,9 @@ public:
          if(fhi > mfe) mfe = fhi;
          if(flo < mae) mae = flo;
 
+         const bool fillbar = (limit_fill && j == e);
          // gap through a level at the open
-         if(fo <= stopf) { real += rem * (fo / risk); rem = 0.0; closed = true; exit_idx = j; ek = (stage == 0) ? XE_STOP : XE_TRAIL; break; }
+         if(!fillbar && fo <= stopf) { real += rem * (fo / risk); rem = 0.0; closed = true; exit_idx = j; ek = (stage == 0) ? XE_STOP : XE_TRAIL; break; }
 
          if(cfg.path_mode == 1)
          {
@@ -1075,6 +1083,14 @@ public:
             pf[1] = bull_path ? flo : fhi;
             pf[2] = bull_path ? fhi : flo;
             pf[3] = fcl;
+            if(fillbar)
+            {
+               // filled on the way to the adverse extreme: fill -> adverse extreme -> (favourable extreme if it comes later) -> close
+               pf[0] = 0.0;
+               pf[1] = flo;
+               pf[2] = bull_path ? fhi : fcl;
+               pf[3] = fcl;
+            }
             for(int k = 1; k <= 3 && !closed; k++)
             {
                const double fa = pf[k - 1], fb = pf[k];
@@ -1104,7 +1120,8 @@ public:
          else
          {
             if(flo <= stopf) { real += rem * (stopf / risk); rem = 0.0; closed = true; exit_idx = j; ek = (stage == 0) ? XE_STOP : XE_TRAIL; break; }
-            if(stage == 0 && has_tp1 && fhi >= tp1f)
+            if(fillbar) { /* the rest of the fill bar is unknown: stop only */ }
+            else if(stage == 0 && has_tp1 && fhi >= tp1f)
             {
                real += x.part * x.tp1_r;
                rem = 1.0 - x.part;

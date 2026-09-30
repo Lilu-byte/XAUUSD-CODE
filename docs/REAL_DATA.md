@@ -227,3 +227,51 @@ no better or worse; they are listed in the research log, not adopted.
 * The EA trades more because your trades no longer block it, the H1 Lab has a proven pick on more days, and three copies can run on M15,
   H1 and H4 at once (presets `XAU_Sniper_Multi_*`). It does not trade more by lowering its standards: every way of doing that tested here
   gave about zero per trade.
+
+## 9. Round 9: more precise trades on M5, M15 and M30?
+Programs: `research/sim/entries.cpp` (entry methods), `research/sim/shortfc.cpp` (short-term direction), the EA replay on M30 (built
+from the M15 export) and on lower costs. Older 60% / newest 40% of each file. Outputs: `research/results/entries_*`, `shortfc_*`,
+`real_M30_results.txt`.
+
+### Entry methods (every signal of all 32 combinations, average R per signal, older / newer)
+| Entry | M5 | M15 | M30 | H1 |
+|---|---|---|---|---|
+| **Market (next open, what the EA does)** | **-0.014 / -0.001** | **-0.002 / -0.004** | -0.050 / **+0.017** | **-0.022 / -0.009** |
+| Limit 0.10 ATR better | -0.026 / -0.009 | -0.010 / -0.025 | -0.054 / -0.019 | -0.024 / -0.034 |
+| Limit 0.25 ATR better | -0.016 / -0.021 | -0.019 / -0.024 | -0.024 / -0.014 | -0.020 / -0.027 |
+| Limit 0.40 ATR better | -0.012 / -0.013 | -0.002 / -0.012 | -0.001 / -0.012 | -0.012 / -0.035 |
+| Wait for a confirming candle | -0.018 / +0.003 | -0.033 / -0.012 | -0.003 / -0.007 | -0.003 / -0.003 |
+
+A better price **lowered** the result in 18 of 24 comparisons, and in all 12 of the newer halves: the limit orders that fill are the trades
+that keep going against you, and the ones that never fill are the winners that left without you (adverse selection). Waiting for a
+confirming candle halves the trades; it was slightly better on H1 and M30 and worse on M15. The EA keeps entering at the next open.
+
+### Can the direction of the next 1-6 bars be called? (M5, M15, M30)
+Eleven ideas, each "traded" from the next open for 1, 3 and 6 bars at 0.35 cost: a candle over 1.5 ATR then reversal; big candle with
+double volume then continuation; volume flow of the last 12 bars; trending/choppy regime from the variance ratio (momentum or reversal);
+timeframes agreeing; following the London open's first 30 minutes; following New York's first 30 minutes; rejection of yesterday's
+high/low; rejection of a $10 round number; inside-bar breakout; a logistic learning model refitted every day on the last 20,000 bars.
+
+**Result: none beats the cost in both halves on any of the three charts.** Right-call rates 42-56%; the learning model is the most
+consistent at 50.5-52.2%. After the 0.35 cost almost every idea loses money per call; the few positive cells appear in one half only,
+with standard errors larger than the result. A 52% call on a $4-6 three-bar move is worth about $0.20, less than the spread.
+
+**US jobs report.** On 49 first-Friday reports in the M15 file (2022-2026), following the 08:30-08:45 New York move until 09:45 was right
+46.9% of the time and lost $1.90 per trade after cost.
+
+### M30 and cheaper spreads (EA replay, proven picks only)
+| Chart | Cost 0.35 (this broker) | Cost 0.25 | Cost 0.15 |
+|---|---|---|---|
+| M5 | -0.008R, 59% won | +0.017R, 66% | +0.005R, 68% |
+| M15 | +0.007R, 61% | -0.005R, 64% | -0.002R, 64% |
+| M30 | **-0.112R, 58%** | -0.035R, 64% | +0.009R, 67% |
+
+A cheaper broker gives more trades and more winners (up to 68%) but still about 0R per trade. **M30 is the weakest short chart** at this
+broker's cost; M15 is the best of the three, H1 (section 8) better still.
+
+### Plain reading
+On M5-M30 gold behaves like a fair coin plus a spread. Nothing tested here (21 entry and prediction ideas, cheaper costs, a learning
+model) calls its direction well enough to pay the spread. What *is* predictable on short charts is **how far** price is likely to move
+(the calibrated range and candle size of section 8); that is what the indicator shows. The remaining untested idea with a real chance,
+markets that move before gold (dollar index, EURUSD, silver, US yields) and surprise in US data, needs data the export did not include:
+the export script now saves them (1-minute gold, related markets, the US economic calendar).

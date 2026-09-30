@@ -29,7 +29,7 @@ echo "[real] broker data in research/data (if any)"
 export XAU_COST=0.35
 D1FILE=research/data/XAUUSD_D1.csv
 [ -e "$D1FILE" ] && export XAU_D1=$D1FILE
-for p in ideas meta drift forecast; do g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/$p" research/sim/$p.cpp; done
+for p in ideas meta drift forecast entries shortfc; do g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/$p" research/sim/$p.cpp; done
 for f in research/data/XAUUSD_*.csv; do
   [ -e "$f" ] || continue
   tf=$(basename "$f" .csv | sed 's/XAUUSD_//')
@@ -53,7 +53,15 @@ for f in research/data/XAUUSD_*.csv; do
       "$BIN/meta" "$f" "$H" 0.35 0 1 > "$OUT/meta_${tf}.txt" 2>&1 || true
       [ -e "$D1FILE" ] && "$BIN/drift" "$f" "$H" "$D1FILE" 0.35 > "$OUT/drift_${tf}.txt" 2>&1 || true
       "$BIN/forecast" "$f" "$H" 3000 > "$OUT/forecast_${tf}.txt" 2>&1 || true
+      "$BIN/entries" "$f" "$H" > "$OUT/entries_${tf}.txt" 2>&1 || true
+      "$BIN/shortfc" "$f" "$H" > "$OUT/shortfc_${tf}.txt" 2>&1 || true
     ;; esac
+  fi
+  # M30 is built from the M15 file (the export has no M30); its higher timeframe is H4, as in MT5
+  if [ "$tf" = M15 ] && [ -e research/data/XAUUSD_H4.csv ]; then
+    XAU_AGG=1800 "$BIN/harness" real "$f" research/data/XAUUSD_H4.csv 2 1 10000 > "$OUT/real_M30_results.txt" 2>&1 || true
+    "$BIN/entries" "$f" research/data/XAUUSD_H4.csv 1800 > "$OUT/entries_M30.txt" 2>&1 || true
+    "$BIN/shortfc" "$f" research/data/XAUUSD_H4.csv 1800 > "$OUT/shortfc_M30.txt" 2>&1 || true
   fi
   echo "  $f -> $OUT/real_${tf}_results.txt"
 done

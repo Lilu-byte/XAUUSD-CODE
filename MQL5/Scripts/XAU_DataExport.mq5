@@ -8,8 +8,8 @@
 //|  chart; the files land in  <Data Folder>\MQL5\Files\XAU_Export\   |
 //+------------------------------------------------------------------+
 #property copyright   "XAU Oracle"
-#property version     "1.00"
-#property description "Exports XAUUSD history (M5..D1) and contract details to CSV for offline testing."
+#property version     "1.10"
+#property description "Exports XAUUSD history (M1..D1), related markets and the US economic calendar to CSV for offline testing."
 #property script_show_inputs
 
 input int InpBarsM5  = 200000;   // M5 bars (about 2.7 years)
@@ -17,6 +17,10 @@ input int InpBarsM15 = 100000;   // M15 bars (about 4 years)
 input int InpBarsH1  = 60000;    // H1 bars (about 10 years)
 input int InpBarsH4  = 20000;    // H4 bars
 input int InpBarsD1  = 8000;     // D1 bars
+input int InpBarsM1  = 100000;   // M1 bars of this symbol (about 3 months; exact candle paths for M5 tests; 0 = skip)
+input string InpExtraSymbols = "EURUSD,XAGUSD,USDX,DXY,US500,USTEC,US30,UST10Y,XAUEUR"; // Related markets (M5 + M15) for lead-lag tests; missing ones are skipped
+input int InpBarsExtra = 100000; // M5 / M15 bars per related market
+input int InpCalendarYears = 4;  // Years of the US economic calendar (medium and high impact; 0 = skip)
 
 string TfLabel(const ENUM_TIMEFRAMES tf)
 {
@@ -42,6 +46,39 @@ int ExportTf(const string sym, const ENUM_TIMEFRAMES tf, const int count)
    return got;
 }
 
+string CalNum(const long v)
+{
+   if(v == LONG_MIN) return "";
+   return DoubleToString((double)v / 1000000.0, 6);
+}
+
+// US economic calendar (medium and high impact) with actual / forecast / previous values, in SERVER time,
+// so news-surprise ideas can be tested offline. Needs a connected terminal (the calendar is not in the tester).
+void ExportCalendar()
+{
+   if(InpCalendarYears <= 0) return;
+   MqlCalendarValue vals[];
+   const datetime to = TimeTradeServer();
+   const datetime from = to - (datetime)((long)InpCalendarYears * 365 * 86400);
+   if(!CalendarValueHistory(vals, from, to, NULL, "USD")) { Print("XAU export: economic calendar not available (", GetLastError(), ")"); return; }
+   const int h = FileOpen("XAU_Export\\USD_calendar.csv", FILE_WRITE | FILE_CSV | FILE_ANSI, ',');
+   if(h == INVALID_HANDLE) { Print("XAU export: cannot write the calendar file (", GetLastError(), ")"); return; }
+   FileWrite(h, "time", "event", "importance", "actual", "forecast", "previous");
+   int rows = 0;
+   for(int i = 0; i < ArraySize(vals); i++)
+   {
+      MqlCalendarEvent ev;
+      if(!CalendarEventById(vals[i].event_id, ev)) continue;
+      const int imp = (int)ev.importance;                     // 2 = moderate, 3 = high
+      if(imp < 2) continue;
+      FileWrite(h, TimeToString(vals[i].time, TIME_DATE | TIME_MINUTES), ev.name, IntegerToString(imp),
+                CalNum(vals[i].actual_value), CalNum(vals[i].forecast_value), CalNum(vals[i].prev_value));
+      rows++;
+   }
+   FileClose(h);
+   Print("XAU export: USD_calendar.csv  ", rows, " events");
+}
+
 void OnStart()
 {
    const string sym = _Symbol;
@@ -54,6 +91,22 @@ void OnStart()
    tfs[4] = PERIOD_D1;  cnt[4] = InpBarsD1;
    int total = 0;
    for(int k = 0; k < 5; k++) total += ExportTf(sym, tfs[k], cnt[k]);
+   if(InpBarsM1 > 0) total += ExportTf(sym, PERIOD_M1, InpBarsM1);
+
+   // related markets (does the dollar, silver, stocks or yields move before gold?)
+   string extra[];
+   const int ne = StringSplit(InpExtraSymbols, ',', extra);
+   for(int k = 0; k < ne; k++)
+   {
+      string es = extra[k];
+      StringTrimLeft(es);
+      StringTrimRight(es);
+      if(StringLen(es) == 0 || es == sym) continue;
+      if(!SymbolSelect(es, true)) { Print("XAU export: ", es, " is not offered by this broker, skipped"); continue; }
+      total += ExportTf(es, PERIOD_M5, InpBarsExtra);
+      total += ExportTf(es, PERIOD_M15, InpBarsExtra);
+   }
+   ExportCalendar();
 
    // contract details and the broker clock, so sizes and sessions can be reproduced exactly
    const int h = FileOpen("XAU_Export\\" + sym + "_info.txt", FILE_WRITE | FILE_TXT | FILE_ANSI);

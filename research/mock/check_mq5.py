@@ -39,6 +39,7 @@ def translate(src: str) -> str:
             names = re.findall(r'(\w+)\[\]', line)
             line = "std::vector<%s> %s;" % (typ, ", ".join(names))
         line = re.sub(r'\b(Mql\w+)\s+(\w+)\[\]\s*;', r'std::vector<\1> \2;', line)
+        line = re.sub(r'\bstring\s+(\w+)\[\]\s*;', r'std::vector<string> \1;', line)
         out.append(line)
     return "\n".join(out)
 

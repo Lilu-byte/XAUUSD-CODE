@@ -1,0 +1,34 @@
+== PRECISION ENTRIES: research/data/XAUUSD_H1.csv (59999 bars of 3600 s), cost 0.35, guard 20 ==
+   older part 2016.08.04 13:00 .. 2022.09.06 18:00 | newer part .. 2026.09.30 12:00
+
+  ALL 32 combinations
+    entry                          | older: filled  won  avgR (se)  per signal | newer: filled  won  avgR (se)  per signal
+    MARKET (next open)             | 100.0%  56.2%  -0.022 (0.008)  -0.022 | 100.0%  58.5%  -0.009 (0.006)  -0.009
+    LIMIT 0.10 ATR better          |  79.1%  55.7%  -0.030 (0.009)  -0.024 |  85.1%  56.4%  -0.040 (0.007)  -0.034
+    LIMIT 0.25 ATR better          |  52.9%  55.3%  -0.037 (0.012)  -0.020 |  66.1%  56.0%  -0.041 (0.008)  -0.027
+    LIMIT 0.40 ATR better          |  33.9%  54.1%  -0.035 (0.015)  -0.012 |  50.0%  53.7%  -0.070 (0.010)  -0.035
+    CONFIRM (next candle agrees)   |  47.7%  53.8%  -0.007 (0.010)  -0.003 |  49.5%  58.2%  -0.007 (0.007)  -0.003
+
+  dips (RSI-2, Double-7, weak close)
+    entry                          | older: filled  won  avgR (se)  per signal | newer: filled  won  avgR (se)  per signal
+    MARKET (next open)             | 100.0%  59.0%  -0.037 (0.014)  -0.037 | 100.0%  60.1%  -0.008 (0.008)  -0.008
+    LIMIT 0.10 ATR better          |  71.2%  57.3%  -0.054 (0.017)  -0.038 |  82.6%  57.3%  -0.050 (0.010)  -0.041
+    LIMIT 0.25 ATR better          |  38.8%  52.7%  -0.109 (0.025)  -0.042 |  62.3%  56.4%  -0.042 (0.011)  -0.026
+    LIMIT 0.40 ATR better          |  20.4%  48.6%  -0.136 (0.036)  -0.028 |  45.6%  52.7%  -0.082 (0.014)  -0.037
+    CONFIRM (next candle agrees)   |  53.5%  57.0%  -0.009 (0.014)  -0.005 |  52.5%  61.3%  +0.006 (0.010)  +0.003
+
+  breakouts (ORB, squeeze)
+    entry                          | older: filled  won  avgR (se)  per signal | newer: filled  won  avgR (se)  per signal
+    MARKET (next open)             | 100.0%  52.7%  -0.019 (0.014)  -0.019 | 100.0%  55.3%  +0.014 (0.012)  +0.014
+    LIMIT 0.10 ATR better          |  84.7%  52.8%  -0.034 (0.015)  -0.029 |  89.3%  54.2%  -0.007 (0.013)  -0.007
+    LIMIT 0.25 ATR better          |  67.8%  56.6%  -0.013 (0.017)  -0.009 |  74.0%  54.4%  -0.031 (0.015)  -0.023
+    LIMIT 0.40 ATR better          |  46.8%  56.8%  +0.012 (0.021)  +0.006 |  59.9%  56.8%  -0.027 (0.017)  -0.016
+    CONFIRM (next candle agrees)   |  41.3%  52.8%  +0.001 (0.019)  +0.001 |  43.9%  53.6%  -0.006 (0.016)  -0.003
+
+  others (confluence, stop-hunt, pullback)
+    entry                          | older: filled  won  avgR (se)  per signal | newer: filled  won  avgR (se)  per signal
+    MARKET (next open)             | 100.0%  55.9%  -0.005 (0.014)  -0.005 | 100.0%  57.0%  -0.031 (0.012)  -0.031
+    LIMIT 0.10 ATR better          |  83.9%  56.9%  +0.000 (0.016)  +0.000 |  88.0%  56.1%  -0.044 (0.013)  -0.039
+    LIMIT 0.25 ATR better          |  56.8%  56.1%  -0.001 (0.020)  -0.001 |  69.5%  56.4%  -0.048 (0.015)  -0.034
+    LIMIT 0.40 ATR better          |  39.0%  54.7%  -0.020 (0.024)  -0.008 |  53.2%  53.0%  -0.086 (0.018)  -0.046
+    CONFIRM (next candle agrees)   |  46.4%  49.9%  -0.011 (0.017)  -0.005 |  46.6%  52.8%  -0.043 (0.015)  -0.020

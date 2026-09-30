@@ -892,6 +892,12 @@ static int run_real(int argc, char **argv)
    std::vector<MqlRates> base, htf;
    if(!load_csv(argv[2], base)) { std::printf("cannot read %s\n", argv[2]); return 2; }
    base.pop_back();                                  // the export ends with the still-forming bar
+   if(std::getenv("XAU_AGG") && std::atoi(std::getenv("XAU_AGG")) > 0)
+   {
+      // build a longer timeframe from the file (e.g. M30 from M15); the last aggregated bar may be incomplete
+      base = aggregate(base, std::atoi(std::getenv("XAU_AGG")));
+      base.pop_back();
+   }
    const int bs = bar_seconds(base);
    int hs;
    if(!std::strcmp(argv[3], "auto"))
@@ -1207,6 +1213,59 @@ static void test_exits()
 
 // Replay a trade on the underlying 1-minute bars: the "truth" the bar simulator approximates.
 // Same rules as SimulateTradeEx (trail and exits at M15 closes); only the order of prices inside a bar is exact.
+// entry at a given bar and price: a market entry must equal the standard simulator; a limit fill only counts the
+// part of the fill bar after the fill (stop yes, targets no)
+static void test_entry_at()
+{
+   std::printf("\n== unit tests: entry at a chosen price (limit orders) ==\n");
+   Series S = make_series(W_TREND, 6000, 13);
+   CXauEngine e;
+   load(e, S, (int)S.m15.size());
+   int same = 0, total = 0;
+   for(int i = e.cfg.warmup + 10; i < e.n - 40 && total < 400; i++)
+   {
+      XExit x; XMakeExit(XP_CLASSIC, e.cfg, x);
+      XSignal sg;
+      if(!e.StrategySignal(XS_DIP, i, x, sg)) continue;
+      XTradeResult a, b;
+      const bool oa = e.SimulateTradeEx(i, sg.dir, sg.sl, e.n - 2, x, a);
+      const bool ob = e.SimulateTradeAt(i, i + 1, e.m_o[i + 1], false, sg.dir, sg.sl, e.n - 2, x, b);
+      total++;
+      if(oa == ob && a.exit_idx == b.exit_idx && near(a.r_net, b.r_net, 1e-12)) same++;
+   }
+   CHECK(total > 20 && same == total, "a market entry through the new entry function gives exactly the old result");
+   // hand-made fill bar: buy limit filled at 100, bar low 98 = stop -> stopped in the fill bar
+   CXauEngine f;
+   std::vector<std::vector<double>> ohlc;
+   for(int k = 0; k < 400; k++) ohlc.push_back({100.0, 101.0, 99.5, 100.0});
+   ohlc.push_back({101.0, 101.5, 97.5, 98.5});      // fill bar: opens above the limit, falls through 100 and the stop 98
+   ohlc.push_back({98.5, 110.0, 98.0, 109.0});
+   tiny(f, ohlc);
+   XExit x; XMakeExit(XP_CLASSIC, f.cfg, x);
+   XTradeResult r;
+   const bool ok = f.SimulateTradeAt(399, 400, 100.0, true, 1, 98.0, f.n - 1, x, r);
+   CHECK(ok && r.closed && r.exit_idx == 400 && r.r_net < -0.99, "a limit buy filled at 100 is stopped at 98 inside the fill bar");
+   // fill bar that never reaches the stop and closes higher: no target is taken inside the fill bar
+   CXauEngine g;
+   std::vector<std::vector<double>> o2(ohlc.begin(), ohlc.begin() + 400);
+   o2.push_back({101.0, 104.0, 99.9, 100.5});       // bearish fill bar (open-high-low-close): the high 104 came BEFORE the fill at 100
+   o2.push_back({100.5, 101.0, 100.2, 100.8});      // later bars stay below the 1R target (102)
+   o2.push_back({100.8, 101.2, 100.4, 101.0});
+   tiny(g, o2);
+   XTradeResult r2;
+   g.SimulateTradeAt(399, 400, 100.0, true, 1, 98.0, g.n - 1, x, r2);
+   CHECK(r2.ok && !r2.tp1_hit, "a high made before the limit fill is not counted as a target hit");
+   // bullish fill bar (open-low-high-close): the high came after the fill and counts
+   CXauEngine h2;
+   std::vector<std::vector<double>> o3(ohlc.begin(), ohlc.begin() + 400);
+   o3.push_back({101.0, 104.0, 99.9, 103.5});
+   o3.push_back({103.5, 103.6, 103.0, 103.2});
+   tiny(h2, o3);
+   XTradeResult r3;
+   h2.SimulateTradeAt(399, 400, 100.0, true, 1, 98.0, h2.n - 1, x, r3);
+   CHECK(r3.ok && r3.tp1_hit && r3.bars_to_tp1 == 1, "a high made after the fill (bullish bar path) reaches the first target");
+}
+
 // cost guard: no setup may carry a stop shorter than min_stop_cost round-trip costs
 static void test_cost_guard()
 {
@@ -1630,7 +1689,7 @@ int main(int argc, char **argv)
       else if(std::sscanf(w, "%lf-%lf", &g_dip_lo, &g_dip_hi) != 2) { g_dip_lo = -2.0; }
    }
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); test_entry_at(); }
    if(all || !std::strcmp(mode, "calib"))   run_calibration();
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); test_strategy_windows(); test_resolve(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);
