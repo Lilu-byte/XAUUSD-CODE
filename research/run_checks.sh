@@ -27,13 +27,16 @@ echo "[real] broker data in research/data (if any)"
 for f in research/data/XAUUSD_*.csv; do
   [ -e "$f" ] || continue
   tf=$(basename "$f" .csv | sed 's/XAUUSD_//')
-  "$BIN/harness" real "$f" auto 2 1 10000 > "$OUT/real_${tf}_results.txt" 2>&1 || true
+  case "$tf" in M5|M15) H=research/data/XAUUSD_H1.csv ;; H1) H=research/data/XAUUSD_H4.csv ;; H4) H=research/data/XAUUSD_D1.csv ;; *) H=auto ;; esac
+  [ -e "$H" ] || H=auto
+  "$BIN/harness" real "$f" "$H" 2 1 10000 > "$OUT/real_${tf}_results.txt" 2>&1 || true
   # daily/4-hour files are too short for a 10,000-bar replay window: replay with a shorter one as well
   case "$tf" in
     D1) "$BIN/harness" real "$f" auto 2 1 2500 2>&1 | sed -n '/LIVE REPLAY/,$p' >> "$OUT/real_${tf}_results.txt" || true ;;
-    H4) "$BIN/harness" real "$f" auto 2 1 6000 2>&1 | sed -n '/LIVE REPLAY/,$p' >> "$OUT/real_${tf}_results.txt" || true ;;
+    H4) "$BIN/harness" real "$f" "$H" 2 1 6000 2>&1 | sed -n '/LIVE REPLAY/,$p' >> "$OUT/real_${tf}_results.txt" || true ;;
   esac
-  "$BIN/harness" realblocks "$f" 5 >> "$OUT/real_${tf}_results.txt" 2>&1 || true
+  case "$tf" in D1|H4) BY=5 ;; H1) BY=2 ;; *) BY=1 ;; esac
+  "$BIN/harness" realblocks "$f" $BY >> "$OUT/real_${tf}_results.txt" 2>&1 || true
   echo "  $f -> $OUT/real_${tf}_results.txt"
 done
 

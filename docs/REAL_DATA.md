@@ -55,3 +55,28 @@ exactly the one that faded after 2014.
 * **Daily charts:** no strong automatic edge. If you trade D1 by hand, the confluence signal and the weak-close dip were the most stable.
 * **Intraday (where you actually trade, M5 to H1):** not tested on real data yet. That needs the M15 and H1 files from the same export folder.
 * Nothing here changes the risk rules: the edges found are small, so risk per trade should stay small.
+
+## 6. Intraday results (M5, M15, H1, H4 export of 30 Sep 2026)
+Data: M5 Apr 2025 - Sep 2026 (100,148 bars), M15 Jun 2022 - Sep 2026 (100,000), H1 Jul 2016 - Sep 2026 (60,000), H4 Oct 2013 - Sep 2026 (20,000).
+Full output: `research/results/real_{M5,M15,H1,H4}_results.txt`.
+
+### Live replay: what the EA would have done, day by day
+| Chart | Period traded | Days a strategy passed | Trades | Won | Avg per trade |
+|---|---|---:|---:|---:|---:|
+| M5 | Jun 2025 - Sep 2026 | 12% | 120 | 63.3% | -0.09R (se 0.07) |
+| M15 | Nov 2022 - Sep 2026 | 15% | 371 | 58.2% | -0.02R (se 0.04) |
+| **H1** | Apr 2018 - Sep 2026 | 33% | **514** | **64.4%** | **0.00R** (se 0.03) |
+| H4 | Sep 2017 - Sep 2026 | 4% | 20 | 60.0% | -0.07R |
+| "Always trade the closest" (demo option) | all four | - | 827 - 2,398 | 63-64% | **-0.04 to -0.06R** |
+
+### Plain reading
+* **The 60% win-rate target is met on real gold** (58-64% winners). **Profit is not:** the best case, H1, is exactly break-even over 514 trades.
+* **Standing aside works:** trading only proven picks cut the loss from about -0.05R to about 0.00R per trade. The demo option that trades the
+  closest strategy anyway lost on every timeframe, so it is now **off by default** (`InpDemoTradeUnproven = false`; still on in `DemoTurbo`).
+* **The next-candle forecast has no edge intraday:** 48.7-51.0% right on M5, M15 and H1 (a coin flip). The indicator's audit gate already hides
+  the ghost candles when the forecast has not proven itself, which on intraday charts will be most of the time.
+* **The most stable intraday rule on 10 years of H1:** the opening-range breakout with the classic exit, **+0.05R per trade over 1,146 trades,
+  positive in 5 of 6 two-year blocks, but only 52% winners.** Its high-winner versions (67% winners) are break-even (+0.01R).
+  The weak-close dip with the mean-revert exit was also positive in 5 of 6 blocks but only +0.005R.
+* **On real gold, high win-rate and profit pull in opposite directions** for every strategy tested here. The tools can deliver either a 60%+
+  win-rate at about break-even, or a small profit at about 52% winners (set *Strategy Lab: minimum % of winning trades* to 50).

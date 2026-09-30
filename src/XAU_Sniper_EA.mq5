@@ -35,7 +35,7 @@ input int    InpLabMinTrades         = 50;     // Strategy Lab: minimum trades b
 input int    InpLabFolds             = 5;      // Strategy Lab: walk-forward folds
 input int    InpHistoryBars          = 10000;  // Bars the lab tests (keep equal to the indicator's setting)
 input int    InpSignalBars           = 3000;   // Bars used for live signals (faster; same signals, tested)
-input bool   InpDemoTradeUnproven    = true;   // DEMO accounts only: trade the closest strategy when none passed the lab
+input bool   InpDemoTradeUnproven    = false;  // DEMO accounts only: also trade the closest strategy when none passed the lab (lost on real data, see docs/REAL_DATA.md)
 
 input group "=== Risk ==="
 input double InpRiskPct         = 1.0;    // Risk per trade, % of equity (hard ceiling 5)
