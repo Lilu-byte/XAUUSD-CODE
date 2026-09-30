@@ -40,7 +40,8 @@ input ENUM_XAU_EXIT  InpExit         = XAU_EX_AUTO;  // Exit style (AUTO = chose
 input double InpWinTarget            = 60.0;   // Strategy Lab: minimum % of winning trades
 input int    InpLabMinTrades         = 50;     // Strategy Lab: minimum trades before a strategy can qualify
 input int    InpLabFolds             = 5;      // Strategy Lab: walk-forward folds
-input int    InpHistoryBars          = 10000;  // Bars the lab tests (keep equal to the indicator's setting)
+input int    InpHistoryBars          = 0;      // Bars the lab tests (0 = auto: 25,000 on H1, else 10,000; keep equal to the indicator)
+input ENUM_XAU_D1 InpDailyTrend      = XAU_D1_AUTO;  // Daily trend filter (AUTO: H1 and above buy only in a daily uptrend)
 input int    InpSignalBars           = 3000;   // Bars used for live signals (faster; same signals, tested)
 
 input group "=== Risk ==="
@@ -72,7 +73,7 @@ input bool   InpPaperResume     = true;   // During that pause, paper-trade the 
 input int    InpMaxTradesPerDay = 6;      // Entries per day
 input int    InpMaxPositions    = 1;      // Simultaneous EA positions
 input int    InpCooldownBars    = 2;      // Bars to wait after a losing trade
-input bool   InpOneTradePerSymbol = true; // Never open while ANY position (any magic, manual too) exists on this symbol
+input bool   InpOneTradePerSymbol = false;// true = never open while ANY position (manual trades too) exists on this symbol
 input bool   InpDailyLossRealized = false;// Daily limit counts closed trades only (default: equity incl. floating)
 
 input group "=== Filters (London local clock) ==="
@@ -143,6 +144,8 @@ CXPanel    g_panel;
 XRATESARR(g_rates);
 XRATESARR(g_hrates);
 XRATESARR(g_irates);
+XRATESARR(g_drates);
+int      g_hist = 10000;          // Strategy Lab window (resolved from InpHistoryBars)
 ENUM_TIMEFRAMES g_htf = PERIOD_H1;
 string   g_inter_sym = "";
 bool     g_inter_invert = false;
@@ -254,11 +257,26 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf)
    // a fixed cost (not the spread of the moment) so the EA and the indicator test and choose alike
    c.cost_price = XMax(InpCostPrice, 0.01);
    c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
+   c.d1_mode = XResolveD1Mode((int)InpDailyTrend, tf);
 }
 
 //+------------------------------------------------------------------+
+// MT5 keeps an EA's global variables when the chart's timeframe or symbol changes (OnDeinit + OnInit without
+// unloading). Everything that belongs to the old timeframe must be cleared, or the EA keeps trading the old
+// timeframe's Strategy Lab result.
+void ResetState()
+{
+   g_lab_ok = false; g_lab_day = 0; g_cell = -1; g_proven = false; g_act_s = -1; g_act_p = XP_CLASSIC;
+   g_last_bar = 0; g_engine_ok = false; g_last_reason = XR_WARMUP; g_skip_note = "";
+   g_small = false; g_small_note = ""; g_stats_dirty = true;
+   g_last_sig.Reset();
+   g_paper.Reset();
+}
+
 int OnInit()
 {
+   ResetState();
+   g_hist = XResolveHistoryBars(InpHistoryBars, (ENUM_TIMEFRAMES)_Period);
    g_htf = (InpHTF == PERIOD_CURRENT) ? XAutoHTF((ENUM_TIMEFRAMES)_Period) : InpHTF;
    if(PeriodSeconds(g_htf) <= PeriodSeconds((ENUM_TIMEFRAMES)_Period)) g_htf = XAutoHTF((ENUM_TIMEFRAMES)_Period);
 
@@ -844,6 +862,13 @@ bool RefreshEngine()
    if(gh < 300) { g_engine_ok = false; return false; }   // never trade without the higher-timeframe trend
    g_eng.SetBase(g_rates, got);
    g_eng.SetHTF(g_hrates, gh);
+   int gd = 0;
+   if(g_eng.cfg.d1_mode > 0)
+   {
+      gd = XLoadRates(_Symbol, PERIOD_D1, XDailyBarsNeeded(got, (ENUM_TIMEFRAMES)_Period), g_drates);
+      if(gd < 210) { g_engine_ok = false; return false; }      // never trade the daily filter blind
+   }
+   g_eng.SetDaily(g_drates, gd);
    if(StringLen(g_inter_sym) > 0)
    {
       const int gi = XLoadRates(g_inter_sym, (ENUM_TIMEFRAMES)_Period, got + 50, g_irates);
@@ -860,7 +885,7 @@ void RunLabIfNeeded()
    const datetime ds = XServerDayStart(TimeCurrent());
    if(g_lab_ok && ds == g_lab_day) return;
    FillConfig(g_lab.cfg, (ENUM_TIMEFRAMES)_Period);
-   const bool ok = XRunDailyLab(g_lab, _Symbol, (ENUM_TIMEFRAMES)_Period, g_htf, InpHistoryBars, g_inter_sym, g_inter_invert,
+   const bool ok = XRunDailyLab(g_lab, _Symbol, (ENUM_TIMEFRAMES)_Period, g_htf, g_hist, g_inter_sym, g_inter_invert,
                                 InpWinTarget, InpLabMinTrades, InpLabFolds, ds);
    if(!ok) return;                       // try again on the next bar
    g_lab_ok = true;

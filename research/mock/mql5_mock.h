@@ -59,6 +59,7 @@ struct MqlRates
 // ---- arrays ------------------------------------------------------------------
 template<typename T> inline int ArrayResize(std::vector<T> &a, int n) { a.resize((size_t)n); return n; }
 template<typename T> inline int ArraySize(const std::vector<T> &a) { return (int)a.size(); }
+template<typename T> inline bool ArraySort(std::vector<T> &a) { std::sort(a.begin(), a.end()); return true; }
 template<typename T> inline void ArrayFree(std::vector<T> &a) { a.clear(); }
 template<typename T> inline void ArrayInitialize(std::vector<T> &a, T v) { std::fill(a.begin(), a.end(), v); }
 template<typename T, size_t N> inline void ArrayInitialize(T (&a)[N], T v) { for(size_t i = 0; i < N; i++) a[i] = v; }
@@ -277,7 +278,7 @@ inline int  ObjectsDeleteAll(long, const string &, int = -1, int = -1) { return 
 inline bool ChartSetInteger(long, int, long) { return true; }
 inline bool ChartSetDouble(long, int, double) { return true; }
 inline void ChartRedraw(long = 0) {}
-enum { CHART_HEIGHT_IN_PIXELS = 100, CHART_WIDTH_IN_PIXELS = 101 };
+enum { CHART_HEIGHT_IN_PIXELS = 100, CHART_WIDTH_IN_PIXELS = 101, CHART_SHOW_ONE_CLICK = 102 };
 inline long ChartGetInteger(long, int p, int = 0) { return p == CHART_HEIGHT_IN_PIXELS ? 800 : 1400; }
 inline bool TextSetFont(const string &, int, uint = 0, int = 0) { return true; }
 inline bool TextGetSize(const string &t, uint &w, uint &h) { w = (uint)(t.size() * 7); h = 14; return true; }

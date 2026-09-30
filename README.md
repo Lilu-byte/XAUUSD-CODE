@@ -15,6 +15,17 @@ every day a **Strategy Lab** tests 8 strategies x 4 exit styles on your chart's 
   (the EA's default *Demo mode = Rehearsal*), and judge it after 100+ trades, not after 3.
 * **"Double every month" needs about 10% risk per trade** and fails most months even with a strong edge ([docs/RISK_MATH.md](docs/RISK_MATH.md)). The EA caps risk at 5% per trade.
 
+## What changed in round 8 (screenshots of the 3,000 USD demo)
+| Seen on your screen | Changed |
+|---|---|
+| EA on H1 showing the M5 result, and not trading | MT5 kept the EA's M5 memory after the timeframe switch; the EA now resets on every start. Your manual trades no longer block it |
+| Indicator: PASS on the scoreboard but UNPROVEN in the panel | PASS now uses exactly the rule that makes a strategy PROVEN |
+| Green box drawn below a buy | The box ends at the strategy's typical winning exit; the moving exit level is a separate dotted line |
+| Top of the panel hidden behind the SELL/BUY buttons | The panel starts below MT5's One Click Trading buttons |
+| "Improve the predictions" | Calibrated cone (holds the price 59-61% of the time, as intended; before 51-55%) and candle sizes 14-19% more accurate, measured on your data |
+| "Make the EA trade on its own" | H1 and above buy only while the daily trend is up, with a 4-year Lab on H1: proven picks on 57% of days instead of 34%, replay +0.025R at 67% won (before -0.049R). Three copies can run on M15, H1 and H4 (`XAU_Sniper_Multi_*` presets) |
+| "Mix every strategy into one" | Tested as a walk-forward model over all 32 combinations: it trades 1-10 times a day at about 0R. Not adopted ([docs/REAL_DATA.md](docs/REAL_DATA.md), section 8) |
+
 ## What changed in round 7 (demo screenshot of 30 Sep 2026)
 | Seen on your screen | Changed |
 |---|---|
@@ -45,8 +56,8 @@ would really deposit, or use a cent account.
 | Green/red trade box | Red = risk to the stop, green = profit to the target(s), with labels and a "close by" time |
 | Strategy Lab scoreboard | The 6 best combinations on this chart with win-rate, average R, trades and PASS marks |
 | Graded history | Past entries of the strategy in use (green = proven, grey = unproven) and where each ended |
-| Next candles | Pattern-matching forecast (25 most similar past situations), drawn only when it has proven itself on this chart; plus a one-line call for M15 / H1 / H4 |
-| Context | Higher-timeframe trend, day range used, opening range box, yesterday's high/low, Asian range, news countdown |
+| Next candles | Calibrated 60% range cone and the expected size of each coming candle (measured on your data); a predicted direction only where the pattern match has proven itself on this chart; expected next-candle size for M15 / H1 / H4 |
+| Context | Higher-timeframe and daily trend, day range used, opening range box, yesterday's high/low, Asian range, news countdown |
 
 ### `XAU_Sniper_EA` (Expert Advisor)
 * Trades exactly the Lab's choice, with its exit style: partial at the first target, break-even, trail, mean-reversion exit, time stop.
@@ -63,6 +74,7 @@ Saves your broker's XAUUSD history (M5 to D1) and contract details to CSV. Share
 2. Compile them in MetaEditor (F7).
 3. Put the indicator on an XAUUSD chart (M15 or H1). Read the scoreboard: is anything marked PASS?
 4. **Remove the old EA from the chart and attach it again** (MT5 keeps an attached EA's old inputs after a recompile), then load `XAU_Sniper_Balanced.set` on a demo account (or `XAU_Sniper_DemoTurbo.set` to watch many trades).
+   For more trades, attach it to three XAUUSD charts, M15, H1 and H4, with `XAU_Sniper_Multi_M15.set`, `_H1.set` and `_H4.set`.
 5. Run `XAU_DataExport` once and send the files, so the Lab can be checked against real gold.
 
 ## Repository layout
@@ -72,7 +84,7 @@ MQL5/Experts/XAU_Sniper_EA.mq5      the EA (single file, generated)
 MQL5/Scripts/XAU_DataExport.mq5     history export script
 MQL5/Presets/*.set                  7 EA profiles, generated from the EA's inputs
 src/                                editable sources (engine, platform layer, the three programs)
-docs/                               Strategy Lab, ideas (176), real-data results, research, risk maths, install, testing, reviews
+docs/                               Strategy Lab, ideas (226), real-data results, research, risk maths, install, testing, reviews
 research/                           bundler, preset generator, C++ harness, MT5 mock, Monte Carlo, results
 ```
 Edit `src/`, then run `research/run_checks.sh`: it rebuilds the MT5 files and presets and re-runs every test.

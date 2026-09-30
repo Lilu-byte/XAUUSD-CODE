@@ -80,6 +80,15 @@ when it is recompiled. The demo inputs were renamed in round 7 so that old free-
 **Your own trades.** *Your own trades > InpProtectManual* (off by default) lets the EA put a stop on any position on the symbol that has none,
 where it would lose *InpProtectPct* (5%) of equity; a position already losing more gets its stop 5% of equity beyond the current price.
 
+**More trades: three copies.** Attach the EA to three XAUUSD charts, M15, H1 and H4, and load `XAU_Sniper_Multi_M15.set`,
+`XAU_Sniper_Multi_H1.set` and `XAU_Sniper_Multi_H4.set` (each has its own magic number, so the copies do not block each other).
+Each runs its own daily Strategy Lab. On a netting account only one position per symbol is possible; use a hedging account.
+
+**Daily trend filter** (*InpDailyTrend*, both programs): AUTO = on H1 and above buy only while the last daily close is above its 200-day
+mean; on M5-M30 no filter. OFF, WITH (only in the daily trend's direction) and LONG (buys only, every timeframe) are the other choices.
+**Lab window** (*InpHistoryBars*): 0 = AUTO, 25,000 bars on H1 (about 4 years), 10,000 elsewhere. Keep both settings equal in the EA and
+the indicator so they choose the same strategy. The H1 window needs *Tools > Options > Charts > Max bars in chart* of at least 30,000.
+
 **Account size.** The indicator shows "TOO BIG, SKIP" when even 0.01 lot risks more than 1.5x your *Risk per trade*, and the balance the
 trade would need. Rough minimums for 1% risk at 0.01 lot (Sep 2026): M5 550 USD, M15 1,100, H1 2,400, H4 5,300.
 
@@ -97,5 +106,7 @@ trade would need. Rough minimums for 1% risk at 0.01 lot (Sep 2026): M5 550 USD,
 | Indicator says "TOO BIG, SKIP" / EA says "ACCOUNT TOO SMALL HERE" | Even 0.01 lot risks more than 1.5x your risk setting on this timeframe. Use a lower timeframe, a larger (demo) balance, or a cent account |
 | EA status line mentions margin | Open trades (manual ones too) use the margin; close or protect them first |
 | EA panel still says "[DEMO - free run]" after an update | Remove the EA from the chart and attach it again |
+| EA shows another timeframe's strategy after you switched the chart (old version) | Update: the EA now resets itself on a timeframe change |
+| "setup skipped: against the daily trend" | H1 and above buy only in a daily uptrend (AUTO); set *InpDailyTrend* = OFF to trade both ways |
 | EA logs "sizing note - broker tick value is off" | Expected on some brokers; the EA already uses the correct figure |
 | EA logs "another instance is already running" | A second chart with the same magic (or a crashed run; wait 15 seconds and reattach) |

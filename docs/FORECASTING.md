@@ -68,3 +68,28 @@ If the pattern match is confident and points *against* a setup, the setup is ski
 * No method predicts individual candles precisely. The candles are a *typical path*, the cone is the honest uncertainty.
 * Accuracy depends on your broker's data and the current regime; the panel's numbers are measured on your chart and change with it.
 * A library of ~6,000 bars (about 2 months of M15) is small. More history helps (`Bars analysed`).
+
+## Round 8: measured on your real gold, and what changed
+`research/sim/forecast.cpp`, last 3,000 bars of each export, every forecast made only from earlier bars
+(output: `research/results/forecast_{M5,M15,H1,H4}.txt`).
+
+**Direction.** The pattern match called the next bar right 48.0% (M5), 50.3% (M15), 50.1% (H1), 50.7% (H4) of the time; 4 bars ahead
+49.1-52.8%. "Always up" scored 48-50% intraday and 53-56% on H4 (the bull market), the 21-EMA slope 48-53%. **Nothing here predicts
+intraday direction**, so the chart only draws coloured candles where the pattern match has proven itself on that chart, as before.
+
+**The range cone was too narrow.** It should hold the later price 60% of the time; the pattern-match cone held it only 51-55%.
+It is replaced by a **calibrated cone**: the 20th-80th percentile of how far price really moved over the same number of bars in the
+last 3,000 bars, scaled by ATR and the hour-of-day range profile. Measured on bars it never saw: **59-61% at every step on every timeframe**.
+
+**Candle size.** Next-bar high-low, compared with the real candle:
+
+| Model | M5 error | M15 error | H1 error | H4 error | within +-25% of the real size |
+|---|---:|---:|---:|---:|---:|
+| Pattern match (typical path) | 2.04 | 4.05 | 9.56 | 14.20 | 34-35% |
+| ATR x hour profile | 1.73 | 3.34 | 8.28 | 12.83 | 40-44% |
+| Recent ranges x hour profile (HAR-style) | 1.77 | 3.42 | 8.81 | 13.86 | 37-43% |
+| **ATR x hour profile, median-corrected (now used)** | **1.66** | **3.11** | **7.73** | **12.21** | **43-48%** |
+
+The error falls 14-19% against the old candles. On the chart, when there is no proven direction, each coming bar is drawn as a grey outline
+exactly as tall as that bar is expected to be, inside the calibrated cone. The panel says, for example, "Next 3 candles: about 4.1 high each;
+price 60% likely between 4180.2 and 4191.5", and "Next candle size: M15 ~7.9 H1 ~17.4 H4 ~39.4" replaces the "-- -- --" line.

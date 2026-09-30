@@ -76,3 +76,17 @@ protect-profit move to break-even before red-folder news, an XAGUSD correlation 
 | 54 | **Panel text wraps** at MT5's 63-character label limit | DONE | Lines were cut off on the screenshot |
 | 55 | **D1/W1 display**: hold time in days/weeks, "close by" as a date, no "day range used" | DONE | |
 | 56 | **Idea screen** `research/sim/ideas.cpp` (discovery/holdout split, filters, new rules, session drift) wired into `run_checks.sh` | DONE | |
+
+## Round 8 (screenshots of 30 Sep 2026: "trade on its own", "more precise", "one perfect strategy")
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 57 | EA and indicator reset their state on every (re)start | DONE | The EA kept the M5 Lab result after the chart was switched to H1 |
+| 58 | Scoreboard PASS = eligible for the pick | DONE | PASS and UNPROVEN on the same screen |
+| 59 | Mean-revert trade box redrawn (typical exit + moving exit line) | DONE | Green box under a buy |
+| 60 | Panel below the One Click Trading buttons | DONE | Status lines hidden |
+| 61 | `InpOneTradePerSymbol` default false | DONE | Manual trades kept the EA idle |
+| 62 | Daily trend filter in the engine (`d1_mode`), `InpDailyTrend` = AUTO in both programs | DONE | H1/H4 improved in both the chosen-on-older test and the EA replay |
+| 63 | Lab window AUTO (H1 25,000 bars) | DONE | More proven days, better H1 replay |
+| 64 | Calibrated forecast cone and candle size (`CalibrateForecast`, `ForecastRange`) | DONE | Cone 59-61% instead of 51-55%; size error -14 to -19% |
+| 65 | Presets for three EA copies (M15, H1, H4) | DONE | More trades from independent Labs |
+| 66 | Research programs `meta.cpp`, `drift.cpp`, `forecast.cpp` in `run_checks.sh` | DONE | |

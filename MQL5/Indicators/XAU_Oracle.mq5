@@ -166,6 +166,7 @@
 #define XR_GRADE      8
 #define XR_ANALOG     9
 #define XR_COST       10
+#define XR_D1         11
 
 //+------------------------------------------------------------------+
 //| small math helpers (avoid MathMax/MathMin overload ambiguity)    |
@@ -256,6 +257,7 @@ string XReasonText(const int r)
       case XR_GRADE:    return "setup not strong enough";
       case XR_ANALOG:   return "pattern match disagrees with the setup";
       case XR_COST:     return "setup skipped: stop too short for the spread";
+      case XR_D1:       return "setup skipped: against the daily trend";
    }
    return "";
 }
@@ -347,6 +349,8 @@ struct XConfig
    double cost_price;        // round-turn spread+slippage in price units (simulation, and the cost guard below)
    double min_stop_cost;     // cost guard: skip setups whose stop is shorter than this many round-trip costs (0 = off)
    double dip_gmt_lo, dip_gmt_hi;   // dip strategies enter only in this GMT window on charts up to H1 (lo < 0 = all day)
+   int    d1_mode;           // daily trend filter: 0 off, 1 trade only in the daily trend's direction, 2 buys only while the daily trend is up
+   int    d1_sma;            // daily trend = last completed daily close above / below its d1_sma-day mean
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
 
    // forecast
@@ -381,6 +385,7 @@ struct XConfig
       max_hold_bars = 0;  hold_minutes = 480;  min_hold_bars = 8;
       cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
       dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
+      d1_mode = 0;  d1_sma = 200;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
    }
@@ -804,6 +809,9 @@ public:
    XTARR(m_ht); XDARR(m_hc); XDARR(m_hh); XDARR(m_hl); XDARR(m_hema2); XDARR(m_hema3);
    XDARR(m_hpdi); XDARR(m_hmdi); XDARR(m_hadx0); XIARR(m_hbias0);
    XIARR(m_hmap); XIARR(m_bias); XDARR(m_hadx);
+   // daily series (for the daily trend filter)
+   int     dn;
+   XTARR(m_dt); XDARR(m_dc); XIARR(m_dreg);
    // intermarket proxy
    XTARR(m_it); XDARR(m_ic); XDARR(m_iema1); XDARR(m_iema2); XIARR(m_idir0); XIARR(m_imap); XIARR(m_inter);
    // votes and scores
@@ -820,10 +828,18 @@ public:
    int     fc_n;
    XTARR(fc_t); XDARR(fc_o); XDARR(fc_h); XDARR(fc_l); XDARR(fc_c); XDARR(fc_up); XDARR(fc_dn);
    double  fc_drift_atr;
+   // calibrated projection (research/sim/forecast.cpp): cone from past standardised moves, candle size from
+   // ATR x hour-of-day profile with a median correction. On real XAUUSD the 20-80% cone held the price 59-61% of
+   // the time (the pattern-match cone: 51-55%) and the candle-size error fell 14-19%.
+   double  fcz_lo[XA_H], fcz_md[XA_H], fcz_hi[XA_H];   // percentiles 20 / 50 / 80 of standardised s-step moves (index s-1)
+   double  fc_krange;         // median of real high-low / (ATR x hour profile)
+   bool    fc_cal_ok;
+   int     rg_n;
+   XTARR(rg_t); XDARR(rg_mid); XDARR(rg_up); XDARR(rg_dn); XDARR(rg_size);
    double  fc_rmse;      // realised one-step error of the drift model (calibrates the cone)
    bool    fc_nomap;     // choppy / spiking market: show range only, no directional path
 
-   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false;
+   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; dn = 0; fc_cal_ok = false; fc_krange = 1.0; rg_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false;
                   lab_buffer = 3.0; lab_window = 0; lab_recent = 1; lab_se_k = 1.0; lab_k = 0; lab_pick_s = -1; lab_pick_p = -1; lab_qualified = 0;
                   lab_auto_folds = 0; lab_first = 0; lab_last = 0; lab_target = 60.0; }
 
@@ -847,6 +863,14 @@ public:
       ArrayResize(m_ht, hn); ArrayResize(m_hc, hn); ArrayResize(m_hh, hn); ArrayResize(m_hl, hn);
       for(int i = 0; i < hn; i++) { m_ht[i] = r[i].time; m_hc[i] = r[i].close; m_hh[i] = r[i].high; m_hl[i] = r[i].low; }
       return hn > 0;
+   }
+   // Optional daily bars for the daily trend filter (cfg.d1_mode). Without them the filter is off.
+   bool SetDaily(XCRATES(r), const int cnt)
+   {
+      dn = (cnt < 0) ? 0 : cnt;
+      ArrayResize(m_dt, dn); ArrayResize(m_dc, dn);
+      for(int i = 0; i < dn; i++) { m_dt[i] = r[i].time; m_dc[i] = r[i].close; }
+      return dn > 0;
    }
    // Optional proxy series (e.g. DXY or EURUSD) on the SAME timeframe as the base.
    // invert = true when the proxy moves opposite to gold (DXY), false for EURUSD-like.
@@ -908,6 +932,7 @@ public:
       ComputeBaseIndicators();
       ComputeSessionLevels();
       ComputeHTF();
+      ComputeDaily();
       ComputeOrb();
       ComputeVotes();
       ComputeScores();
@@ -1272,6 +1297,32 @@ public:
       return 0;
    }
 
+   // Daily trend for every base bar: +1 / -1 when the last daily bar COMPLETED by the close of bar i closed above /
+   // below its d1_sma-day mean, 0 when unknown (not enough daily history).
+   void ComputeDaily()
+   {
+      ArrayResize(m_dreg, n);
+      for(int i = 0; i < n; i++) m_dreg[i] = 0;
+      const int L = XMaxI(cfg.d1_sma, 2);
+      if(dn < L + 1) return;
+      XDARR(sm);
+      ArrayResize(sm, dn);
+      double sum = 0.0;
+      for(int k = 0; k < dn; k++)
+      {
+         sum += m_dc[k];
+         if(k >= L) sum -= m_dc[k - L];
+         sm[k] = (k >= L - 1) ? sum / L : 0.0;
+      }
+      int j = -1;
+      for(int i = 0; i < n; i++)
+      {
+         const datetime done = m_t[i] + (datetime)cfg.base_sec;
+         while(j + 1 < dn && m_dt[j + 1] + 86400 <= done) j++;
+         if(j >= L - 1) m_dreg[i] = (m_dc[j] > sm[j]) ? 1 : -1;
+      }
+   }
+
    // True when a dip strategy may enter after bar i: inside the configured GMT window (charts up to H1 only).
    bool DipWindowOk(const int i) const
    {
@@ -1282,8 +1333,22 @@ public:
       return (h >= cfg.dip_gmt_lo || h < cfg.dip_gmt_hi);   // window across midnight
    }
 
-   // Direction strategy s wants to trade after closed bar i (0 = nothing). Uses data <= i only.
+   // Direction strategy s wants to trade after closed bar i (0 = nothing), after the optional filters.
    int StrategyDir(const int st, const int i) const
+   {
+      const int d = StrategyDirRaw(st, i);
+      if(d == 0) return 0;
+      if(cfg.d1_mode > 0 && dn > 0 && i < ArraySize(m_dreg))
+      {
+         const int r = m_dreg[i];
+         if(cfg.d1_mode == 1 && r != d) return 0;
+         if(cfg.d1_mode == 2 && !(d > 0 && r > 0)) return 0;
+      }
+      return d;
+   }
+
+   // Direction strategy s wants to trade after closed bar i (0 = nothing). Uses data <= i only.
+   int StrategyDirRaw(const int st, const int i) const
    {
       if(i < cfg.warmup + 10 || i >= n) return 0;
       const int o = i * XM_COUNT;
@@ -1356,7 +1421,7 @@ public:
       const int fr = FilterReason(i);
       if(fr != XR_OK) { sig.reason = fr; return false; }
       const int d = StrategyDir(st, i);
-      if(d == 0) { sig.reason = XR_NOSETUP; return false; }
+      if(d == 0) { sig.reason = (cfg.d1_mode > 0 && StrategyDirRaw(st, i) != 0) ? XR_D1 : XR_NOSETUP; return false; }
       sig.dir = d;
       sig.primary = -1;
       sig.n_agree = (d > 0) ? m_nal[i] : m_nas[i];
@@ -1440,14 +1505,19 @@ public:
                m_lt_cnt[c]++;
             }
          }
-         lab[c].qualified = LabQualifies(lab[c].all, win_target, min_trades);
          lab[c].score = LabScore(lab[c].all);
-         if(lab[c].qualified) lab_qualified++;
       }
       // walk-forward record of the auto-pick
       const int K = XClampI(folds, 2, 15);
       lab_k = K;
       for(int k = 0; k <= K; k++) lab_bounds[k] = start + (int)((double)k * (last_closed - start) / K);
+      // PASS = eligible for the live pick right now (same rule as the pick, so PASS and PROVEN always agree)
+      for(int c = 0; c < XLAB_CELLS; c++)
+      {
+         double sc0;
+         lab[c].qualified = CellEligible(c, K, win_target, min_trades, sc0);
+         if(lab[c].qualified) lab_qualified++;
+      }
       for(int k = 1; k < K; k++)
       {
          const int f0 = lab_bounds[k];
@@ -1474,32 +1544,41 @@ public:
    // (k = lab_k means "now"). -1 when nothing qualifies.
    int LabPickFold(const int k, const double win_target, const int min_trades) const
    {
-      const int before = (k >= lab_k) ? lab_last + 1 : lab_bounds[k];
-      const int from = (lab_window > 0) ? lab_bounds[XMaxI(0, k - lab_window)] : lab_bounds[0];
-      const int rec_from = lab_bounds[XMaxI(0, k - 1)];
       int best = -1;
       double best_sc = -1e9;
       for(int c = 0; c < XLAB_CELLS; c++)
       {
-         XStats st, rc;
-         st.Reset(); rc.Reset();
-         for(int q = 0; q < m_lt_cnt[c]; q++)
-         {
-            const int kk = c * XLAB_MAXTR + q;
-            if(m_lt_e[kk] >= before) break;
-            if(m_lt_e[kk] < from) continue;
-            XTradeResult t;
-            t.Reset();
-            t.r_net = m_lt_r[kk]; t.bars = m_lt_b[kk];
-            st.Add(t);
-            if(m_lt_e[kk] >= rec_from) rc.Add(t);
-         }
-         if(!LabQualifies(st, win_target + lab_buffer, min_trades)) continue;
-         if(lab_recent == 1 && rc.n >= 5 && rc.Expectancy() <= 0.0) continue;
-         const double sc = LabScore(st);
+         double sc;
+         if(!CellEligible(c, k, win_target, min_trades, sc)) continue;
          if(sc > best_sc) { best_sc = sc; best = c; }
       }
       return best;
+   }
+
+   // Could cell c be picked for fold k (k = lab_k: now)? Uses trades that entered before the fold only.
+   bool CellEligible(const int c, const int k, const double win_target, const int min_trades, double &sc) const
+   {
+      sc = -1e9;
+      const int before = (k >= lab_k) ? lab_last + 1 : lab_bounds[k];
+      const int from = (lab_window > 0) ? lab_bounds[XMaxI(0, k - lab_window)] : lab_bounds[0];
+      const int rec_from = lab_bounds[XMaxI(0, k - 1)];
+      XStats st, rc;
+      st.Reset(); rc.Reset();
+      for(int q = 0; q < m_lt_cnt[c]; q++)
+      {
+         const int kk = c * XLAB_MAXTR + q;
+         if(m_lt_e[kk] >= before) break;
+         if(m_lt_e[kk] < from) continue;
+         XTradeResult t;
+         t.Reset();
+         t.r_net = m_lt_r[kk]; t.bars = m_lt_b[kk];
+         st.Add(t);
+         if(m_lt_e[kk] >= rec_from) rc.Add(t);
+      }
+      if(!LabQualifies(st, win_target + lab_buffer, min_trades)) return false;
+      if(lab_recent == 1 && rc.n >= 5 && rc.Expectancy() <= 0.0) return false;
+      sc = LabScore(st);
+      return true;
    }
 
    // The cell the tools should use. proven = it passed the lab. Otherwise the best cell that at least reaches the
@@ -1597,6 +1676,70 @@ public:
          decay *= cfg.fc_decay;
       }
       fc_n = steps;
+   }
+
+   //--- calibrated projection ---------------------------------------------
+   // Learn, from the `lookback` bars that closed before last_closed, how far price really moved s bars ahead
+   // (in units of ATR x hour profile) and how big candles really were compared with ATR x hour profile.
+   void CalibrateForecast(const int last_closed, const int lookback)
+   {
+      fc_cal_ok = false;
+      const int from = XMaxI(cfg.warmup + 1, last_closed - lookback - XA_H);
+      const int cnt = last_closed - XA_H - from;
+      if(cnt < 300) return;
+      XDARR(v);
+      ArrayResize(v, cnt);
+      for(int s = 1; s <= XA_H; s++)
+      {
+         int m = 0;
+         for(int i = from; i < last_closed - XA_H && m < cnt; i++)
+         {
+            double pv = 0.0;
+            for(int k = 1; k <= s; k++) { const double se = SeasonAt(m_t[i + k]); pv += se * se; }
+            v[m++] = (m_c[i + s] - m_c[i]) / (XMax(m_atr[i], 1e-9) * MathSqrt(pv));
+         }
+         ArrayResize(v, m);
+         ArraySort(v);
+         fcz_lo[s - 1] = v[(int)(0.2 * (m - 1))];
+         fcz_md[s - 1] = v[m / 2];
+         fcz_hi[s - 1] = v[(int)(0.8 * (m - 1))];
+         ArrayResize(v, cnt);
+      }
+      int m = 0;
+      for(int i = from; i < last_closed && m < cnt; i++)
+      {
+         const double d = XMax(m_atr[i], 1e-9) * SeasonAt(m_t[i + 1]);
+         v[m++] = (m_h[i + 1] - m_l[i + 1]) / d;
+      }
+      ArrayResize(v, m);
+      ArraySort(v);
+      fc_krange = XClamp(v[m / 2], 0.3, 3.0);
+      fc_cal_ok = true;
+   }
+
+   // Calibrated projection for `steps` bars after the live price: median path, 20-80% cone and expected
+   // high-low of each bar. ref_i = last closed bar (its ATR scales everything).
+   void ForecastRange(const int ref_i, const double price_now, const datetime t_first, const int steps)
+   {
+      rg_n = 0;
+      if(!fc_cal_ok || ref_i < 0 || ref_i >= n || steps < 1) return;
+      const int cnt = XMinI(steps, XA_H);
+      ArrayResize(rg_t, cnt); ArrayResize(rg_mid, cnt); ArrayResize(rg_up, cnt); ArrayResize(rg_dn, cnt); ArrayResize(rg_size, cnt);
+      const double a = m_atr[ref_i];
+      double pv = 0.0;
+      for(int j = 0; j < cnt; j++)
+      {
+         const datetime tj = t_first + (datetime)j * cfg.base_sec;
+         const double se = SeasonAt(tj);
+         pv += se * se;
+         const double sc = a * MathSqrt(pv);
+         rg_t[j] = tj;
+         rg_mid[j] = price_now + fcz_md[j] * sc;
+         rg_up[j] = price_now + fcz_hi[j] * sc;
+         rg_dn[j] = price_now + fcz_lo[j] * sc;
+         rg_size[j] = a * se * fc_krange;
+      }
+      rg_n = cnt;
    }
 
    //--- analog forecaster ------------------------------------------------
@@ -1919,7 +2062,7 @@ private:
       double hs[24], hc[24];
       double allsum = 0.0; int allc = 0;
       for(int k = 0; k < 24; k++) { hs[k] = 0.0; hc[k] = 0.0; season[k] = 1.0; }
-      if(cfg.base_sec <= 3600)
+      if(cfg.base_sec <= 14400)
       {
          for(int i = 0; i < n; i++)
          {
@@ -2618,6 +2761,35 @@ int XResolveCell(const CXauEngine &le, const int user_s, const int user_p, const
    return best;
 }
 
+// Daily trend filter (research/sim/drift.cpp, docs/REAL_DATA.md section 8). The daily trend is the last completed
+// daily close above / below its 200-day mean.
+enum ENUM_XAU_D1
+{
+   XAU_D1_AUTO = -1,   // AUTO: H1 and above buy only while the daily trend is up; M5-M30 unfiltered
+   XAU_D1_OFF  = 0,    // off
+   XAU_D1_WITH = 1,    // trade only in the daily trend's direction
+   XAU_D1_LONG = 2     // buy only, and only while the daily trend is up
+};
+
+int XResolveD1Mode(const int input_mode, const ENUM_TIMEFRAMES tf)
+{
+   if(input_mode >= 0) return input_mode;
+   return (PeriodSeconds(tf) >= 3600) ? XAU_D1_LONG : XAU_D1_OFF;
+}
+
+// Strategy Lab window: 0 = automatic (H1: 25,000 bars, about 4 years; everything else 10,000 bars).
+int XResolveHistoryBars(const int input_bars, const ENUM_TIMEFRAMES tf)
+{
+   if(input_bars > 0) return input_bars;
+   return (PeriodSeconds(tf) == 3600) ? 25000 : 10000;
+}
+
+// Daily bars needed to know the daily trend over `base_bars` bars of timeframe tf (plus the 200-day mean).
+int XDailyBarsNeeded(const int base_bars, const ENUM_TIMEFRAMES tf)
+{
+   return (int)((double)base_bars * PeriodSeconds(tf) / 86400.0 * 1.45) + 260;
+}
+
 enum ENUM_XAU_DST
 {
    XAU_DST_FIXED = 0,   // server clock never changes
@@ -3182,6 +3354,15 @@ bool XRunDailyLab(CXauEngine &le, const string sym, const ENUM_TIMEFRAMES tf, co
    if(gh < 300) return false;
    le.SetBase(b, gb);
    le.SetHTF(h, gh);
+   XRATESARR(d);
+   ArraySetAsSeries(d, false);
+   int gd = 0;
+   if(le.cfg.d1_mode > 0)
+   {
+      gd = CopyRates(sym, PERIOD_D1, upto, XDailyBarsNeeded(gb, tf), d);
+      if(gd < 210) return false;          // daily history still loading: retry, never test the filter blind
+   }
+   le.SetDaily(d, gd);
    if(StringLen(inter_sym) > 0)
    {
       const int gx = CopyRates(inter_sym, tf, upto, gb + 50, x);
@@ -3203,7 +3384,8 @@ input ENUM_XAU_EXIT   InpExit           = XAU_EX_AUTO;   // Exit style (AUTO = c
 input double          InpWinTarget      = 60.0;          // Strategy Lab: minimum % of winning trades
 input int             InpLabMinTrades   = 50;            // Strategy Lab: minimum trades before a strategy can qualify
 input int             InpLabFolds       = 5;             // Strategy Lab: walk-forward folds
-input int             InpHistoryBars    = 10000;         // Bars tested (keep equal to the EA's setting so both choose alike)
+input int             InpHistoryBars    = 0;             // Bars tested (0 = auto: 25,000 on H1, else 10,000; keep equal to the EA)
+input ENUM_XAU_D1     InpDailyTrend     = XAU_D1_AUTO;   // Daily trend filter (AUTO: H1 and above buy only in a daily uptrend)
 
 input group "=== Money ==="
 input double          InpRiskPct        = 1.0;           // Risk per trade, % of balance (for the lot size shown)
@@ -3278,7 +3460,9 @@ CXPanel    g_pl;             // scoreboard
 XRATESARR(g_rates);
 XRATESARR(g_hrates);
 XRATESARR(g_irates);
+XRATESARR(g_drates);
 int        g_gh = 0, g_gi = 0;
+int        g_hist = 10000;          // Strategy Lab window (resolved from InpHistoryBars)
 string     g_inter_sym    = "";
 bool       g_inter_invert = false;
 datetime   g_last_bar     = 0;
@@ -3363,6 +3547,10 @@ bool SignalSize(XLotPlan &lp, bool &fits)
 //+------------------------------------------------------------------+
 int OnInit()
 {
+   // start clean after a timeframe or symbol change
+   g_ready = false; g_n = 0; g_last_bar = 0; g_last_alert = 0; g_last_try = 0;
+   g_lab_ok = false; g_lab_day = 0; g_cell = -1; g_proven = false; g_act_s = -1; g_act_p = XP_CLASSIC;
+   g_sig_i = -1; g_live_ok = false; g_reason = XR_WARMUP; g_opp_dir = 0;
    SetIndexBuffer(0, BufEma1, INDICATOR_DATA);
    SetIndexBuffer(1, BufEma2, INDICATOR_DATA);
    SetIndexBuffer(2, BufEma3, INDICATOR_DATA);
@@ -3382,6 +3570,7 @@ int OnInit()
    IndicatorSetString(INDICATOR_SHORTNAME, "XAU Oracle");
    IndicatorSetInteger(INDICATOR_DIGITS, _Digits);
 
+   g_hist = XResolveHistoryBars(InpHistoryBars, (ENUM_TIMEFRAMES)_Period);
    g_htf = (InpHTF == PERIOD_CURRENT) ? XAutoHTF((ENUM_TIMEFRAMES)_Period) : InpHTF;
    if(PeriodSeconds(g_htf) <= PeriodSeconds((ENUM_TIMEFRAMES)_Period)) g_htf = XAutoHTF((ENUM_TIMEFRAMES)_Period);
    g_inter_sym = XResolveInterSymbol(InpInterSymbol, g_inter_invert);
@@ -3443,6 +3632,7 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf, const ENUM_TIMEFRAMES htf)
    // a fixed cost (not the spread of the moment) so the indicator and the EA test and choose alike
    c.cost_price = XMax(InpCostPrice, 0.01);
    c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
+   c.d1_mode = XResolveD1Mode((int)InpDailyTrend, tf);
 }
 
 //+------------------------------------------------------------------+
@@ -3456,7 +3646,7 @@ void RunLabIfNeeded(const datetime now_bar)
    if(g_lab_ok && ds == g_lab_day) return;
    FillConfig(g_lab.cfg, (ENUM_TIMEFRAMES)_Period, g_htf);
    // the fixed window (same bars as the EA): retried on every new bar until the history is there
-   if(XRunDailyLab(g_lab, _Symbol, (ENUM_TIMEFRAMES)_Period, g_htf, InpHistoryBars, g_inter_sym, g_inter_invert,
+   if(XRunDailyLab(g_lab, _Symbol, (ENUM_TIMEFRAMES)_Period, g_htf, g_hist, g_inter_sym, g_inter_invert,
                    InpWinTarget, InpLabMinTrades, InpLabFolds, ds))
    {
       g_lab_ok = true;
@@ -3468,6 +3658,7 @@ void RunLabIfNeeded(const datetime now_bar)
    // nothing yet: use the chart's own bars so the screen is useful at once
    g_lab.SetBase(g_rates, g_n);
    g_lab.SetHTF(g_hrates, g_gh);
+   g_lab.SetDaily(g_drates, ArraySize(g_drates));
    if(g_gi > 100) g_lab.SetInter(g_irates, g_gi, g_inter_invert);
    g_lab_ok = g_lab.Compute();
    if(g_lab_ok) g_lab.RunLab(g_lab.cfg.warmup, g_n - 2, InpWinTarget, InpLabMinTrades, InpLabFolds);
@@ -3498,7 +3689,7 @@ void AnalogRefresh();
 bool Rebuild(const int rates_total, const datetime &time[], const double &open[], const double &high[],
              const double &low[], const double &close[], const long &tick_volume[], const int &spread[])
 {
-   const int n = XMinI(rates_total, InpHistoryBars);
+   const int n = XMinI(rates_total, g_hist);
    if(n < 400) return false;
    g_start = rates_total - n;
    g_n = n;
@@ -3521,6 +3712,13 @@ bool Rebuild(const int rates_total, const datetime &time[], const double &open[]
    g_htf_missing = (g_gh < 300);
    g_eng.SetBase(g_rates, n);
    g_eng.SetHTF(g_hrates, g_gh);
+   int gd = 0;
+   if(g_eng.cfg.d1_mode > 0)
+   {
+      gd = XLoadRates(_Symbol, PERIOD_D1, XDailyBarsNeeded(n, (ENUM_TIMEFRAMES)_Period), g_drates);
+      if(gd < 0) gd = 0;
+   }
+   g_eng.SetDaily(g_drates, gd);
    g_gi = 0;
    if(StringLen(g_inter_sym) > 0)
    {
@@ -3621,6 +3819,7 @@ void AnalogRefresh()
    g_an_up = 0; g_an_dn = 0;
    if(!g_ready) return;
    const int n = g_n;
+   g_eng.CalibrateForecast(n - 2, 3000);
    g_eng.AnalogQuery(n - 2, g_an);
    g_eng.AnalogAudit(n - 2, 1000, 4, g_aud);
    if(!g_an.ok) return;
@@ -3668,19 +3867,24 @@ void RefreshTfForecasts()
       g_tfe[k].SetBase(b, gb);
       g_tfe[k].SetHTF(h, gh);
       if(!g_tfe[k].Compute()) continue;
+      // expected size of that timeframe's next candle (calibrated), then a direction only if it is proven there
+      g_tfe[k].CalibrateForecast(gb - 2, 2000);
+      string sz = "";
+      if(g_tfe[k].fc_cal_ok)
+         sz = "~" + DoubleToString(g_tfe[k].m_atr[gb - 2] * g_tfe[k].SeasonAt(bt + (datetime)PeriodSeconds(g_tfs[k])) * g_tfe[k].fc_krange, 1);
+      g_tf_txt[k] = sz;
       XAnalog a;
       XAnalogAudit au;
       if(!g_tfe[k].AnalogQuery(gb - 2, a)) continue;
       g_tfe[k].AnalogAudit(gb - 2, 800, 4, au);
       const bool conf = g_tfe[k].AnalogConfident(a);
       const bool prov = (au.nc4 >= 25 && au.LowerBound(au.hitc4, au.nc4, g_tfe[k].cfg.an_z) >= 0.5);
-      if(!conf) g_tf_txt[k] = "--";
-      else
+      if(conf && prov)
       {
          string d = "down";
          if(a.dir4 > 0) d = "up";
-         if(prov) { StringToUpper(d); g_tf_txt[k] = d + " " + DoubleToString(100.0 * au.Rate(au.hitc4, au.nc4), 0) + "%"; }
-         else g_tf_txt[k] = d + "?";
+         StringToUpper(d);
+         g_tf_txt[k] = sz + " " + d + " " + DoubleToString(100.0 * au.Rate(au.hitc4, au.nc4), 0) + "%";
       }
    }
 }
@@ -3698,46 +3902,83 @@ void DrawForecast()
       XObjDelete("XO_FD" + IntegerToString(j));
    }
    XObjDelete("XO_FT");
-   if(!InpShowForecast || !g_ready || !g_an.ok) return;
+   if(!InpShowForecast || !g_ready) return;
    const int n = g_n;
    const int period = g_eng.cfg.base_sec;
    const int steps = XMinI(XMaxI(InpForecastBars, 1), 7);
-   const double live = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   g_eng.ForecastAnalog(g_an, (live > 0.0) ? live : g_eng.m_c[n - 1], g_eng.m_t[n - 1] + period, steps);
-   if(g_eng.fc_n < 1) return;
+   const double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   const double live = (bid > 0.0) ? bid : g_eng.m_c[n - 1];
+   const datetime t_first = g_eng.m_t[n - 1] + period;
+   // calibrated range: cone and candle size (always); the pattern-match path only when it has proven itself here
+   g_eng.ForecastRange(n - 2, live, t_first, steps);
+   if(g_an_show && g_an.ok) g_eng.ForecastAnalog(g_an, live, t_first, steps);
+   const bool path = g_an_show && g_eng.fc_n > 0;
+   const int cnt = path ? XMinI(g_eng.fc_n, g_eng.rg_n > 0 ? g_eng.rg_n : g_eng.fc_n) : g_eng.rg_n;
+   if(cnt < 1) return;
    const color cu = XRGB(70, 175, 130), cd = XRGB(215, 95, 95), cc = XRGB(140, 150, 175);
-   for(int j = 0; j < g_eng.fc_n; j++)
+   for(int j = 0; j < cnt; j++)
    {
       const string sj = IntegerToString(j);
-      const datetime t0 = g_eng.fc_t[j];
-      if(g_an_show)
+      const datetime t0 = path ? g_eng.fc_t[j] : g_eng.rg_t[j];
+      if(path)
       {
          const color cl = (g_eng.fc_c[j] >= g_eng.fc_o[j]) ? cu : cd;
          XObjRect("XO_FB" + sj, t0 + (datetime)(period * 0.12), g_eng.fc_o[j], t0 + (datetime)(period * 0.88), g_eng.fc_c[j], cl, true);
          XObjTrend("XO_FW" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_l[j], t0 + (datetime)(period * 0.5), g_eng.fc_h[j], cl, STYLE_SOLID, 1, false);
       }
-      if(InpShowCone && j + 1 < g_eng.fc_n)
+      else
       {
-         const datetime t1 = g_eng.fc_t[j + 1];
-         XObjTrend("XO_FU" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_up[j], t1 + (datetime)(period * 0.5), g_eng.fc_up[j + 1], cc, STYLE_SOLID, 1, false);
-         XObjTrend("XO_FD" + sj, t0 + (datetime)(period * 0.5), g_eng.fc_dn[j], t1 + (datetime)(period * 0.5), g_eng.fc_dn[j + 1], cc, STYLE_SOLID, 1, false);
+         // no direction: a grey outline as tall as the next candle is expected to be (median-corrected size)
+         const double half = 0.5 * g_eng.rg_size[j];
+         XObjRect("XO_FB" + sj, t0 + (datetime)(period * 0.2), g_eng.rg_mid[j] - half, t0 + (datetime)(period * 0.8), g_eng.rg_mid[j] + half, cc, false);
+      }
+      if(InpShowCone && g_eng.rg_n > j + 1)
+      {
+         const datetime t1 = g_eng.rg_t[j + 1];
+         XObjTrend("XO_FU" + sj, t0 + (datetime)(period * 0.5), g_eng.rg_up[j], t1 + (datetime)(period * 0.5), g_eng.rg_up[j + 1], cc, STYLE_SOLID, 1, false);
+         XObjTrend("XO_FD" + sj, t0 + (datetime)(period * 0.5), g_eng.rg_dn[j], t1 + (datetime)(period * 0.5), g_eng.rg_dn[j + 1], cc, STYLE_SOLID, 1, false);
       }
    }
-   string lab = "range only (no reliable direction)";
+   string lab = "expected size and 60% range (direction unknown)";
    color lc = cc;
-   if(g_an_show) { lab = (g_an.dir4 > 0) ? "PREDICTED: UP" : "PREDICTED: DOWN"; lc = (g_an.dir4 > 0) ? cu : cd; }
-   XObjText("XO_FT", g_eng.fc_t[0], g_eng.fc_up[g_eng.fc_n - 1], lab, lc, 8);
+   if(path) { lab = (g_an.dir4 > 0) ? "PREDICTED: UP" : "PREDICTED: DOWN"; lc = (g_an.dir4 > 0) ? cu : cd; }
+   const double top = (g_eng.rg_n > 0) ? g_eng.rg_up[g_eng.rg_n - 1] : g_eng.fc_up[g_eng.fc_n - 1];
+   XObjText("XO_FT", t_first, top, lab, lc, 8);
+}
+
+// "Next 3 bars: 60% between A and B, candles about X high" (calibrated on this chart's history)
+string RangeLine()
+{
+   if(!g_eng.fc_cal_ok || g_eng.rg_n < 3) return "";
+   return "Next 3 candles: about " + DoubleToString(g_eng.rg_size[0], _Digits > 2 ? 2 : _Digits) + " high each; price 60% likely between "
+          + Px(g_eng.rg_dn[2]) + " and " + Px(g_eng.rg_up[2]);
 }
 
 //+------------------------------------------------------------------+
 //| the green / red trade box                                         |
 //+------------------------------------------------------------------+
 // price the trade is aiming for (for the mean-reversion exit: today's 5-bar mean)
+// Average winning trade of the strategy in use, in R (the mean-revert exit has no fixed target).
+double TypicalWinR()
+{
+   if(g_cell >= 0 && g_lab.lab[g_cell].all.wins >= 5) return XClamp(g_lab.lab[g_cell].all.sum_win / g_lab.lab[g_cell].all.wins, 0.2, 3.0);
+   return 0.8;
+}
+
+// Where the green box ends: the fixed target, or for the mean-revert exit the typical winning exit.
+// (The mean-revert exit itself is a moving level, the 5-bar mean; drawing it as the target put the "profit"
+// box under a buy whenever price had fallen since the signal.)
 double TargetPrice()
 {
    if(g_sig.tp2 > 0.0) return g_sig.tp2;
    if(g_sig.tp1 > 0.0) return g_sig.tp1;
-   return g_eng.m_sma5[g_n - 1];
+   return g_sig.entry + g_sig.dir * TypicalWinR() * g_sig.risk;
+}
+
+// Mean-revert exit trigger right now: close the trade when a candle closes beyond this 5-bar mean.
+double MeanTrigger()
+{
+   return g_eng.m_sma5[g_n - 2];
 }
 
 bool TradeActive()
@@ -3748,8 +3989,9 @@ bool TradeActive()
 
 void DrawTradeBox()
 {
-   const string nm[10] = {"XO_BX_R", "XO_BX_G1", "XO_BX_G2", "XO_BX_E", "XO_BX_TR", "XO_BX_T0", "XO_BX_T1", "XO_BX_T2", "XO_BX_T3", "XO_BX_T4"};
-   for(int k = 0; k < 10; k++) XObjDelete(nm[k]);
+   const string nm[12] = {"XO_BX_R", "XO_BX_G1", "XO_BX_G2", "XO_BX_E", "XO_BX_TR", "XO_BX_T0", "XO_BX_T1", "XO_BX_T2", "XO_BX_T3", "XO_BX_T4",
+                          "XO_BX_MR", "XO_BX_T5"};
+   for(int k = 0; k < 12; k++) XObjDelete(nm[k]);
    if(!InpShowTradeBox || !TradeActive()) return;
    const int period = g_eng.cfg.base_sec;
    const datetime t0 = g_eng.m_t[g_sig_i + 1];
@@ -3776,7 +4018,16 @@ void DrawTradeBox()
    XObjText("XO_BX_T0", tl, entry, side + Px(entry), XRGB(235, 235, 245), 9);
    XObjText("XO_BX_T1", tl, g_sig.sl, "STOP " + Px(g_sig.sl), XRGB(255, 120, 120), 9);
    if(g_act_x.mr_exit == 1)
-      XObjText("XO_BX_T2", tl, tgt, "EXIT on a close past " + Px(tgt), XRGB(90, 230, 160), 9);
+   {
+      const double trg = MeanTrigger();
+      XObjText("XO_BX_T2", tl, tgt, "TYPICAL EXIT " + Px(tgt), XRGB(90, 230, 160), 9);
+      XObjTrend("XO_BX_MR", t0, trg, t_end, trg, XRGB(90, 230, 160), STYLE_DOT, 1, false);
+      const bool loss_side = (g_sig.dir > 0) ? (trg <= entry) : (trg >= entry);
+      const string ex_txt = buy ? "exit on a close above " : "exit on a close below ";
+      const string ls_txt = loss_side ? " (past the entry: small loss)" : "";
+      XObjText("XO_BX_T5", tl, trg, ex_txt + Px(trg) + ls_txt,
+               loss_side ? XRGB(255, 170, 60) : XRGB(90, 230, 160), 8);
+   }
    else if(tp1 > 0.0 && g_sig.tp2 > 0.0 && MathAbs(g_sig.tp2 - tp1) > 1e-9)
    {
       XObjText("XO_BX_T2", tl, tp1, "TAKE " + DoubleToString(g_act_x.part * 100.0, 0) + "% " + Px(tp1), XRGB(90, 230, 160), 9);
@@ -3852,6 +4103,8 @@ void QuoteRecord(XStats &st, bool &walkforward)
 void DrawMainPanel()
 {
    if(!InpShowPanel || !g_ready) { g_pm.Clear(); return; }
+   // MT5's One Click Trading buttons sit in the top-left corner and hid the status lines: start below them
+   g_pm.y = (InpPanelPos == XAU_PANEL_TOP_LEFT && ChartGetInteger(0, CHART_SHOW_ONE_CLICK)) ? 104 : 24;
    const int n = g_n;
    const double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    const bool fresh = (g_sig_i == n - 2);
@@ -3927,7 +4180,11 @@ void DrawMainPanel()
    {
       const double tgt = TargetPrice();
       if(g_act_x.mr_exit == 1)
-         g_pm.Line((buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Exit on a close past " + Px(tgt), ClrText());
+      {
+         g_pm.Line((buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Typical exit " + Px(tgt), ClrText());
+         const string side = buy ? "above " : "below ";
+         g_pm.Line("Exit rule: close when a candle closes " + side + Px(MeanTrigger()) + " (the 5-bar mean, it moves)", ClrDim());
+      }
       else
          g_pm.Line((buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Target " + Px(tgt), ClrText());
       XLotPlan lp;
@@ -3983,11 +4240,21 @@ void DrawMainPanel()
    if(tb > 0) tr = "UP";
    if(tb < 0) tr = "DOWN";
    string trl = "Trend " + XTfName(g_htf) + ": " + tr;
+   if(g_eng.cfg.d1_mode > 0 && g_eng.dn > 0)
+   {
+      const int dr = g_eng.m_dreg[n - 1];
+      string dtx = "Daily: ?";
+      if(dr > 0) dtx = "Daily: UP";
+      if(dr < 0) dtx = (g_eng.cfg.d1_mode == 2) ? "Daily: DOWN (no buys)" : "Daily: DOWN";
+      trl += "   " + dtx;
+   }
    if(PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400) trl += "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%";
    g_pm.Line(trl, ClrText());
    g_pm.Line(AnalogLine(), (g_an_state == 3) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
+   const string rl = RangeLine();
+   if(StringLen(rl) > 0) g_pm.Line(rl, ClrText());
    if(InpShowTfForecast)
-      g_pm.Line("By timeframe:  M15 " + g_tf_txt[0] + "   H1 " + g_tf_txt[1] + "   H4 " + g_tf_txt[2], ClrDim());
+      g_pm.Line("Next candle size:  M15 " + g_tf_txt[0] + "   H1 " + g_tf_txt[1] + "   H4 " + g_tf_txt[2], ClrDim());
    const string warn = XAccountWarning(_Symbol);
    if(StringLen(warn) > 0) g_pm.Line("RISK: " + warn, ClrRed());
    if(InpUseNews && !g_news_blocked && StringFind(g_news_text, " in ") >= 0) g_pm.Line("News: " + g_news_text, ClrDim());

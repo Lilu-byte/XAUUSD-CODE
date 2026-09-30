@@ -537,7 +537,9 @@ struct ReplayOut { XStats live, demo; int days, days_traded; int picks[XLAB_CELL
 static double g_minstop = -1.0;   // cost-guard override for real-data runs (env XAU_MINSTOP; -1 = engine default)
 static double g_target = 60.0;    // Strategy Lab win-rate target for real-data runs (env XAU_TARGET)
 static double g_cost = -1.0;      // round-trip cost for real-data runs (env XAU_COST; -1 = engine default 0.30)
-static double g_dip_lo = -2.0, g_dip_hi = 24.0;   // dip-strategy GMT window for real-data runs (env XAU_DIPWIN="17-21", "off"; -2 = default)
+static double g_dip_lo = -2.0, g_dip_hi = 24.0;
+static std::vector<MqlRates> g_d1;   // daily bars for the daily trend filter (env XAU_D1 = path to the D1 csv)
+static int g_d1mode = -1;            // env XAU_D1MODE (0 off, 1 with the trend, 2 buys only in an up trend; -1 = engine default)   // dip-strategy GMT window for real-data runs (env XAU_DIPWIN="17-21", "off"; -2 = default)
 static double g_rp_se = 1.0, g_rp_buf = 3.0; static int g_rp_win = 0, g_rp_min = 50, g_rp_rec = 1;   // = engine defaults
 
 static void live_replay(const std::vector<MqlRates> &base, const std::vector<MqlRates> &htf, int base_sec, int htf_sec,
@@ -551,6 +553,8 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
    if(g_minstop >= 0.0) E.cfg.min_stop_cost = g_minstop;
    if(g_cost > 0.0) E.cfg.cost_price = g_cost;
    if(g_dip_lo > -2.0) { E.cfg.dip_gmt_lo = g_dip_lo; E.cfg.dip_gmt_hi = g_dip_hi; }
+   if(g_d1mode >= 0) E.cfg.d1_mode = g_d1mode;
+   if(!g_d1.empty()) E.SetDaily(g_d1, (int)g_d1.size());
    E.SetBase(base, N);
    E.SetHTF(htf, (int)htf.size());
    if(!E.Compute()) return;
@@ -574,6 +578,7 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
          L.lab_se_k = g_rp_se; L.lab_buffer = g_rp_buf; L.lab_window = g_rp_win; L.lab_recent = g_rp_rec;
          L.SetBase(lb, (int)lb.size());
          L.SetHTF(lh, (int)lh.size());
+         if(!g_d1.empty()) L.SetDaily(g_d1, (int)g_d1.size());
          pick_live = -1; pick_demo = -1;
          if(L.Compute())
          {
@@ -755,6 +760,91 @@ static int bar_seconds(const std::vector<MqlRates> &v)
    return d.empty() ? 0 : (int)d[d.size() / 2];
 }
 
+// daily trend filter: no look-ahead, and the modes do what they say
+static std::vector<MqlRates> aggregate(const std::vector<MqlRates> &v, int htf_sec);
+
+static void test_daily_filter()
+{
+   std::printf("\n== unit tests: daily trend filter ==\n");
+   Series S = make_series(W_TREND, 40000, 21);
+   std::vector<MqlRates> d1 = aggregate(S.m15, 86400);
+   CXauEngine e;
+   load(e, S, (int)S.m15.size());
+   e.cfg.d1_sma = 50;
+   e.SetDaily(d1, (int)d1.size());
+   e.Compute();
+   int known = 0, up = 0;
+   for(int i = 0; i < e.n; i++) if(e.m_dreg[i] != 0) { known++; if(e.m_dreg[i] > 0) up++; }
+   CHECK(known > e.n / 2 && up > 0 && up < known, "daily trend known for most bars, both up and down phases present");
+   // truncating the daily series at each bar's close changes nothing (no look-ahead)
+   bool same = true;
+   for(int t = 0; t < 40 && same; t++)
+   {
+      const int i = e.cfg.warmup + (int)((long long)t * (e.n - e.cfg.warmup - 1) / 40);
+      std::vector<MqlRates> cut;
+      for(const MqlRates &r : d1) if(r.time + 86400 <= e.m_t[i] + e.cfg.base_sec) cut.push_back(r);
+      CXauEngine f;
+      load(f, S, (int)S.m15.size());
+      f.cfg.d1_sma = 50;
+      f.SetDaily(cut, (int)cut.size());
+      f.Compute();
+      if(f.m_dreg[i] != e.m_dreg[i]) same = false;
+   }
+   CHECK(same, "daily trend at a bar uses only daily bars completed by that bar's close");
+   int sells2 = 0, buys_down2 = 0, against1 = 0, sig0 = 0, sig2 = 0;
+   for(int mode = 0; mode <= 2; mode++)
+   {
+      e.cfg.d1_mode = mode;
+      for(int st = 0; st < XS_COUNT; st++)
+         for(int i = e.cfg.warmup + 10; i < e.n - 2; i++)
+         {
+            const int d = e.StrategyDir(st, i);
+            if(d == 0) continue;
+            if(mode == 0) sig0++;
+            if(mode == 2) { sig2++; if(d < 0) sells2++; if(d > 0 && e.m_dreg[i] <= 0) buys_down2++; }
+            if(mode == 1 && d != e.m_dreg[i]) against1++;
+         }
+   }
+   CHECK(sells2 == 0 && buys_down2 == 0 && sig2 > 0 && sig2 < sig0, "BUYS ONLY: no sells, no buys in a daily downtrend, fewer signals than unfiltered");
+   CHECK(against1 == 0, "WITH THE TREND: no signal against the daily trend");
+   e.cfg.d1_mode = 2;
+   int d1_reason = 0;
+   for(int i = e.cfg.warmup + 10; i < e.n - 2 && d1_reason == 0; i++)
+   {
+      XExit x; XMakeExit(XP_CLASSIC, e.cfg, x);
+      XSignal sg;
+      if(!e.StrategySignal(XS_DIP, i, x, sg) && sg.reason == XR_D1) d1_reason++;
+   }
+   CHECK(d1_reason > 0, "a filtered signal reports the reason 'against the daily trend'");
+}
+
+// calibrated projection: the 20-80% cone should hold the later price about 60% of the time
+static void test_forecast_calibration()
+{
+   std::printf("\n== unit tests: calibrated forecast cone ==\n");
+   Series S = make_series(W_NULL, 30000, 5);
+   CXauEngine e;
+   load(e, S, (int)S.m15.size());
+   const int cal = e.n - 4000;
+   e.CalibrateForecast(cal, 3000);
+   CHECK(e.fc_cal_ok && e.fcz_lo[0] < e.fcz_md[0] && e.fcz_md[0] < e.fcz_hi[0] && e.fc_krange > 0.3, "calibration produced ordered percentiles and a size factor");
+   int in1 = 0, in3 = 0, tot = 0;
+   bool widening = true;
+   for(int i = cal; i < e.n - 10; i++)
+   {
+      e.ForecastRange(i, e.m_c[i], e.m_t[i + 1], 4);
+      if(e.rg_n < 4) continue;
+      tot++;
+      if(e.m_c[i + 1] >= e.rg_dn[0] && e.m_c[i + 1] <= e.rg_up[0]) in1++;
+      if(e.m_c[i + 3] >= e.rg_dn[2] && e.m_c[i + 3] <= e.rg_up[2]) in3++;
+      if(e.rg_up[3] - e.rg_dn[3] < e.rg_up[0] - e.rg_dn[0]) widening = false;
+   }
+   const double c1 = 100.0 * in1 / std::max(tot, 1), c3 = 100.0 * in3 / std::max(tot, 1);
+   std::printf("  held-out bars %d: cone held the price %.1f%% (1 bar) and %.1f%% (3 bars), target 60%%\n", tot, c1, c3);
+   CHECK(tot > 3000 && c1 > 54.0 && c1 < 66.0 && c3 > 54.0 && c3 < 66.0, "calibrated cone holds the price 54-66% of the time on bars it never saw");
+   CHECK(widening, "the cone widens with the horizon");
+}
+
 static void test_csv_roundtrip()
 {
    std::printf("\n== real-data loader: CSV round trip (the format XAU_DataExport.mq5 writes) ==\n");
@@ -831,7 +921,9 @@ static int run_real(int argc, char **argv)
    if(g_minstop >= 0.0) L.cfg.min_stop_cost = g_minstop;
    if(g_cost > 0.0) L.cfg.cost_price = g_cost;
    if(g_dip_lo > -2.0) { L.cfg.dip_gmt_lo = g_dip_lo; L.cfg.dip_gmt_hi = g_dip_hi; }
+   if(g_d1mode >= 0) L.cfg.d1_mode = g_d1mode;
    L.SetBase(lb, NL); L.SetHTF(htf, (int)htf.size());
+   if(!g_d1.empty()) L.SetDaily(g_d1, (int)g_d1.size());
    if(!L.Compute()) { std::printf("not enough bars\n"); return 2; }
    L.RunLab(L.cfg.warmup, NL - 1, g_target, 50, 5);
    std::printf("  STRATEGY LAB on the newest %d bars (what the indicator shows today), all 32 combinations:\n", NL);
@@ -895,7 +987,9 @@ static int run_real_blocks(int argc, char **argv)
    if(g_minstop >= 0.0) L.cfg.min_stop_cost = g_minstop;
    if(g_cost > 0.0) L.cfg.cost_price = g_cost;
    if(g_dip_lo > -2.0) { L.cfg.dip_gmt_lo = g_dip_lo; L.cfg.dip_gmt_hi = g_dip_hi; }
+   if(g_d1mode >= 0) L.cfg.d1_mode = g_d1mode;
    L.SetBase(base, (int)base.size()); L.SetHTF(htf, (int)htf.size());
+   if(!g_d1.empty()) L.SetDaily(g_d1, (int)g_d1.size());
    if(!L.Compute()) return 2;
    L.RunLab(L.cfg.warmup, (int)base.size() - 1, 60.0, 50, 5);
    const int y0 = XYearOfDays(base[L.cfg.warmup].time / 86400), y1 = XYearOfDays(base.back().time / 86400);
@@ -1527,6 +1621,8 @@ int main(int argc, char **argv)
    if(std::getenv("XAU_MINSTOP")) g_minstop = std::atof(std::getenv("XAU_MINSTOP"));
    if(std::getenv("XAU_TARGET")) g_target = std::atof(std::getenv("XAU_TARGET"));
    if(std::getenv("XAU_COST")) g_cost = std::atof(std::getenv("XAU_COST"));
+   if(std::getenv("XAU_D1MODE")) g_d1mode = std::atoi(std::getenv("XAU_D1MODE"));
+   if(std::getenv("XAU_D1") && load_csv(std::getenv("XAU_D1"), g_d1)) g_d1.pop_back();
    if(std::getenv("XAU_DIPWIN"))
    {
       const char *w = std::getenv("XAU_DIPWIN");
@@ -1534,7 +1630,7 @@ int main(int argc, char **argv)
       else if(std::sscanf(w, "%lf-%lf", &g_dip_lo, &g_dip_hi) != 2) { g_dip_lo = -2.0; }
    }
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); }
    if(all || !std::strcmp(mode, "calib"))   run_calibration();
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); test_strategy_windows(); test_resolve(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);

@@ -24,15 +24,20 @@ g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/harness" research/sim/harness.cpp
 "$BIN/harness" all | tee "$OUT/harness_results.txt" | tail -3
 
 echo "[real] broker data in research/data (if any)"
-# 0.35 = the round-trip cost the EA and the indicator assume by default (InpCostPrice)
+# The same defaults as the EA and the indicator: cost 0.35 per trade (InpCostPrice), cost guard 20 costs,
+# daily trend filter AUTO (H1 and above buy only in a daily uptrend), Lab window AUTO (H1 25,000 bars, else 10,000).
 export XAU_COST=0.35
-g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/ideas" research/sim/ideas.cpp
+D1FILE=research/data/XAUUSD_D1.csv
+[ -e "$D1FILE" ] && export XAU_D1=$D1FILE
+for p in ideas meta drift forecast; do g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/$p" research/sim/$p.cpp; done
 for f in research/data/XAUUSD_*.csv; do
   [ -e "$f" ] || continue
   tf=$(basename "$f" .csv | sed 's/XAUUSD_//')
   case "$tf" in M5|M15) H=research/data/XAUUSD_H1.csv ;; H1) H=research/data/XAUUSD_H4.csv ;; H4) H=research/data/XAUUSD_D1.csv ;; *) H=auto ;; esac
   [ -e "$H" ] || H=auto
-  "$BIN/harness" real "$f" "$H" 2 1 10000 > "$OUT/real_${tf}_results.txt" 2>&1 || true
+  case "$tf" in H1|H4|D1) export XAU_D1MODE=2 ;; *) export XAU_D1MODE=0 ;; esac
+  case "$tf" in H1) LB=25000 ;; *) LB=10000 ;; esac
+  "$BIN/harness" real "$f" "$H" 2 1 $LB > "$OUT/real_${tf}_results.txt" 2>&1 || true
   # daily/4-hour files are too short for a 10,000-bar replay window: replay with a shorter one as well
   case "$tf" in
     D1) "$BIN/harness" real "$f" auto 2 1 2500 2>&1 | sed -n '/LIVE REPLAY/,$p' >> "$OUT/real_${tf}_results.txt" || true ;;
@@ -40,8 +45,16 @@ for f in research/data/XAUUSD_*.csv; do
   esac
   case "$tf" in D1|H4) BY=5 ;; H1) BY=2 ;; *) BY=1 ;; esac
   "$BIN/harness" realblocks "$f" $BY >> "$OUT/real_${tf}_results.txt" 2>&1 || true
-  # idea screen: discovery (older 60%) vs holdout (newest 40%); intraday files with a higher-timeframe file only
-  case "$tf" in M5|M15|H1|H4) [ "$H" != auto ] && "$BIN/ideas" "$f" "$H" 2 1 > "$OUT/ideas_${tf}.txt" 2>&1 || true ;; esac
+  unset XAU_D1MODE
+  # research programs on the intraday files (older part vs newer part, walk-forward)
+  if [ "$H" != auto ]; then
+    case "$tf" in M5|M15|H1|H4)
+      "$BIN/ideas" "$f" "$H" 2 1 > "$OUT/ideas_${tf}.txt" 2>&1 || true
+      "$BIN/meta" "$f" "$H" 0.35 0 1 > "$OUT/meta_${tf}.txt" 2>&1 || true
+      [ -e "$D1FILE" ] && "$BIN/drift" "$f" "$H" "$D1FILE" 0.35 > "$OUT/drift_${tf}.txt" 2>&1 || true
+      "$BIN/forecast" "$f" "$H" 3000 > "$OUT/forecast_${tf}.txt" 2>&1 || true
+    ;; esac
+  fi
   echo "  $f -> $OUT/real_${tf}_results.txt"
 done
 

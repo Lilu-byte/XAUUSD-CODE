@@ -40,6 +40,13 @@ PRESETS = {
         {"InpRiskPct": "4.0", "InpDailyLossPct": "6.0", "InpWeeklyLossPct": "12.0", "InpMaxDDPct": "30.0"}),
     "XAU_Sniper_DemoTurbo": ("DEMO WATCHING (free run): trades all day (no session filter), several positions, protections only warn, and trades the closest strategy even when none passed the lab (demo accounts only). Many more trades, lower quality, NOT a preview of a real account.",
         {"InpDemoMode": "1", "InpSessionFilter": "false", "InpMaxTradesPerDay": "50", "InpCooldownBars": "0", "InpDemoMaxPositions": "5", "InpDemoUnproven": "true", "InpWinTarget": "55.0"}),
+    # one EA per chart, three charts at once: more trades from independent daily Labs (different magic numbers)
+    "XAU_Sniper_Multi_M15": ("Run together with the Multi_H1 and Multi_H4 sets: attach the EA to an XAUUSD M15 chart with this set. Own magic number, so the three copies never block each other.",
+        {"InpMagic": "20261015", "InpComment": "XAUS15"}),
+    "XAU_Sniper_Multi_H1": ("Run together with Multi_M15 and Multi_H4: XAUUSD H1 chart. Buys only while the daily trend is up (AUTO), Lab on about 4 years.",
+        {"InpMagic": "20261060", "InpComment": "XAUS60"}),
+    "XAU_Sniper_Multi_H4": ("Run together with Multi_M15 and Multi_H1: XAUUSD H4 chart. Buys only while the daily trend is up (AUTO).",
+        {"InpMagic": "20261240", "InpComment": "XAUS240"}),
     "XAU_Sniper_GoldORB": ("The GOLD_ORB opening-range breakout on its own; the lab still chooses its best exit. Attach to an XAUUSD H1 chart.",
         {"InpStrategy": "1", "InpOrbSolo": "true"}),
 }

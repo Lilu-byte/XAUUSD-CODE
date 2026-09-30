@@ -86,6 +86,35 @@ int XResolveCell(const CXauEngine &le, const int user_s, const int user_p, const
    return best;
 }
 
+// Daily trend filter (research/sim/drift.cpp, docs/REAL_DATA.md section 8). The daily trend is the last completed
+// daily close above / below its 200-day mean.
+enum ENUM_XAU_D1
+{
+   XAU_D1_AUTO = -1,   // AUTO: H1 and above buy only while the daily trend is up; M5-M30 unfiltered
+   XAU_D1_OFF  = 0,    // off
+   XAU_D1_WITH = 1,    // trade only in the daily trend's direction
+   XAU_D1_LONG = 2     // buy only, and only while the daily trend is up
+};
+
+int XResolveD1Mode(const int input_mode, const ENUM_TIMEFRAMES tf)
+{
+   if(input_mode >= 0) return input_mode;
+   return (PeriodSeconds(tf) >= 3600) ? XAU_D1_LONG : XAU_D1_OFF;
+}
+
+// Strategy Lab window: 0 = automatic (H1: 25,000 bars, about 4 years; everything else 10,000 bars).
+int XResolveHistoryBars(const int input_bars, const ENUM_TIMEFRAMES tf)
+{
+   if(input_bars > 0) return input_bars;
+   return (PeriodSeconds(tf) == 3600) ? 25000 : 10000;
+}
+
+// Daily bars needed to know the daily trend over `base_bars` bars of timeframe tf (plus the 200-day mean).
+int XDailyBarsNeeded(const int base_bars, const ENUM_TIMEFRAMES tf)
+{
+   return (int)((double)base_bars * PeriodSeconds(tf) / 86400.0 * 1.45) + 260;
+}
+
 enum ENUM_XAU_DST
 {
    XAU_DST_FIXED = 0,   // server clock never changes
@@ -650,6 +679,15 @@ bool XRunDailyLab(CXauEngine &le, const string sym, const ENUM_TIMEFRAMES tf, co
    if(gh < 300) return false;
    le.SetBase(b, gb);
    le.SetHTF(h, gh);
+   XRATESARR(d);
+   ArraySetAsSeries(d, false);
+   int gd = 0;
+   if(le.cfg.d1_mode > 0)
+   {
+      gd = CopyRates(sym, PERIOD_D1, upto, XDailyBarsNeeded(gb, tf), d);
+      if(gd < 210) return false;          // daily history still loading: retry, never test the filter blind
+   }
+   le.SetDaily(d, gd);
    if(StringLen(inter_sym) > 0)
    {
       const int gx = CopyRates(inter_sym, tf, upto, gb + 50, x);

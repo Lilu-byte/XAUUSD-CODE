@@ -159,3 +159,71 @@ The real-data win-rate is already 58-67% on every timeframe; what is missing is 
   without a stop (optional protection), and trading unproven strategies on demo (rehearsal mode).
 * On real gold the result is still **about break-even with 58-65% winners**. A demo account cannot turn that into a guarantee: 45 days and
   3 trades carry no information, and even 200 trades have a standard error of about 0.07R per trade, larger than any edge measured here.
+
+## 8. Round 8: "one perfect strategy", an EA that trades, better predictions
+### What the screenshots of 30 Sep 2026 showed
+| On screen | Cause | Fixed |
+|---|---|---|
+| The EA on H1 showed exactly the M5 result ("63% won, +0.06R, 350 trades") | MT5 keeps an EA's variables when the chart's timeframe changes; the EA kept the M5 Lab result | The EA and the indicator reset everything on (re)start |
+| Scoreboard "PASS" but the panel said UNPROVEN | PASS used the plain 60% rule, the pick needs 63% and a profitable last fold | PASS now means exactly "can be picked" |
+| Green box under a buy entry | The mean-revert exit's moving 5-bar mean was drawn as the target after price had fallen | The box ends at the strategy's typical winning exit; the moving exit level is a dotted line with its own label |
+| Top lines of the indicator panel hidden | MT5's One Click Trading buttons cover the top-left corner | The panel starts below them when they are shown |
+| EA idle | A manual trade was open (the EA did not trade while any position existed on the symbol); news pauses; nothing passed the Lab on 66-76% of days | Your trades no longer block the EA; see below for the rest |
+
+### Mixing every strategy into one: a walk-forward meta-model
+`research/sim/meta.cpp`: every signal of all 32 combinations becomes a candidate; a ridge regression on 22 situation features (per strategy
+family) plus a term per combination, refitted daily on candidates that had already closed, takes the best candidate if its predicted result
+beats a threshold. Cost 0.35, cost guard on. Average R per trade, older 60% / newer 40% (full tables: `research/results/meta_*.txt`):
+
+| | M5 | M15 | H1 | H4 | Trades per day |
+|---|---|---|---|---|---|
+| Every signal, no model | | | -0.004 / -0.008 | | 1-2 (H1) |
+| Combination average (a continuous Lab) | -0.042 / -0.025 | -0.002 / -0.010 | -0.035 / -0.001 | +0.001 / +0.016 | 0.3-5 |
+| Ridge model, threshold +0.03R | -0.045 / -0.003 | -0.013 / -0.018 | -0.014 / -0.001 | -0.067 / -0.019 | 0.3-4 |
+| Ridge model, 3 positions at once | | -0.009 / -0.009 | -0.015 / +0.005 | | up to 10 (M15) |
+
+The model makes the EA trade often (1-10 times a day) at 52-60% winners and **about zero per trade**. The strategies' results cannot be
+predicted from the situation at entry any better than by their own average. Not adopted.
+
+### Well-documented gold effects, tested here
+| Effect | Result | Verdict |
+|---|---|---|
+| First 30 minutes of New York predict the last 30 / the rest of the day (intraday momentum) | same direction 47.8-51.9% (M5 and M15) | none |
+| Turn of the month | first 3 days: +0.02%/day vs +0.05% (2004-15), +0.13% vs +0.04% (2015-26) | flips, rejected |
+| Daily trend, long/flat (close vs 200-day mean) | 9.0%/yr (Sharpe 0.59) 2004-15, 10.2%/yr (0.72) 2015-26 | real, but it is gold's drift: buy-and-hold made 10.5% / 13.5% |
+| Daily trend, long/short (50 or 100-day mean) | -0.9% to -1.5%/yr 2004-15, +8%/yr 2015-26 | shorts cost money |
+
+### Trading with the daily trend (`research/sim/drift.cpp`)
+Every strategy with six exits (the four standard ones, a slow "rider" and a 3-day "swing") in three modes: no filter, only in the daily trend's
+direction, buys only while the daily trend is up. The honest test of any selection: **choose the three best on the older half, then look at
+the newer half**:
+
+| Chart | No daily filter | With the daily trend | Buys only in a daily uptrend |
+|---|---:|---:|---:|
+| M5 | +0.083R | +0.033R | -0.025R |
+| M15 | +0.016R | -0.009R | +0.012R |
+| **H1** | +0.028R | +0.123R | **+0.163R** |
+| **H4** | -0.030R | +0.066R | **+0.109R** |
+
+On H1 and H4 buying only in a daily uptrend held up (H1 example: weak-close dip with the High-hit exit, 76% won +0.09R older, **71% won
++0.085R newer**, 279 trades). Caveat: the newer half (2021/22-2026) was a strong bull market, which flatters buying.
+
+### The EA process with the new defaults (daily Lab, as the EA trades, cost 0.35)
+| Chart | Defaults | Proven picks only | Won | Before this round |
+|---|---|---:|---:|---:|
+| M5 | no daily filter, 10,000-bar Lab | -0.008R (451 trades) | 59% | same |
+| M15 | no daily filter, 10,000-bar Lab | +0.007R (563) | 61% | same |
+| **H1** | **buys only in a daily uptrend, 25,000-bar Lab** | **+0.025R (164)** | **67%** | -0.049R (189), 58% |
+| **H4** | **buys only in a daily uptrend, 10,000-bar Lab** | **+0.020R (151)** | **65%** | +0.004R (186), 63% |
+
+With the longer Lab window a proven strategy existed on 57-58% of days on H1/H4 (before: 29-34%). Everything is still within about one
+standard error of zero: better, not proven. Other combinations tried (daily filter on M5/M15, both-sides filter, 25,000 bars on M5/M15) were
+no better or worse; they are listed in the research log, not adopted.
+
+### Plain reading
+* No mix of these strategies, no model and no filter found an intraday edge on real gold that survives costs.
+* The one thing that held for 22 years is gold's upward drift. The files now lean on it where holding times are long enough to matter
+  (H1 and above: buy only in a daily uptrend), which moved H1/H4 from slightly negative to slightly positive at 65-67% winners.
+* The EA trades more because your trades no longer block it, the H1 Lab has a proven pick on more days, and three copies can run on M15,
+  H1 and H4 at once (presets `XAU_Sniper_Multi_*`). It does not trade more by lowering its standards: every way of doing that tested here
+  gave about zero per trade.

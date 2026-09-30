@@ -1,4 +1,4 @@
-# 175+ ideas, and what happened to each
+# 225+ ideas, and what happened to each
 
 Status key: **BUILT** = in the code and on by default. **BUILT (off)** = in the code, off by default. **TESTED - rejected** = tried,
 did not survive. **BACKLOG** = sensible, not done. **REJECTED** = deliberately not done, with the reason.
@@ -268,3 +268,85 @@ Full numbers: [REAL_DATA.md, section 7](REAL_DATA.md#7-round-7-the-demo-screensh
 | 174 | Eight new entry rules (previous-day breakout and sweep, 3 lower closes, Bollinger, Donchian, 50-EMA touch, RSI-2 with higher timeframe, weak close early in the day) | TESTED - rejected | None positive in both halves on H1 or H4 |
 | 175 | Asian-open drift (buy the first hours after the daily break) and buys-only (gold's long drift) | TESTED - rejected | The drift sits in the widest-spread hour and bid-only data cannot show what a buyer pays; buys-only changed results by under 0.04R and flipped sign |
 | 176 | Higher Lab target (65-70%) to raise the win-rate | TESTED - rejected | Real win-rate stayed 61-67% and the average did not improve |
+
+## Round 8: fifty more ideas ("one perfect strategy", an EA that trades, sharper predictions)
+Numbers: [REAL_DATA.md section 8](REAL_DATA.md#8-round-8-one-perfect-strategy-an-ea-that-trades-better-predictions) and
+[FORECASTING.md](FORECASTING.md#round-8-measured-on-your-real-gold-and-what-changed).
+
+### A. From the screenshots
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 177 | Reset the EA's state on every (re)start | BUILT | Bug: after M5 -> H1 the EA kept trading the M5 Lab result |
+| 178 | Scoreboard PASS uses the exact pick rule | BUILT | PASS and PROVEN can no longer disagree |
+| 179 | Mean-revert trade box: typical exit as the green edge, moving exit level as a dotted line | BUILT | The green box was drawn under a buy |
+| 180 | Panel starts below MT5's One Click Trading buttons | BUILT | The status lines were hidden |
+| 181 | Your manual trades no longer stop the EA (`InpOneTradePerSymbol` = false) | BUILT | Margin-level check still protects the account |
+
+### B. One strategy that mixes everything
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 182 | Walk-forward meta-model (ridge, 22 features x 3 families + 32 combinations) choosing among all signals | TESTED - rejected | About 0R per trade on every timeframe, both halves |
+| 183 | Continuous Lab: take any combination whose running average is positive | TESTED - rejected | -0.04 to +0.02R |
+| 184 | Take every signal of every combination | TESTED - rejected | 1-2 trades/day on H1 at -0.01R |
+| 185 | Meta-model plus "the combination itself must be positive" | TESTED - rejected | |
+| 186 | Up to 3 positions at once from different combinations | TESTED - rejected | Up to 10 trades/day on M15, still about 0R |
+| 187 | Higher model threshold for fewer, "surer" trades | TESTED - rejected | Win-rate 55-60%, average still within noise of 0 |
+
+### C. Gold's daily trend and drift
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 188 | Buy only while the daily close is above its 200-day mean, on H1 and above | BUILT (AUTO) | Chosen-on-older, checked-on-newer: H1 +0.16R, H4 +0.11R; EA replay H1 +0.025R at 67% won, H4 +0.020R at 65% |
+| 189 | Strategy Lab on about 4 years of H1 (25,000 bars) | BUILT (AUTO) | Proven pick on 57% of days instead of 34%; replay -0.049R -> +0.025R |
+| 190 | Trade only in the daily trend's direction (shorts in a downtrend) | TESTED - option | Worse than buys-only on H1/H4; available as `InpDailyTrend` = WITH |
+| 191 | Daily filter on M5/M15 | TESTED - rejected | M5 worse (-0.15R), M15 unchanged within noise |
+| 192 | "Rider" exit: a third at 1R, trail the rest 3 ATR, up to 5 days | TESTED - proposed | Best profit with the daily trend (+0.15 to +0.40R newer half) but 41-60% winners; below the 60% target |
+| 193 | "Swing" exit: classic exit held up to 3 days | TESTED - proposed | Same trade-off |
+| 194 | Daily trend following, long/flat 200-day mean | TESTED - documented | 9-10%/yr in both halves; needs a large account (0.01 lot with a daily stop risks 5-10% of 3,000 USD) |
+| 195 | Daily trend following, long/short 50/100-day mean | TESTED - rejected | Lost money 2004-15 |
+| 196 | Turn-of-the-month effect | TESTED - rejected | Flips between decades |
+| 197 | Intraday momentum (first 30 min of New York -> last 30 min / rest of day) | TESTED - rejected | 47.8-51.9% |
+| 198 | Lab window 25,000 bars on M5/M15 | TESTED - rejected | No better |
+
+### D. Prediction precision
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 199 | Calibrated range cone (past standardised moves x ATR x hour profile) | BUILT | Holds the price 59-61% of the time as intended; the old cone 51-55% |
+| 200 | Candle size = ATR x hour profile x median correction | BUILT | Error 14-19% lower than the old ghost candles |
+| 201 | Grey outline for each coming bar, as tall as it is expected to be | BUILT | Shown when no direction is proven |
+| 202 | Panel line: "Next 3 candles: about X high; price 60% likely between A and B" | BUILT | |
+| 203 | Expected next-candle size for M15, H1, H4 instead of "-- -- --" | BUILT | |
+| 204 | Hour-of-day profile on H4 too | BUILT | |
+| 205 | De-seasonalised EWMA of ranges (HAR-style) for candle size | TESTED - rejected | Slightly worse than ATR x profile |
+| 206 | "Always up" as the direction call | TESTED - rejected | 53-56% on H4 only because of the bull market; 48-50% intraday |
+| 207 | 21-EMA slope as the direction call | TESTED - rejected | 48-53% |
+| 208 | Pattern-match direction with a stricter confidence gate | TESTED - rejected | Confident calls 48-53%: the existing gate already hides them |
+
+### E. More trades without lowering the bar
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 209 | Three EA copies on M15, H1 and H4 (presets `XAU_Sniper_Multi_*`, own magic numbers) | BUILT | Independent daily Labs, about three times the chances |
+| 210 | One EA that scans several timeframes itself | PROPOSED | Needs per-position timeframe state; not written blind without an MT5 test |
+| 211 | Trade every PASS combination, not only the best | PROPOSED | Idea 186 suggests about 0R extra per trade |
+| 212 | Lower Lab target (55%) for more trades | TESTED (round 7) | H1 +0.026R: similar; left at 60% for the win-rate goal |
+
+### F. Clarity and safety
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 213 | "against the daily trend" as the reason a signal was skipped | BUILT | |
+| 214 | Daily trend on the panel ("Daily: UP" / "Daily: DOWN (no buys)") | BUILT | |
+| 215 | EA does not trade when the daily bars needed by the filter are missing | BUILT | |
+| 216 | Same Lab window rule in the EA and the indicator (AUTO) | BUILT | |
+| 217 | Unit tests: daily filter look-ahead, modes, calibrated cone on unseen bars | BUILT | |
+
+### G. Backlog and rejections
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 218 | Swap-aware holding (gold longs pay overnight swap) | PROPOSED | Matters for the rider/swing exits |
+| 219 | Real-yield / DXY daily regime | PROPOSED | Needs the data in MT5 |
+| 220 | Gradient-boosted trees instead of ridge for the meta-model | PROPOSED | Low prior after 182 |
+| 221 | Separate Labs for London and New York | PROPOSED | |
+| 222 | Volatility-targeted position size | PROPOSED | Helps drawdowns, not the average |
+| 223 | Trail H4 runners under swing lows | PROPOSED | |
+| 224 | Pyramiding into winners in a daily uptrend | REJECTED | Too much risk for small accounts |
+| 225 | COT / options-implied volatility filters | REJECTED | Not available in an MT5 feed |
+| 226 | Grid / martingale to raise the win-rate | REJECTED | Hides losses until one wipes the account |
