@@ -1,81 +1,81 @@
 
 == REAL DATA: research/data/XAUUSD_H1.csv (59999 bars of 3600 s), higher timeframe 14400 s (19999 bars) ==
-   from 2016.07.20 16:00 to 2026.09.30 12:00 | cost per trade 0.35 (price units) | cost guard 20 costs | lab window 10000 bars
-  STRATEGY LAB on the newest 10000 bars (what the indicator shows today), all 32 combinations:
-   PASS Squeeze breakout         High-hit 0.5R      won  69.9%  avg +0.063R  PF  1.24  n= 143 | last 40%: won  65.5% avg -0.020R n=55
-   PASS Weak-close dip in trend  Mean-revert exit   won  61.7%  avg +0.064R  PF  1.28  n= 546 | last 40%: won  63.6% avg +0.080R n=239
-   PASS Opening-range breakout   High-hit 0.5R      won  67.7%  avg +0.059R  PF  1.22  n= 167 | last 40%: won  70.1% avg +0.062R n=67
-        Opening-range breakout   Classic 1R+runner  won  55.1%  avg +0.163R  PF  1.48  n= 167 | last 40%: won  56.7% avg +0.191R n=67
-        Opening-range breakout   Mean-revert exit   won  44.3%  avg +0.059R  PF  1.45  n= 201 | last 40%: won  48.7% avg +0.118R n=78
-        Squeeze breakout         Classic 1R+runner  won  54.1%  avg +0.075R  PF  1.21  n= 135 | last 40%: won  44.9% avg -0.055R n=49
-        Squeeze breakout         Quick 0.6R         won  64.5%  avg +0.055R  PF  1.18  n= 141 | last 40%: won  60.8% avg +0.030R n=51
-        Weak-close dip in trend  Classic 1R+runner  won  52.3%  avg +0.048R  PF  1.10  n= 436 | last 40%: won  50.7% avg +0.021R n=209
-        RSI-2 dip in trend       Mean-revert exit   won  61.3%  avg +0.037R  PF  1.13  n= 274 | last 40%: won  59.4% avg +0.019R n=106
-        Weak-close dip in trend  Quick 0.6R         won  65.5%  avg +0.026R  PF  1.08  n= 496 | last 40%: won  65.1% avg +0.023R n=238
-        Opening-range breakout   Quick 0.6R         won  62.9%  avg +0.043R  PF  1.15  n= 167 | last 40%: won  65.7% avg +0.055R n=67
-        Double-7 dip in trend    Mean-revert exit   won  61.6%  avg +0.017R  PF  1.06  n= 466 | last 40%: won  63.8% avg +0.067R n=188
-        Weak-close dip in trend  High-hit 0.5R      won  67.7%  avg +0.013R  PF  1.04  n= 471 | last 40%: won  68.6% avg +0.020R n=223
-        Squeeze breakout         Mean-revert exit   won  41.3%  avg +0.006R  PF  1.05  n= 201 | last 40%: won  37.1% avg -0.037R n=70
-        Double-7 dip in trend    Quick 0.6R         won  61.6%  avg -0.039R  PF  0.90  n= 463 | last 40%: won  63.8% avg +0.005R n=207
-        Double-7 dip in trend    Classic 1R+runner  won  49.0%  avg -0.023R  PF  0.96  n= 420 | last 40%: won  49.7% avg -0.006R n=181
-        Confluence (9 modules)   Mean-revert exit   won  47.3%  avg -0.022R  PF  0.91  n= 112 | last 40%: won  47.5% avg -0.081R n=40
-        Double-7 dip in trend    High-hit 0.5R      won  63.1%  avg -0.054R  PF  0.86  n= 444 | last 40%: won  66.8% avg +0.001R n=196
-        Confluence (9 modules)   High-hit 0.5R      won  64.0%  avg -0.017R  PF  0.95  n=  86 | last 40%: won  53.1% avg -0.130R n=32
-        Confluence (9 modules)   Classic 1R+runner  won  50.0%  avg +0.011R  PF  1.03  n=  86 | last 40%: won  34.4% avg -0.161R n=32
-        RSI-2 dip in trend       Classic 1R+runner  won  47.8%  avg -0.033R  PF  0.94  n= 249 | last 40%: won  46.1% avg -0.093R n=102
-        Stop-hunt reversal       High-hit 0.5R      won  61.4%  avg -0.058R  PF  0.84  n= 220 | last 40%: won  60.2% avg -0.093R n=88
-        Stop-hunt reversal       Mean-revert exit   won  52.2%  avg -0.071R  PF  0.74  n= 255 | last 40%: won  55.4% avg -0.086R n=92
-        RSI-2 dip in trend       High-hit 0.5R      won  61.8%  avg -0.062R  PF  0.84  n= 259 | last 40%: won  65.4% avg -0.017R n=107
-        EMA pullback             Quick 0.6R         won  64.1%  avg -0.002R  PF  1.00  n=  39 | last 40%: won  62.5% avg -0.015R n=16
-        EMA pullback             High-hit 0.5R      won  64.9%  avg -0.011R  PF  0.97  n=  37 | last 40%: won  66.7% avg +0.035R n=15
-        RSI-2 dip in trend       Quick 0.6R         won  58.6%  avg -0.081R  PF  0.81  n= 261 | last 40%: won  58.7% avg -0.074R n=109
-        Stop-hunt reversal       Quick 0.6R         won  56.6%  avg -0.086R  PF  0.79  n= 228 | last 40%: won  54.9% avg -0.127R n=91
-        Stop-hunt reversal       Classic 1R+runner  won  45.8%  avg -0.076R  PF  0.85  n= 212 | last 40%: won  41.9% avg -0.155R n=86
-        Confluence (9 modules)   Quick 0.6R         won  56.7%  avg -0.084R  PF  0.78  n=  90 | last 40%: won  47.1% avg -0.172R n=34
-        EMA pullback             Mean-revert exit   won  39.6%  avg -0.136R  PF  0.49  n=  48 | last 40%: won  38.9% avg -0.251R n=18
-        EMA pullback             Classic 1R+runner  won  50.0%  avg -0.056R  PF  0.88  n=  36 | last 40%: won  50.0% avg +0.072R n=14
-  pick today: Squeeze breakout / High-hit 0.5R [PROVEN]
-  auto-pick walk-forward (3 folds traded):                     n= 178  win%= 62.9  TP1%=  0.0  expR=-0.027 (se 0.056)  PF= 0.93  holdMed=  2 bars
-  v1 confluence + classic exit, v1 fill rule:                     n=  86  win%= 50.0  TP1%= 37.2  expR=-0.083 (se 0.098)  PF= 0.82  holdMed=  6 bars
-  v1 confluence + classic exit, v2 fill rule:                     n=  86  win%= 50.0  TP1%= 37.2  expR=+0.011 (se 0.109)  PF= 1.03  holdMed=  6 bars
-  pattern-match forecast (walk-forward): next bar 49.7% right (n=1997), 4 bars 49.7% (n=1998); confident 4-bar calls 49.8% (n=624)
-  LIVE REPLAY from 2018.04.04 11:00 (daily Lab on the previous 10000 bars, trading its pick, as the EA does):
-  real       days 2193, a proven strategy existed on  749 ( 34%)
-             LIVE (proven picks only)   0.09 trades/day                     n= 189  win%= 57.7  TP1%= 50.3  expR=-0.049 (se 0.047)  PF= 0.84  holdMed=  5 bars
-             DEMO (closest pick always) 0.27 trades/day                     n= 600  win%= 61.0  TP1%= 38.3  expR=+0.005 (se 0.028)  PF= 1.01  holdMed=  4 bars
-             most used picks: [Weak-close dip in trend / High-hit 0.5R: 320 days] [Opening-range breakout / High-hit 0.5R: 197 days] [Confluence (9 modules) / Quick 0.6R: 64 days]
+   from 2016.07.20 16:00 to 2026.09.30 12:00 | cost per trade 0.35 (price units) | cost guard 20 costs | lab window 25000 bars
+  STRATEGY LAB on the newest 25000 bars (what the indicator shows today), all 32 combinations:
+   PASS Weak-close dip in trend  High-hit 0.5R      won  71.0%  avg +0.085R  PF  1.30  n= 279 | last 40%: won  71.2% avg +0.078R n=222
+        Weak-close dip in trend  Classic 1R+runner  won  57.5%  avg +0.153R  PF  1.37  n= 261 | last 40%: won  56.6% avg +0.143R n=205
+        Opening-range breakout   Classic 1R+runner  won  52.9%  avg +0.101R  PF  1.27  n= 187 | last 40%: won  55.8% avg +0.131R n=104
+        Weak-close dip in trend  Mean-revert exit   won  62.1%  avg +0.052R  PF  1.21  n= 517 | last 40%: won  64.6% avg +0.081R n=285
+        Confluence (9 modules)   Mean-revert exit   won  53.1%  avg +0.048R  PF  1.26  n= 177 | last 40%: won  52.2% avg +0.021R n=67
+        Weak-close dip in trend  Quick 0.6R         won  66.3%  avg +0.043R  PF  1.13  n= 294 | last 40%: won  67.1% avg +0.046R n=234
+        Confluence (9 modules)   High-hit 0.5R      won  69.6%  avg +0.058R  PF  1.22  n= 125 | last 40%: won  73.6% avg +0.083R n=53
+        Opening-range breakout   High-hit 0.5R      won  66.8%  avg +0.041R  PF  1.14  n= 187 | last 40%: won  68.3% avg +0.055R n=104
+        Double-7 dip in trend    Mean-revert exit   won  62.2%  avg +0.013R  PF  1.04  n= 495 | last 40%: won  63.9% avg +0.019R n=263
+        RSI-2 dip in trend       Mean-revert exit   won  60.4%  avg +0.023R  PF  1.07  n= 280 | last 40%: won  63.7% avg +0.051R n=146
+        Confluence (9 modules)   Classic 1R+runner  won  52.8%  avg +0.057R  PF  1.16  n= 125 | last 40%: won  58.5% avg +0.096R n=53
+        Confluence (9 modules)   Quick 0.6R         won  63.3%  avg +0.036R  PF  1.12  n= 128 | last 40%: won  64.3% avg -0.008R n=56
+        Opening-range breakout   Mean-revert exit   won  42.1%  avg +0.005R  PF  1.03  n= 233 | last 40%: won  40.0% avg +0.004R n=120
+        Squeeze breakout         High-hit 0.5R      won  66.5%  avg +0.022R  PF  1.08  n= 197 | last 40%: won  72.9% avg +0.107R n=85
+        Squeeze breakout         Mean-revert exit   won  43.3%  avg -0.001R  PF  1.00  n= 293 | last 40%: won  44.3% avg +0.020R n=122
+        Opening-range breakout   Quick 0.6R         won  61.5%  avg +0.007R  PF  1.02  n= 187 | last 40%: won  62.5% avg +0.013R n=104
+        Stop-hunt reversal       Mean-revert exit   won  53.0%  avg -0.023R  PF  0.90  n= 317 | last 40%: won  52.9% avg -0.043R n=153
+        Stop-hunt reversal       Quick 0.6R         won  59.9%  avg -0.013R  PF  0.96  n= 247 | last 40%: won  61.7% avg -0.006R n=133
+        Squeeze breakout         Quick 0.6R         won  60.3%  avg -0.008R  PF  0.98  n= 194 | last 40%: won  64.7% avg +0.034R n=85
+        Squeeze breakout         Classic 1R+runner  won  50.8%  avg +0.008R  PF  1.02  n= 189 | last 40%: won  60.5% avg +0.143R n=81
+        Stop-hunt reversal       High-hit 0.5R      won  63.3%  avg -0.025R  PF  0.92  n= 240 | last 40%: won  64.8% avg -0.014R n=128
+        EMA pullback             Mean-revert exit   won  46.7%  avg -0.015R  PF  0.91  n=  60 | last 40%: won  37.0% avg -0.102R n=27
+        Stop-hunt reversal       Classic 1R+runner  won  48.7%  avg -0.019R  PF  0.96  n= 236 | last 40%: won  48.8% avg -0.005R n=125
+        Double-7 dip in trend    Classic 1R+runner  won  47.7%  avg -0.017R  PF  0.97  n= 279 | last 40%: won  49.1% avg +0.019R n=226
+        Double-7 dip in trend    High-hit 0.5R      won  62.0%  avg -0.070R  PF  0.82  n= 292 | last 40%: won  63.9% avg -0.041R n=238
+        Double-7 dip in trend    Quick 0.6R         won  59.6%  avg -0.073R  PF  0.82  n= 302 | last 40%: won  61.4% avg -0.040R n=246
+        EMA pullback             Quick 0.6R         won  58.1%  avg -0.034R  PF  0.90  n=  43 | last 40%: won  60.0% avg -0.064R n=20
+        EMA pullback             High-hit 0.5R      won  58.5%  avg -0.061R  PF  0.82  n=  41 | last 40%: won  60.0% avg -0.086R n=20
+        RSI-2 dip in trend       High-hit 0.5R      won  57.5%  avg -0.121R  PF  0.72  n= 167 | last 40%: won  59.7% avg -0.083R n=134
+        RSI-2 dip in trend       Classic 1R+runner  won  41.6%  avg -0.126R  PF  0.78  n= 161 | last 40%: won  43.0% avg -0.079R n=128
+        RSI-2 dip in trend       Quick 0.6R         won  54.2%  avg -0.154R  PF  0.67  n= 166 | last 40%: won  56.4% avg -0.119R n=133
+        EMA pullback             Classic 1R+runner  won  48.8%  avg -0.126R  PF  0.71  n=  41 | last 40%: won  50.0% avg -0.136R n=20
+  pick today: Weak-close dip in trend / High-hit 0.5R [PROVEN]
+  auto-pick walk-forward (2 folds traded):                     n= 169  win%= 66.9  TP1%=  0.0  expR=+0.005 (se 0.058)  PF= 1.02  holdMed=  3 bars
+  v1 confluence + classic exit, v1 fill rule:                     n= 195  win%= 48.2  TP1%= 34.9  expR=-0.076 (se 0.060)  PF= 0.81  holdMed=  7 bars
+  v1 confluence + classic exit, v2 fill rule:                     n= 195  win%= 48.2  TP1%= 34.9  expR=+0.010 (se 0.067)  PF= 1.02  holdMed=  8 bars
+  pattern-match forecast (walk-forward): next bar 50.8% right (n=1981), 4 bars 49.5% (n=1995); confident 4-bar calls 50.5% (n=632)
+  LIVE REPLAY from 2020.10.20 15:00 (daily Lab on the previous 25000 bars, trading its pick, as the EA does):
+  real       days 1535, a proven strategy existed on  879 ( 57%)
+             LIVE (proven picks only)   0.11 trades/day                     n= 164  win%= 67.1  TP1%= 64.0  expR=+0.025 (se 0.055)  PF= 1.08  holdMed=  3 bars
+             DEMO (closest pick always) 0.14 trades/day                     n= 216  win%= 68.1  TP1%= 56.5  expR=+0.050 (se 0.047)  PF= 1.17  holdMed=  3 bars
+             most used picks: [Weak-close dip in trend / High-hit 0.5R: 506 days] [Opening-range breakout / High-hit 0.5R: 189 days] [RSI-2 dip in trend / Mean-revert exit: 123 days]
 
 == REAL DATA by period: research/data/XAUUSD_H1.csv, blocks of 2 years (won% / avg R / trades) ==
   strategy                   exit               | 2016-2017           | 2018-2019           | 2020-2021           | 2022-2023           | 2024-2025           | 2026-2026           | all
-  Confluence (9 modules)     Classic 1R+runner  |  50% +0.087    4 |  57% +0.459    7 |  49% -0.012   90 |  47% +0.038   77 |  53% +0.047  103 |  39% -0.122   38 |  49% +0.017  319  (3/5 blocks positive)
-  Confluence (9 modules)     High-hit 0.5R      |  50% +0.023    4 |  57% +0.071    7 |  65% -0.007   93 |  59% +0.012   78 |  70% +0.046  103 |  58% -0.085   38 |  64% +0.007  323  (3/5 blocks positive)
-  Confluence (9 modules)     Quick 0.6R         |  50% -0.077    4 |  57% +0.021    7 |  61% +0.016   92 |  54% -0.038   79 |  64% +0.025  105 |  52% -0.110   40 |  59% -0.011  327  (3/5 blocks positive)
-  Confluence (9 modules)     Mean-revert exit   |  36% +0.060   22 |  47% +0.081   17 |  45% -0.028  129 |  44% +0.014  126 |  50% +0.031  146 |  50% -0.051   46 |  47% +0.006  486  (4/6 blocks positive)
-  Opening-range breakout     Classic 1R+runner  |  44% +0.167    9 |  50% +0.069   10 |  53% +0.040  128 |  52% +0.024  110 |  50% +0.043  189 |  55% +0.169   76 |  52% +0.059  522  (6/6 blocks positive)
-  Opening-range breakout     High-hit 0.5R      |  67% +0.219    9 |  60% -0.036   10 |  63% -0.022  130 |  66% +0.038  110 |  62% -0.004  189 |  68% +0.035   76 |  64% +0.009  524  (3/6 blocks positive)
-  Opening-range breakout     Quick 0.6R         |  56% +0.159    9 |  50% -0.053   10 |  59% -0.006  130 |  62% +0.044  110 |  58% -0.029  189 |  64% +0.034   76 |  60% +0.004  524  (3/6 blocks positive)
-  Opening-range breakout     Mean-revert exit   |  25% -0.138   24 |  28% -0.027   29 |  39% -0.033  192 |  46% +0.034  159 |  42% -0.008  238 |  47% +0.094   88 |  41% +0.002  730  (2/6 blocks positive)
-  RSI-2 dip in trend         Classic 1R+runner  |   0% -1.032    1 |  50% +0.337    2 |  50% -0.109   46 |  19% -0.598   27 |  46% -0.066  178 |  49% -0.025  112 |  45% -0.098  366  (0/4 blocks positive)
-  RSI-2 dip in trend         High-hit 0.5R      | 100% +0.318    1 |  50% -0.138    2 |  60% -0.108   47 |  46% -0.317   28 |  58% -0.120  182 |  66% +0.004  118 |  60% -0.094  378  (1/4 blocks positive)
-  RSI-2 dip in trend         Quick 0.6R         | 100% +0.568    1 |  50% -0.238    2 |  57% -0.080   47 |  39% -0.363   28 |  57% -0.120  182 |  60% -0.054  120 |  57% -0.111  380  (0/4 blocks positive)
-  RSI-2 dip in trend         Mean-revert exit   |  67% +0.190    3 |  69% +0.126   13 |  59% -0.034  172 |  51% -0.067  149 |  59% -0.034  300 |  63% +0.082  117 |  58% -0.019  754  (2/5 blocks positive)
-  Double-7 dip in trend      Classic 1R+runner  | 100% +0.816    1 |  50% +0.337    2 |  54% -0.065   74 |  32% -0.404   38 |  47% -0.064  292 |  51% +0.022  198 |  48% -0.054  605  (1/4 blocks positive)
-  Double-7 dip in trend      High-hit 0.5R      | 100% +0.763    1 |  50% -0.138    2 |  64% -0.080   76 |  51% -0.244   39 |  59% -0.113  303 |  67% +0.007  213 |  62% -0.075  634  (1/4 blocks positive)
-  Double-7 dip in trend      Quick 0.6R         | 100% +0.563    1 |  50% -0.238    2 |  64% -0.010   78 |  48% -0.246   40 |  58% -0.100  312 |  64% +0.006  224 |  60% -0.061  657  (1/4 blocks positive)
-  Double-7 dip in trend      Mean-revert exit   |  80% +0.513    5 |  59% -0.011   22 |  56% -0.055  287 |  55% -0.058  235 |  59% -0.021  526 |  66% +0.097  204 |  59% -0.014 1279  (2/6 blocks positive)
-  Weak-close dip in trend    Classic 1R+runner  | 100% +0.710    1 |  86% +0.358    7 |  54% +0.085  101 |  52% +0.076   73 |  53% +0.053  285 |  52% +0.047  225 |  53% +0.062  692  (5/5 blocks positive)
-  Weak-close dip in trend    High-hit 0.5R      | 100% +0.458    1 |  86% +0.130    7 |  71% +0.102  109 |  65% +0.057   77 |  67% -0.003  305 |  69% +0.033  240 |  68% +0.033  739  (4/5 blocks positive)
-  Weak-close dip in trend    Quick 0.6R         | 100% +0.555    1 |  86% +0.207    7 |  64% +0.079  109 |  58% +0.024   78 |  65% +0.014  318 |  65% +0.025  255 |  64% +0.031  768  (5/5 blocks positive)
-  Weak-close dip in trend    Mean-revert exit   | 100% +0.669    7 |  56% -0.051   34 |  60% +0.031  328 |  56% -0.003  278 |  59% +0.027  562 |  64% +0.100  256 |  60% +0.036 1465  (4/6 blocks positive)
-  Stop-hunt reversal         Classic 1R+runner  |  83% +0.879    6 |  50% +0.067   16 |  42% -0.086  161 |  55% +0.100  127 |  46% -0.081  233 |  42% -0.142   92 |  47% -0.042  635  (3/6 blocks positive)
-  Stop-hunt reversal         High-hit 0.5R      |  83% +0.506    6 |  62% +0.036   16 |  57% -0.062  166 |  64% +0.032  131 |  60% -0.073  239 |  61% -0.086   94 |  60% -0.043  652  (3/6 blocks positive)
-  Stop-hunt reversal         Quick 0.6R         |  83% +0.466    6 |  56% -0.079   16 |  53% -0.052  165 |  61% +0.042  130 |  56% -0.077  246 |  56% -0.116   97 |  56% -0.048  660  (2/6 blocks positive)
-  Stop-hunt reversal         Mean-revert exit   |  65% +0.231   17 |  36% -0.123   28 |  50% -0.021  252 |  51% -0.036  209 |  50% -0.062  322 |  55% -0.083   99 |  51% -0.044  927  (1/6 blocks positive)
-  EMA pullback               Classic 1R+runner  |   0% +0.000    0 |  67% +0.593    3 |  61% +0.223   28 |  40% -0.276   25 |  53% -0.034   34 |  56% +0.120   16 |  53% +0.018  106  (2/4 blocks positive)
-  EMA pullback               High-hit 0.5R      |   0% +0.000    0 |  67% +0.157    3 |  69% +0.068   29 |  46% -0.283   26 |  68% +0.055   34 |  71% +0.101   17 |  63% -0.012  109  (3/4 blocks positive)
-  EMA pullback               Quick 0.6R         |   0% +0.000    0 |  67% +0.023    3 |  69% +0.145   29 |  46% -0.252   26 |  68% +0.105   37 |  67% +0.032   18 |  63% +0.019  113  (3/4 blocks positive)
-  EMA pullback               Mean-revert exit   |   0% -0.257    1 |  75% +0.084    4 |  57% -0.012   44 |  30% -0.247   43 |  50% +0.034   52 |  43% -0.213   21 |  46% -0.083  165  (1/4 blocks positive)
-  Squeeze breakout           Classic 1R+runner  |  38% -0.162    8 |  50% +0.054   16 |  47% -0.053  152 |  49% +0.024  146 |  52% +0.034  190 |  46% -0.047   52 |  49% -0.001  564  (3/6 blocks positive)
-  Squeeze breakout           High-hit 0.5R      |  38% -0.322    8 |  56% -0.099   16 |  61% -0.061  158 |  66% +0.038  151 |  66% +0.031  197 |  67% -0.004   58 |  64% -0.004  588  (2/6 blocks positive)
-  Squeeze breakout           Quick 0.6R         |  38% -0.298    8 |  56% -0.078   16 |  59% -0.037  158 |  62% +0.052  151 |  61% +0.010  199 |  63% +0.053   54 |  60% +0.005  586  (3/6 blocks positive)
-  Squeeze breakout           Mean-revert exit   |  25% -0.123   24 |  29% -0.078   41 |  39% -0.066  235 |  39% -0.022  236 |  42% +0.003  295 |  38% -0.026   73 |  39% -0.031  904  (1/6 blocks positive)
+  Confluence (9 modules)     Classic 1R+runner  |   0% +0.000    0 |  67% +0.710    6 |  43% -0.161   53 |  44% +0.004   39 |  57% +0.105   87 |  54% -0.010   13 |  51% +0.025  198  (3/5 blocks positive)
+  Confluence (9 modules)     High-hit 0.5R      |   0% +0.000    0 |  67% +0.256    6 |  60% -0.082   53 |  62% +0.037   39 |  74% +0.093   87 |  77% +0.119   13 |  68% +0.042  198  (4/5 blocks positive)
+  Confluence (9 modules)     Quick 0.6R         |   0% +0.000    0 |  67% +0.198    6 |  55% -0.100   53 |  55% -0.018   40 |  66% +0.063   89 |  71% +0.101   14 |  61% +0.011  202  (3/5 blocks positive)
+  Confluence (9 modules)     Mean-revert exit   |  50% +0.011    4 |  50% +0.085   12 |  45% -0.052   64 |  49% +0.022   67 |  51% +0.055  117 |  80% +0.102   15 |  51% +0.026  279  (4/5 blocks positive)
+  Opening-range breakout     Classic 1R+runner  | 100% +1.497    1 |  50% +0.318    6 |  48% -0.149   64 |  49% +0.012   41 |  54% +0.145  129 |  52% -0.041   33 |  52% +0.043  274  (3/5 blocks positive)
+  Opening-range breakout     High-hit 0.5R      | 100% +1.483    1 |  67% +0.171    6 |  59% -0.130   64 |  68% +0.074   41 |  67% +0.067  129 |  64% -0.087   33 |  65% +0.011  274  (3/5 blocks positive)
+  Opening-range breakout     Quick 0.6R         | 100% +1.483    1 |  50% +0.132    6 |  53% -0.148   64 |  66% +0.079   41 |  61% +0.017  129 |  58% -0.127   33 |  59% -0.022  274  (3/5 blocks positive)
+  Opening-range breakout     Mean-revert exit   |  20% -0.245    5 |  29% -0.015   17 |  38% -0.037   87 |  52% +0.015   63 |  41% +0.003  156 |  39% -0.017   36 |  41% -0.011  364  (2/6 blocks positive)
+  RSI-2 dip in trend         Classic 1R+runner  |   0% +0.000    0 |  50% +0.337    2 |  52% -0.136   25 |  22% -0.499   18 |  45% -0.072  121 |  36% -0.216   33 |  42% -0.139  199  (0/4 blocks positive)
+  RSI-2 dip in trend         High-hit 0.5R      |   0% +0.000    0 |  50% -0.138    2 |  65% -0.045   26 |  53% -0.224   19 |  56% -0.138  124 |  69% +0.049   36 |  59% -0.102  207  (1/4 blocks positive)
+  RSI-2 dip in trend         Quick 0.6R         |   0% +0.000    0 |  50% -0.238    2 |  62% -0.048   26 |  42% -0.332   19 |  54% -0.155  123 |  61% -0.039   36 |  55% -0.139  206  (0/4 blocks positive)
+  RSI-2 dip in trend         Mean-revert exit   |   0% +0.000    0 |  60% -0.032   10 |  70% +0.093   76 |  51% -0.069   67 |  62% +0.035  201 |  68% +0.074   37 |  62% +0.031  391  (3/5 blocks positive)
+  Double-7 dip in trend      Classic 1R+runner  |   0% +0.000    0 |  50% +0.337    2 |  47% -0.195   45 |  36% -0.321   25 |  48% -0.003  200 |  46% -0.009   69 |  47% -0.051  341  (0/4 blocks positive)
+  Double-7 dip in trend      High-hit 0.5R      |   0% +0.000    0 |  50% -0.138    2 |  60% -0.150   47 |  58% -0.166   26 |  60% -0.102  206 |  71% +0.060   76 |  62% -0.079  357  (1/4 blocks positive)
+  Double-7 dip in trend      Quick 0.6R         |   0% +0.000    0 |  50% -0.238    2 |  58% -0.111   48 |  52% -0.202   27 |  58% -0.100  215 |  66% +0.035   76 |  59% -0.081  368  (1/4 blocks positive)
+  Double-7 dip in trend      Mean-revert exit   |   0% +0.000    0 |  56% -0.038   18 |  59% -0.059  134 |  55% -0.078  105 |  62% +0.014  355 |  71% +0.090   70 |  61% -0.008  682  (2/5 blocks positive)
+  Weak-close dip in trend    Classic 1R+runner  |   0% +0.000    0 |  67% -0.023    3 |  61% +0.069   36 |  56% +0.061   36 |  59% +0.178  174 |  52% +0.084   66 |  57% +0.130  315  (4/4 blocks positive)
+  Weak-close dip in trend    High-hit 0.5R      |   0% +0.000    0 |  67% -0.145    3 |  80% +0.149   40 |  66% +0.027   38 |  70% +0.047  187 |  77% +0.192   70 |  72% +0.085  338  (4/4 blocks positive)
+  Weak-close dip in trend    Quick 0.6R         |   0% +0.000    0 |  67% -0.110    3 |  72% +0.132   40 |  59% -0.007   39 |  66% +0.030  194 |  68% +0.072   77 |  67% +0.046  353  (3/4 blocks positive)
+  Weak-close dip in trend    Mean-revert exit   |   0% +0.000    0 |  57% -0.059   21 |  63% -0.000  121 |  53% -0.053  113 |  62% +0.044  361 |  71% +0.172   80 |  61% +0.032  696  (2/5 blocks positive)
+  Stop-hunt reversal         Classic 1R+runner  | 100% +1.064    1 |  46% -0.019   13 |  43% -0.168   93 |  57% +0.105   60 |  50% -0.016  155 |  37% -0.212   38 |  48% -0.053  360  (1/5 blocks positive)
+  Stop-hunt reversal         High-hit 0.5R      | 100% +0.670    1 |  62% +0.008   13 |  55% -0.122   95 |  68% +0.070   62 |  64% -0.020  158 |  61% -0.112   38 |  62% -0.038  367  (2/5 blocks positive)
+  Stop-hunt reversal         Quick 0.6R         | 100% +0.554    1 |  54% -0.103   13 |  51% -0.109   94 |  65% +0.105   62 |  60% -0.012  164 |  56% -0.091   39 |  58% -0.027  373  (1/5 blocks positive)
+  Stop-hunt reversal         Mean-revert exit   |  75% +0.163    4 |  35% -0.141   23 |  50% -0.030  126 |  53% +0.023   96 |  55% -0.000  205 |  44% -0.188   41 |  52% -0.024  495  (1/5 blocks positive)
+  EMA pullback               Classic 1R+runner  |   0% +0.000    0 |  67% +0.593    3 |  50% -0.035   10 |  22% -0.544    9 |  52% -0.072   31 | 100% +0.457    2 |  49% -0.087   55  (0/3 blocks positive)
+  EMA pullback               High-hit 0.5R      |   0% +0.000    0 |  67% +0.157    3 |  50% -0.236   10 |  22% -0.562    9 |  65% +0.009   31 | 100% +0.597    2 |  56% -0.099   55  (1/3 blocks positive)
+  EMA pullback               Quick 0.6R         |   0% +0.000    0 |  67% +0.023    3 |  50% -0.201   10 |  22% -0.575    9 |  64% +0.057   33 | 100% +0.404    2 |  56% -0.078   57  (1/3 blocks positive)
+  EMA pullback               Mean-revert exit   |   0% +0.000    0 |  67% +0.067    3 |  53% -0.165   15 |  23% -0.294   13 |  51% +0.040   45 |  67% +0.017    3 |  48% -0.053   79  (1/3 blocks positive)
+  Squeeze breakout           Classic 1R+runner  |   0% -0.976    2 |  55% +0.131   11 |  42% -0.175   74 |  51% +0.049   55 |  52% +0.024  141 |  53% -0.045   17 |  49% -0.027  300  (3/5 blocks positive)
+  Squeeze breakout           High-hit 0.5R      |   0% -0.976    2 |  64% +0.058   11 |  57% -0.140   76 |  68% +0.073   57 |  66% +0.029  145 |  70% +0.004   20 |  64% -0.011  311  (4/5 blocks positive)
+  Squeeze breakout           Quick 0.6R         |   0% -0.976    2 |  64% +0.071   11 |  54% -0.124   78 |  67% +0.105   57 |  59% -0.017  145 |  61% -0.069   18 |  59% -0.027  311  (2/5 blocks positive)
+  Squeeze breakout           Mean-revert exit   |  29% -0.169    7 |  39% -0.027   23 |  43% -0.058  102 |  48% +0.009   97 |  44% +0.010  209 |  42% +0.018   24 |  44% -0.009  462  (3/6 blocks positive)

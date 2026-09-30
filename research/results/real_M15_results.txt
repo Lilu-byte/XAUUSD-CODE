@@ -2,8 +2,8 @@
 == REAL DATA: research/data/XAUUSD_M15.csv (99999 bars of 900 s), higher timeframe 3600 s (59999 bars) ==
    from 2022.06.29 14:45 to 2026.09.30 13:00 | cost per trade 0.35 (price units) | cost guard 20 costs | lab window 10000 bars
   STRATEGY LAB on the newest 10000 bars (what the indicator shows today), all 32 combinations:
-   PASS Weak-close dip in trend  High-hit 0.5R      won  70.9%  avg +0.041R  PF  1.14  n= 437 | last 40%: won  70.6% avg +0.038R n=180
         EMA pullback             High-hit 0.5R      won  78.0%  avg +0.166R  PF  1.74  n=  41 | last 40%: won  71.4% avg +0.027R n=14
+        Weak-close dip in trend  High-hit 0.5R      won  70.9%  avg +0.041R  PF  1.14  n= 437 | last 40%: won  70.6% avg +0.038R n=180
         Weak-close dip in trend  Quick 0.6R         won  65.9%  avg +0.015R  PF  1.04  n= 487 | last 40%: won  67.3% avg +0.039R n=202
         Weak-close dip in trend  Classic 1R+runner  won  52.9%  avg +0.032R  PF  1.06  n= 378 | last 40%: won  51.7% avg +0.003R n=151
         EMA pullback             Classic 1R+runner  won  60.5%  avg +0.136R  PF  1.33  n=  38 | last 40%: won  35.7% avg -0.368R n=14

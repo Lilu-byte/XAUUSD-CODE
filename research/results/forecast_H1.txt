@@ -1,0 +1,16 @@
+== FORECAST PRECISION: research/data/XAUUSD_H1.csv, last 3000 bars (2026.03.20 19:00 .. 2026.09.30 12:00) ==
+  DIRECTION  next bar: pattern match 50.1% | always up 48.3% | 21-EMA slope 49.1%  (n 3000)
+             4 bars:   pattern match 49.7% | always up 47.7% | 21-EMA slope 48.3%  | confident pattern calls 48.2% (n 789)
+  CONE (should contain the real close 60% of the time)
+    step | pattern-match cone: inside  width(ATR) | calibrated cone: inside  width(ATR)
+     1   |                  52.1%    0.82     |               60.1%    0.94
+     2   |                  51.3%    1.20     |               59.7%    1.36
+     3   |                  52.5%    1.52     |               59.9%    1.68
+     4   |                  52.7%    1.81     |               60.1%    1.99
+     5   |                  52.5%    2.07     |               60.0%    2.30
+     6   |                  52.6%    2.32     |               60.3%    2.57
+  NEXT CANDLE SIZE (high-low)      mean abs error  avg pred/actual  correlation  within +-25%
+    pattern match (typical path)            9.556          0.91           0.37         34.1%
+    ATR x hour profile                      8.276          1.23           0.49         39.8%
+    recent ranges x hour profile            8.805          1.25           0.47         36.8%
+    ATR x hour profile, median-corrected    7.733          1.07           0.49         43.7%

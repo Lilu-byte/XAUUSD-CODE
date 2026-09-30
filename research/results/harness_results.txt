@@ -80,6 +80,19 @@
   ok:   setups with shorter stops are refused with the reason 'stop too short for the spread'
   ok:   with the guard off exactly those setups come back
 
+== unit tests: daily trend filter ==
+  ok:   daily trend known for most bars, both up and down phases present
+  ok:   daily trend at a bar uses only daily bars completed by that bar's close
+  ok:   BUYS ONLY: no sells, no buys in a daily downtrend, fewer signals than unfiltered
+  ok:   WITH THE TREND: no signal against the daily trend
+  ok:   a filtered signal reports the reason 'against the daily trend'
+
+== unit tests: calibrated forecast cone ==
+  ok:   calibration produced ordered percentiles and a size factor
+  held-out bars 3990: cone held the price 59.5% (1 bar) and 60.7% (3 bars), target 60%
+  ok:   calibrated cone holds the price 54-66% of the time on bars it never saw
+  ok:   the cone widens with the horizon
+
 == simulator calibration: bar-level fills vs minute-level truth (4 seeds x 16000 M15 bars, entries every 7th bar) ==
   exit profile       world       truthR     pathR     pessR |   truthW%    pathW%    pessW% | mean |error| per trade: path / pessimistic
   Classic 1R+runner  null        +0.005    +0.007    -0.071 |     50.9%     50.9%     50.7% | 0.002 / 0.076  (n=3454)
@@ -177,7 +190,7 @@
 == analog (pattern-matching) forecaster ==
   causality: 16 queries compared on truncated vs full history, 0 differ
   ok:   analog forecast identical on truncated vs full history (no look-ahead)
-  audit + live query on 6000 bars: 34 ms
+  audit + live query on 6000 bars: 49 ms
   NULL (no edge: must be ~50%)     next bar: all 49.8% (n=19995) confident 50.5% (n=4477) | +4 bars: all 50.1% confident 51.4% (n=6655, z=+2.2) | old drift model: next 49.8%, +4 49.9%
   ok:   no-edge world: analog hit-rate is a coin flip (no leakage)
   ok:   no-edge world: even the 'confident' calls do not beat a coin flip
@@ -196,7 +209,7 @@
   EMA pullback             |    52% +0.024R n=252   |    67% -0.004R n=272   |    63% -0.019R n=279   |    50% +0.008R n=389  
   Squeeze breakout         |    51% +0.035R n=840   |    65% -0.030R n=883   |    62% -0.029R n=904   |    41% -0.037R n=1635 
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 0.2 of 32 | final pick counts:
+  qualified cells per seed: 0.0 of 32 | final pick counts:
   AUTO-PICK walk-forward (out-of-sample, honest): traded in 1 of 16 folds;                     n= 165  win%= 64.8  TP1%=  0.0  expR=-0.027 (se 0.060)  PF= 0.92  holdMed=  3 bars
   ok:   no-edge world: the auto-pick's out-of-sample record is not significantly profitable (selection bias contained)
 
@@ -211,7 +224,7 @@
   EMA pullback             |    57% +0.174R n=333   | *  67% +0.012R n=370   | *  65% +0.022R n=385   |    51% -0.005R n=507  
   Squeeze breakout         |    52% +0.065R n=901   | *  68% +0.014R n=952   | *  65% +0.023R n=965   |    44% -0.015R n=1700 
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 2.0 of 32 | final pick counts: [Confluence (9 modules) + Quick 0.6R] x1 [EMA pullback + Classic 1R+runner] x1
+  qualified cells per seed: 1.5 of 32 | final pick counts: [Confluence (9 modules) + Quick 0.6R] x1 [EMA pullback + Classic 1R+runner] x1
   AUTO-PICK walk-forward (out-of-sample, honest): traded in 9 of 16 folds;                     n= 363  win%= 60.9  TP1%=  0.0  expR=-0.026 (se 0.043)  PF= 0.93  holdMed=  4 bars
 
 == Strategy Lab on world TREND (drift regimes) (4 seeds x 30000 M15 bars, target 60% wins, min 50 trades, 5 folds) ==
@@ -225,7 +238,7 @@
   EMA pullback             |    58% +0.214R n=358   | *  70% +0.066R n=388   | *  69% +0.081R n=402   |    53% +0.016R n=586  
   Squeeze breakout         |    60% +0.252R n=818   | *  73% +0.117R n=881   | *  70% +0.091R n=911   |    47% +0.022R n=1643 
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 7.0 of 32 | final pick counts: [Confluence (9 modules) + High-hit 0.5R] x1 [Opening-range breakout + Classic 1R+runner] x1 [Squeeze breakout + Classic 1R+runner] x1 [Squeeze breakout + High-hit 0.5R] x1
+  qualified cells per seed: 4.8 of 32 | final pick counts: [Confluence (9 modules) + High-hit 0.5R] x1 [Opening-range breakout + Classic 1R+runner] x1 [Squeeze breakout + Classic 1R+runner] x1 [Squeeze breakout + High-hit 0.5R] x1
   AUTO-PICK walk-forward (out-of-sample, honest): traded in 13 of 16 folds;                     n= 612  win%= 67.3  TP1%=  0.0  expR=+0.099 (se 0.034)  PF= 1.30  holdMed=  4 bars
   ok:   trending world (clear edge): the auto-pick holds >= 60% wins AND positive expectancy out-of-sample
 
