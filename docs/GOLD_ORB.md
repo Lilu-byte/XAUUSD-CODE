@@ -59,10 +59,13 @@ ORB solo on M15, 8 seeds x 30,000 bars, about 0.8-1.1 trades a day:
 
 | World | Expectancy per trade | Reading |
 |---|---:|---|
-| No edge | -0.08R | Baseline (costs plus the simulator's pessimism); nothing leaks |
-| Trending | **+0.20R** (win 58%) | Breakouts follow through |
-| Mean-reverting | **-0.43R** (win 33%) | Breakouts are faded; the strategy's real risk |
-| Alternating | -0.11R | Wins and losses cancel |
+| No edge | -0.03R | Costs only; nothing leaks |
+| Trending | **+0.26R** (win 59%) | Breakouts follow through |
+| Mean-reverting | **-0.40R** (win 33%) | Breakouts are faded; the strategy's real risk |
+| Alternating | -0.08R | Wins and losses cancel |
+
+(Re-measured in v2 with the calibrated fill model; v1 quoted -0.08 / +0.20 / -0.43 / -0.11 with the older, harsher one.)
+In v2 the opening-range breakout is also one of the 8 strategies in the Strategy Lab, tested with every exit style.
 
 This is the same picture as the source's own "profitable on bull market": a breakout system needs the market to follow through.
 

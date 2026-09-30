@@ -12,7 +12,7 @@ import os, re, sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SRC = os.path.join(ROOT, "src")
-TARGETS = {"XAU_Oracle.mq5": "MQL5/Indicators", "XAU_Sniper_EA.mq5": "MQL5/Experts"}
+TARGETS = {"XAU_Oracle.mq5": "MQL5/Indicators", "XAU_Sniper_EA.mq5": "MQL5/Experts", "XAU_DataExport.mq5": "MQL5/Scripts"}
 
 def inline(path, seen):
     out = []

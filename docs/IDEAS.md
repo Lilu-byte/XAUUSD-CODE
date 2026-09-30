@@ -158,3 +158,97 @@ more like the trending or the mean-reverting world.** That is what the indicator
 | 100 | One-long-one-short-per-day limit for breakouts | BUILT | Inside the ORB module |
 | 101 | Equity-slope detection to resume (GOLD_ORB) | REJECTED | Paper-trade recovery is simpler and uses the same simulator |
 | 102 | Fixed-point stops and targets | REJECTED | Not portable across price levels; ATR-scaled instead |
+
+## Round 5: 50 new ideas for a 60%+ win-rate that also makes money
+Status: **BUILT** (in the code, tested), **BUILT (option)**, **TESTED-OFF**, **PROPOSED**, **REJECTED**.
+
+### A. Measuring honestly (you cannot improve what you mis-measure)
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 103 | Replace the "stop always wins" fill rule with the candle's likely path (O-L-H-C / O-H-L-C) | BUILT | Old rule understated results by ~0.1R per trade; new one is within 0.007R of minute-level truth |
+| 104 | Calibrate the simulator against a minute-by-minute replay | BUILT | `harness calib` |
+| 105 | Gaps through a level fill at the open, not at the level | BUILT | Weekend gaps |
+| 106 | Report expectancy next to win-rate everywhere | BUILT | Scoreboard, panel, EA log |
+| 107 | Walk-forward record for any automatic choice | BUILT | Panel quotes it in AUTO mode |
+| 108 | Live replay: re-run the daily Lab over history exactly like the EA | BUILT | `harness replay` |
+| 109 | Real-data path: export your broker's history and re-run every test on it | BUILT | `XAU_DataExport.mq5` + `harness real` |
+| 110 | Statistical margin (1 standard error) before calling a strategy profitable | BUILT | |
+
+### B. Exits that raise the share of winners
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 111 | High-hit exit: 70% off at 0.5R, break-even, runner to 1.5R | BUILT | 66.7% winners even with no edge |
+| 112 | Quick exit: everything at 0.6R | BUILT | 62.7% winners with no edge |
+| 113 | Mean-reversion exit on the close back over the 5-bar mean (Connors) | BUILT | For dip strategies |
+| 114 | Wider stops for mean-reversion trades (1.5-3.2 ATR) | BUILT | Part of the profile |
+| 115 | Lock a small profit instead of plain break-even after the first target | BUILT (field) | `be_lock_r`; not used by default |
+| 116 | Time stop per exit style (12 bars for mean reversion) | BUILT | |
+| 117 | Exit style chosen per strategy by the Lab, not globally | BUILT | 32 combinations |
+| 118 | Limit entries a fraction of ATR better than the signal close | PROPOSED | Raises win-rate a little; needs pending-order handling and fill modelling |
+| 119 | Scale-out ladder 0.5R / 1R / 2R | PROPOSED | Middle ground between High-hit and Classic |
+
+### C. Entries with a documented edge
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 120 | RSI(2) dip in trend (Connors) | BUILT | ~72% winners on GLD daily in published tests |
+| 121 | Double-7s in trend | BUILT | |
+| 122 | Internal bar strength (weak close) in trend | BUILT | Documented next-bar reversal effect in indices |
+| 123 | Opening range breakout with the trend (GOLD_ORB) | BUILT | Trend filter added |
+| 124 | Stop-hunt reversal only with the trend | BUILT | |
+| 125 | Squeeze and Asian-range breakout not against the trend | BUILT | Most often chosen in trending worlds |
+| 126 | Trend defined by 200 EMA side AND higher-timeframe agreement | BUILT | |
+| 127 | First-half-hour momentum into the last half hour (intraday momentum literature, incl. gold futures) | PROPOSED | Needs a session-return feature; promising for NY session |
+| 128 | Buy-the-dip only above yesterday's low in a bull regime | PROPOSED | |
+| 129 | Short-side filter: shorts only when D1 and H4 both point down | PROPOSED | Gold's long bull trend punishes counter-trend shorts |
+
+### D. Choosing what to trade
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 130 | Strategy Lab: 8 x 4 combinations tested daily on the chart's own history | BUILT | |
+| 131 | Win-rate target as an input (default 60%) | BUILT | |
+| 132 | 3-point allowance for out-of-sample decay | BUILT | Tested: lifts out-of-sample win-rate above 60% |
+| 133 | "Still profitable in the most recent fifth" rule | BUILT | Tested: cuts trading in regime changes |
+| 134 | 50-trade minimum | BUILT | Tested |
+| 135 | Stand aside when nothing qualifies (live accounts) | BUILT | Trades on 4-7% of days in no-edge worlds |
+| 136 | Rolling "last two folds" window | TESTED-OFF | Worse than using the whole window with the recency rule |
+| 137 | Same fixed data window for indicator and EA so both choose alike | BUILT | Bars up to server midnight |
+| 138 | Fixed strategy or fixed exit selectable by hand | BUILT | Inputs "Strategy" and "Exit style" |
+| 139 | Pattern-match veto inside the Lab | TESTED-OFF | Removed from the default path: kept the Lab and live trading identical and fast |
+| 140 | Weight recent trades more in the Lab score | PROPOSED | Needs a replay comparison |
+
+### E. Making it easy and fun
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 141 | Strategy Lab scoreboard with PASS marks and the pick highlighted | BUILT | Bottom right |
+| 142 | PROVEN / UNPROVEN badge on every signal (green / grey arrows) | BUILT | |
+| 143 | "Stay about 3h; close by 17:00" from the Lab's own hold times | BUILT | |
+| 144 | Lot size shown as money: risk and typical win in account currency | BUILT | |
+| 145 | Mean-reversion target drawn as a moving line (5-bar mean) | BUILT | |
+| 146 | Next-candle direction for M15 / H1 / H4 on one line | BUILT | Each audited separately |
+| 147 | Ghost candles re-anchored to the live price every second | BUILT | |
+| 148 | Panels that size themselves to their text; EA panel bottom-left, indicator top-left | BUILT | Fixes the overlap in your screenshots |
+| 149 | Account-health warning: trades without a stop loss, low margin level | BUILT | Your screenshots showed two sells without a stop and 64% margin level |
+| 150 | Weekly report card (trades, win-rate, R, best/worst) written to a file | PROPOSED | |
+
+### F. Safety
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 151 | Lot size from the broker's profit formula, not the tick value | BUILT | Your broker reports the tick value 10x too small; the old sizing would have been 10x too big |
+| 152 | Size cross-check: tick value vs profit formula vs contract size, mismatch logged | BUILT | |
+
+### And more (second brainstorm)
+| # | Idea | Status |
+|--:|---|---|
+| 153 | Per-session Lab (London vs New York) choosing different strategies | PROPOSED |
+| 154 | Real-yield and DXY daily bias as a Lab filter | PROPOSED |
+| 155 | Volatility-targeted position size (smaller in the top 20% of ATR) | PROPOSED |
+| 156 | Monte Carlo risk-of-ruin of the chosen strategy shown in the scoreboard | PROPOSED |
+| 157 | Auto-export of the Lab table to CSV every day for a journal | PROPOSED |
+| 158 | Push notification with the full plan (entry/stop/target/size) | PROPOSED |
+| 159 | "Why no trade" history: last 20 skipped signals with reasons | PROPOSED |
+| 160 | One-click manual trade from the panel with the plan's stop and size | PROPOSED |
+| 161 | Multi-symbol Lab (XAGUSD, XAUEUR) to see if the edge is gold-specific | PROPOSED |
+| 162 | Break-even move before red-folder news for open trades | PROPOSED |
+| 163 | Stop placed beyond the nearest round number (playbook idea) | PROPOSED |
+| 164 | Lab on M1-resolved fills (exact intrabar order) inside MT5 | PROPOSED |
+| 165 | Martingale / grid recovery | REJECTED: raises win-rate by hiding losses until one wipes the account |

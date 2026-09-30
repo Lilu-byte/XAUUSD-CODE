@@ -184,7 +184,6 @@ template<typename... A> inline void Print(A... a)
    std::printf("%s\n", os.str().c_str());
 }
 template<typename T> inline void ArraySetAsSeries(std::vector<T> &, bool) {}
-inline void Alert(const string &) {}
 inline bool PlaySound(const string &) { return true; }
 inline bool SendNotification(const string &) { return true; }
 inline bool SendMail(const string &, const string &) { return true; }
@@ -207,32 +206,48 @@ inline double NormalizeDouble(double v, int d) { double m = std::pow(10.0, d); r
 // ---- symbol / account ------------------------------------------------------------
 enum { SYMBOL_TRADE_TICK_VALUE = 1, SYMBOL_TRADE_TICK_VALUE_LOSS, SYMBOL_TRADE_TICK_SIZE, SYMBOL_VOLUME_MIN,
        SYMBOL_VOLUME_MAX, SYMBOL_VOLUME_STEP, SYMBOL_POINT, SYMBOL_BID, SYMBOL_ASK,
-       SYMBOL_SPREAD, SYMBOL_TRADE_STOPS_LEVEL, SYMBOL_TRADE_MODE, SYMBOL_DIGITS };
+       SYMBOL_SPREAD, SYMBOL_TRADE_STOPS_LEVEL, SYMBOL_TRADE_MODE, SYMBOL_DIGITS, SYMBOL_TRADE_CONTRACT_SIZE,
+       SYMBOL_CURRENCY_PROFIT };
+// mock broker settings that tests can change (e.g. a broker reporting a tick value 10x too small)
+static double g_mock_tick_value = 1.0;
+static bool   g_mock_calcprofit_ok = true;
 enum { SYMBOL_TRADE_MODE_FULL = 4 };
 enum { ORDER_TYPE_BUY = 0, ORDER_TYPE_SELL = 1 };
 enum { ACCOUNT_TRADE_MODE = 50, ACCOUNT_TRADE_MODE_DEMO = 0 };
-enum { ACCOUNT_LOGIN = 1, ACCOUNT_MARGIN_MODE, ACCOUNT_EQUITY, ACCOUNT_MARGIN_FREE, ACCOUNT_BALANCE };
+enum { ACCOUNT_LOGIN = 1, ACCOUNT_MARGIN_MODE, ACCOUNT_EQUITY, ACCOUNT_MARGIN_FREE, ACCOUNT_BALANCE, ACCOUNT_MARGIN_LEVEL,
+       ACCOUNT_MARGIN_SO_SO, ACCOUNT_MARGIN, ACCOUNT_CURRENCY, ACCOUNT_MARGIN_SO_MODE };
+enum { ACCOUNT_STOPOUT_MODE_PERCENT = 0, ACCOUNT_STOPOUT_MODE_MONEY = 1 };
 enum { ACCOUNT_MARGIN_MODE_RETAIL_HEDGING = 2 };
 enum { TERMINAL_TRADE_ALLOWED = 1 };
-enum { MQL_TRADE_ALLOWED = 1, MQL_TESTER = 2 };
+enum { MQL_TRADE_ALLOWED = 1, MQL_TESTER = 2, MQL_VISUAL_MODE = 3 };
 enum { INIT_FAILED = 1 };
 inline double SymbolInfoDouble(const string &, int p)
 {
-   switch(p) { case SYMBOL_TRADE_TICK_VALUE: case SYMBOL_TRADE_TICK_VALUE_LOSS: return 1.0; case SYMBOL_TRADE_TICK_SIZE: return 0.01;
+   switch(p) { case SYMBOL_TRADE_TICK_VALUE: case SYMBOL_TRADE_TICK_VALUE_LOSS: return g_mock_tick_value; case SYMBOL_TRADE_CONTRACT_SIZE: return 100.0; case SYMBOL_TRADE_TICK_SIZE: return 0.01;
       case SYMBOL_VOLUME_MIN: return 0.01; case SYMBOL_VOLUME_MAX: return 100.0; case SYMBOL_VOLUME_STEP: return 0.01;
       case SYMBOL_POINT: return 0.01; case SYMBOL_BID: return 4000.0; case SYMBOL_ASK: return 4000.3; }
    return 0.0;
 }
 inline long SymbolInfoInteger(const string &, int p) { return p == SYMBOL_SPREAD ? 30 : (p == SYMBOL_TRADE_MODE ? 4 : (p == SYMBOL_DIGITS ? 2 : 0)); }
 inline bool SymbolSelect(const string &, bool) { return true; }
-inline double AccountInfoDouble(int p) { return p == ACCOUNT_MARGIN_FREE ? 9000.0 : 10000.0; }
-inline long AccountInfoInteger(int p) { return p == ACCOUNT_MARGIN_MODE ? ACCOUNT_MARGIN_MODE_RETAIL_HEDGING : (p == ACCOUNT_TRADE_MODE ? 0 : 1); }
+inline double AccountInfoDouble(int p) { return p == ACCOUNT_MARGIN_FREE ? 9000.0 : (p == ACCOUNT_MARGIN_SO_SO ? 50.0 : (p == ACCOUNT_MARGIN_LEVEL ? 1200.0 : 10000.0)); }
+inline string AccountInfoString(int) { return "USD"; }
+inline string SymbolInfoString(const string &, int) { return "USD"; }
+inline long AccountInfoInteger(int p) { return p == ACCOUNT_MARGIN_MODE ? ACCOUNT_MARGIN_MODE_RETAIL_HEDGING : (p == ACCOUNT_TRADE_MODE ? 0 : (p == ACCOUNT_MARGIN_SO_MODE ? 0 : 1)); }
 inline long TerminalInfoInteger(int) { return 1; }
 inline long MQLInfoInteger(int) { return 1; }
 inline bool OrderCalcMargin(int, const string &, double v, double px, double &m) { m = v * px * 100.0 / 100.0; return true; }
+// the broker's own profit formula: contract 100 oz, USD profit currency
+inline bool OrderCalcProfit(int type, const string &, double v, double open, double close, double &pr)
+{
+   if(!g_mock_calcprofit_ok) return false;
+   pr = (type == 0 ? (close - open) : (open - close)) * 100.0 * v;
+   return true;
+}
 struct MqlTick { datetime time; double bid, ask, last; long volume; };
 inline bool SymbolInfoTick(const string &, MqlTick &t) { t.bid = 4000.0; t.ask = 4000.3; t.time = g_mock_now; return true; }
 template<typename T> inline int CopyRates(const string &, int, int, int, std::vector<T> &) { return 0; }
+template<typename T> inline int CopyRates(const string &, int, datetime, int, std::vector<T> &) { return 0; }
 
 // ---- calendar -------------------------------------------------------------------
 struct MqlCalendarValue { ulong id, event_id; datetime time; };
@@ -261,6 +276,10 @@ inline int  ObjectsDeleteAll(long, const string &, int = -1, int = -1) { return 
 inline bool ChartSetInteger(long, int, long) { return true; }
 inline bool ChartSetDouble(long, int, double) { return true; }
 inline void ChartRedraw(long = 0) {}
+enum { CHART_HEIGHT_IN_PIXELS = 100, CHART_WIDTH_IN_PIXELS = 101 };
+inline long ChartGetInteger(long, int p, int = 0) { return p == CHART_HEIGHT_IN_PIXELS ? 800 : 1400; }
+inline bool TextSetFont(const string &, int, uint = 0, int = 0) { return true; }
+inline bool TextGetSize(const string &t, uint &w, uint &h) { w = (uint)(t.size() * 7); h = 14; return true; }
 
 // ---- indicator plumbing --------------------------------------------------------
 enum { INIT_SUCCEEDED = 0, INDICATOR_DATA = 0, INDICATOR_COLOR_INDEX = 1, INDICATOR_SHORTNAME = 1, INDICATOR_DIGITS = 2,
@@ -296,6 +315,7 @@ public:
    bool PositionClosePartial(ulong, double) { return true; }
    bool PositionModify(ulong, double, double) { return true; }
    uint ResultRetcode() const { return TRADE_RETCODE_DONE; }
+   ulong ResultOrder() const { return 1; }
    string ResultRetcodeDescription() const { return "done"; }
 };
 enum { POSITION_TYPE_BUY = 0, POSITION_TYPE_SELL = 1 };
@@ -321,3 +341,14 @@ struct MqlTradeResult { int dummy; };
 enum { TRADE_TRANSACTION_DEAL_ADD = 6 };
 enum { STAT_PROFIT = 1, STAT_TRADES, STAT_PROFIT_FACTOR, STAT_RECOVERY_FACTOR };
 inline double TesterStatistics(int) { return 0.0; }
+
+// ---- files / terminal (data export script) -------------------------------------
+enum { FILE_WRITE = 2, FILE_CSV = 8, FILE_ANSI = 32, FILE_TXT = 16, INVALID_HANDLE = -1 };
+enum { TERMINAL_DATA_PATH = 1 };
+inline int FileOpen(const string &, int, int = 0) { return 1; }
+inline int FileOpen(const string &, int, char) { return 1; }
+template<typename... A> inline unsigned FileWrite(int, A...) { return 0; }
+inline void FileClose(int) {}
+inline string TerminalInfoString(int) { return "C:\\data"; }
+inline int GetLastError() { return 0; }
+template<typename... A> inline void Alert(A...) {}

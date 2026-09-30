@@ -45,3 +45,19 @@ protect-profit move to break-even before red-folder news, an XAGUSD correlation 
 | 32 | **Paper-trade ledger** that resumes trading after a loss-streak pause | DONE | Idea from GOLD_ORB's virtual environment |
 | 33 | **Loss-streak deadlock fixed** (pause now ends at end of day or on paper recovery) | DONE | Bug in this project's earlier pause |
 | 30 | **Analog-only trade signals** (a proven, confident pattern match as its own setup source) | PROPOSED | Needs an incremental analog cache: per-bar queries over the full history are too slow to backtest inside the indicator |
+
+## Round 5 (screenshots of the live demo, and the 60% goal)
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 34 | **Lot sizing from the broker's profit formula** (OrderCalcProfit), tick value only as a fallback | DONE | The demo broker reports the XAUUSD tick value 10x too small: "0.01 lot, lose 1.42" was really 14.18. A live account would have been sized 10x too big |
+| 35 | **Candle-path fills** in every trial | DONE | The old pessimistic rule understated results by ~0.1R per trade |
+| 36 | **Four exit styles** (Classic, High-hit, Quick, Mean-revert) | DONE | Win-rate is mostly set by the exit |
+| 37 | **Four new entry families** (RSI-2 dip, Double-7, weak close, trend-filtered ORB) | DONE | Documented high-win-rate methods |
+| 38 | **Strategy Lab** with walk-forward record and strict qualification | DONE | Chooses per chart, per day |
+| 39 | **Live replay** of the daily Lab | DONE | The faithful estimate of the whole system |
+| 40 | **Scoreboard**, PROVEN badge, hold-time, money-based size | DONE | |
+| 41 | **Panels that fit their text**, EA panel bottom-left | DONE | The screenshots showed both panels on top of each other and text running past the box |
+| 42 | **Account-health warning** (no-stop trades, margin level) | DONE | |
+| 43 | **Multi-timeframe next-candle line** | DONE | |
+| 44 | **Data export script** and real-data mode in the harness | DONE | So real XAUUSD can be tested next |
+| 45 | **Presets generated from the EA's own inputs** | DONE | They can no longer drift out of date |

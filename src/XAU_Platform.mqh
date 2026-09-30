@@ -43,6 +43,49 @@ string XTfName(const ENUM_TIMEFRAMES tf)
 //+------------------------------------------------------------------+
 //| data                                                             |
 //+------------------------------------------------------------------+
+// user-facing strategy / exit choices (AUTO = let the Strategy Lab choose on this chart's own history)
+enum ENUM_XAU_STRAT
+{
+   XAU_ST_AUTO       = -1,  // AUTO: the strategy that passed the Strategy Lab
+   XAU_ST_CONFLUENCE = 0,   // Confluence of 9 modules
+   XAU_ST_ORB        = 1,   // Opening-range breakout (GOLD_ORB)
+   XAU_ST_DIP        = 2,   // RSI-2 dip in trend
+   XAU_ST_DOUBLE7    = 3,   // Double-7 dip in trend
+   XAU_ST_IBS        = 4,   // Weak-close dip in trend
+   XAU_ST_SWEEP      = 5,   // Stop-hunt reversal
+   XAU_ST_PULLBACK   = 6,   // EMA pullback
+   XAU_ST_SQUEEZE    = 7    // Squeeze breakout
+};
+
+enum ENUM_XAU_EXIT
+{
+   XAU_EX_AUTO    = -1,     // AUTO: chosen together with the strategy
+   XAU_EX_CLASSIC = 0,      // Classic: half at 1R, runner to 2.5R
+   XAU_EX_HIGHHIT = 1,      // High-hit: 70% at 0.5R, runner to 1.5R
+   XAU_EX_QUICK   = 2,      // Quick: all out at 0.6R
+   XAU_EX_MEANREV = 3       // Mean-revert: exit on the close back over the 5-bar mean
+};
+
+// Resolve the user's choice against the lab. Returns the cell (strategy * XP_COUNT + exit) or -1.
+int XResolveCell(const CXauEngine &le, const int user_s, const int user_p, const int min_trades, bool &proven)
+{
+   proven = false;
+   if(user_s < 0 && user_p < 0) return le.LabActiveCell(min_trades, proven);
+   int best = -1;
+   double sc = -1e9;
+   for(int c = 0; c < XLAB_CELLS; c++)
+   {
+      const int st = c / XP_COUNT, pr = c % XP_COUNT;
+      if(user_s >= 0 && st != user_s) continue;
+      if(user_p >= 0 && pr != user_p) continue;
+      const double v = le.lab[c].score + (le.lab[c].qualified ? 1000.0 : 0.0);
+      if(le.lab[c].all.n >= 1 && v > sc) { sc = v; best = c; }
+   }
+   if(best < 0) best = XMaxI(user_s, 0) * XP_COUNT + XMaxI(user_p, 0);
+   proven = le.lab[best].qualified;
+   return best;
+}
+
 enum ENUM_XAU_DST
 {
    XAU_DST_FIXED = 0,   // server clock never changes
@@ -122,6 +165,7 @@ struct XLotPlan
    double margin;
    double min_lot_risk_pct;  // what the smallest tradable lot would risk
    string note;
+   string src_note;          // set when the broker's tick value was found to be wrong
 };
 
 double XTickValueLoss(const string sym)
@@ -129,6 +173,38 @@ double XTickValueLoss(const string sym)
    double v = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_VALUE_LOSS);
    if(v <= 0.0) v = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_VALUE);
    return v;
+}
+
+// Money lost by ONE lot if the stop (sl_dist away from price) is hit, in account currency.
+// Some brokers report the XAUUSD tick value 10x too small, which would make every position 10x too big.
+// The broker's own profit formula (OrderCalcProfit) is therefore the source of truth; the tick value and
+// the contract size are only fallbacks. `note` explains when the sources disagreed.
+double XLossPerLot(const string sym, const bool is_buy, const double price, const double sl_dist, string &note)
+{
+   note = "";
+   if(sl_dist <= 0.0 || price <= 0.0) return 0.0;
+   const ENUM_ORDER_TYPE ot = is_buy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   const double sl = is_buy ? price - sl_dist : price + sl_dist;
+   double prof = 0.0, by_profit = 0.0;
+   if(OrderCalcProfit(ot, sym, 1.0, price, sl, prof) && prof < 0.0) by_profit = -prof;
+   const double ts = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_SIZE);
+   const double tv = XTickValueLoss(sym);
+   const double by_tick = (ts > 0.0 && tv > 0.0) ? sl_dist / ts * tv : 0.0;
+   double by_contract = 0.0;
+   if(SymbolInfoString(sym, SYMBOL_CURRENCY_PROFIT) == AccountInfoString(ACCOUNT_CURRENCY))
+      by_contract = sl_dist * SymbolInfoDouble(sym, SYMBOL_TRADE_CONTRACT_SIZE);
+   if(by_profit > 0.0)
+   {
+      if(by_tick > 0.0 && MathAbs(by_tick - by_profit) > 0.2 * by_profit)
+         note = "broker tick value is off by x" + DoubleToString(by_profit / by_tick, 1) + "; using the broker's profit formula";
+      return by_profit;
+   }
+   if(by_contract > 0.0)
+   {
+      if(by_tick > 0.0 && MathAbs(by_tick - by_contract) > 0.2 * by_contract) note = "tick value disagrees with contract size; using contract size";
+      return by_contract;
+   }
+   return by_tick;
 }
 
 // Sizes a trade so that hitting the stop costs `risk_pct` of equity. Never rounds UP past
@@ -140,20 +216,20 @@ void XPlanLots(const string sym, const double equity, const double risk_pct, con
                XLotPlan &p)
 {
    p.ok = false; p.lots = 0.0; p.risk_money = 0.0; p.risk_pct = 0.0; p.margin = 0.0;
-   p.min_lot_risk_pct = 0.0; p.note = "";
-   const double tick_size = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_SIZE);
-   const double tick_val  = XTickValueLoss(sym);
+   p.min_lot_risk_pct = 0.0; p.note = ""; p.src_note = "";
    const double vmin  = SymbolInfoDouble(sym, SYMBOL_VOLUME_MIN);
    const double vmax  = SymbolInfoDouble(sym, SYMBOL_VOLUME_MAX);
    const double vstep = SymbolInfoDouble(sym, SYMBOL_VOLUME_STEP);
-   if(equity <= 0.0 || sl_dist <= 0.0 || tick_size <= 0.0 || tick_val <= 0.0 || vstep <= 0.0)
+   string src_note = "";
+   const double loss_per_lot = XLossPerLot(sym, is_buy, price, sl_dist, src_note);
+   p.src_note = src_note;
+   if(equity <= 0.0 || sl_dist <= 0.0 || loss_per_lot <= 0.0 || vstep <= 0.0)
    {
       p.note = "symbol data unavailable";
       return;
    }
    const double risk_money = equity * risk_pct / 100.0;
-   const double loss_per_lot = (sl_dist / tick_size) * tick_val;
-   double lots = XNormLotsDown(XRawLots(risk_money, sl_dist, tick_size, tick_val), vmin, vmax, vstep);
+   double lots = XNormLotsDown(risk_money / loss_per_lot, vmin, vmax, vstep);
    p.min_lot_risk_pct = 100.0 * vmin * loss_per_lot / equity;
    if(lots <= 0.0)
    {
@@ -406,6 +482,154 @@ void XObjVLine(const string name, const datetime t, const color clr)
 void XObjDelete(const string name)
 {
    if(ObjectFind(0, name) >= 0) ObjectDelete(0, name);
+}
+
+//+------------------------------------------------------------------+
+//| panel: lines are collected, then drawn in a box that fits them   |
+//+------------------------------------------------------------------+
+enum ENUM_XAU_PANEL_POS
+{
+   XAU_PANEL_TOP_LEFT    = 0,   // top left
+   XAU_PANEL_BOTTOM_LEFT = 1,   // bottom left
+   XAU_PANEL_TOP_RIGHT   = 2,   // top right (left of the price scale)
+   XAU_PANEL_BOTTOM_RIGHT = 3   // bottom right
+};
+
+int XTextWidth(const string text, const string font, const int size)
+{
+   uint w = 0, h = 0;
+   if(TextSetFont(font, -size * 10, 0, 0) && TextGetSize(text, w, h) && w > 0) return (int)w;
+   return (int)(StringLen(text) * size * 0.8);
+}
+
+class CXPanel
+{
+private:
+   string m_text[48];
+   color  m_clr[48];
+   int    m_extra[48];
+   int    m_rows, m_drawn;
+public:
+   string prefix;
+   string font;
+   int    x, y, fs, min_w;
+   ENUM_XAU_PANEL_POS pos;
+   color  bg, border;
+
+   CXPanel() { m_rows = 0; m_drawn = 0; prefix = "XP_"; font = "Consolas"; x = 12; y = 24; fs = 10; min_w = 300;
+               pos = XAU_PANEL_TOP_LEFT; bg = XRGB(16, 20, 28); border = XRGB(58, 68, 88); }
+   void Begin() { m_rows = 0; }
+   void Line(const string text, const color clr, const int extra = 0)
+   {
+      if(m_rows >= 48) return;
+      m_text[m_rows] = text; m_clr[m_rows] = clr; m_extra[m_rows] = extra; m_rows++;
+   }
+   int Rows() const { return m_rows; }
+   // measured size of the collected lines
+   void Measure(int &w, int &h) const
+   {
+      w = min_w; h = 16;
+      for(int k = 0; k < m_rows; k++)
+      {
+         const int fsz = fs + m_extra[k];
+         const int tw = XTextWidth(m_text[k], font, fsz) + 24;
+         if(tw > w) w = tw;
+         h += fsz + 8;
+      }
+   }
+   void End()
+   {
+      int w, h;
+      Measure(w, h);
+      const int ch = (int)ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS);
+      const int cw = (int)ChartGetInteger(0, CHART_WIDTH_IN_PIXELS);
+      int top = y, left = x;
+      if(pos == XAU_PANEL_BOTTOM_LEFT) top = XMaxI(4, ch - h - y);
+      if(pos == XAU_PANEL_TOP_RIGHT || pos == XAU_PANEL_BOTTOM_RIGHT) left = XMaxI(4, cw - w - x - 70);
+      if(pos == XAU_PANEL_BOTTOM_RIGHT) top = XMaxI(4, ch - h - y - 20);
+      XObjRectLabel(prefix + "BG", left, top, w, h, bg, border, CORNER_LEFT_UPPER);
+      int py = top + 8;
+      for(int k = 0; k < m_rows; k++)
+      {
+         const int fsz = fs + m_extra[k];
+         XObjLabel(prefix + IntegerToString(k), left + 12, py, m_text[k], m_clr[k], fsz, font, CORNER_LEFT_UPPER);
+         py += fsz + 8;
+      }
+      for(int k = m_rows; k < m_drawn; k++) XObjDelete(prefix + IntegerToString(k));
+      m_drawn = m_rows;
+   }
+   void Clear()
+   {
+      for(int k = 0; k < 48; k++) XObjDelete(prefix + IntegerToString(k));
+      XObjDelete(prefix + "BG");
+      m_drawn = 0;
+   }
+};
+
+//+------------------------------------------------------------------+
+//| account health: things that can blow an account up               |
+//+------------------------------------------------------------------+
+string XAccountWarning(const string sym)
+{
+   int naked = 0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      const ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != sym) continue;
+      if(PositionGetDouble(POSITION_SL) <= 0.0) naked++;
+   }
+   string w = "";
+   if(naked > 0) w = IntegerToString(naked) + " open trade" + (naked > 1 ? "s have" : " has") + " NO stop loss";
+   const double ml = AccountInfoDouble(ACCOUNT_MARGIN_LEVEL);
+   if(ml > 0.0 && ml < 200.0)
+   {
+      string so = "";
+      if(AccountInfoInteger(ACCOUNT_MARGIN_SO_MODE) == ACCOUNT_STOPOUT_MODE_PERCENT)
+         so = " (broker closes trades at " + DoubleToString(AccountInfoDouble(ACCOUNT_MARGIN_SO_SO), 0) + "%)";
+      if(StringLen(w) > 0) w += "; ";
+      w += "margin level " + DoubleToString(ml, 0) + "%" + so;
+   }
+   return w;
+}
+
+//+------------------------------------------------------------------+
+//| daily Strategy Lab on a fixed data window                         |
+//| Both the indicator and the EA run the lab on exactly the same     |
+//| bars (N closed bars ending before today's server midnight), so    |
+//| they always choose the same strategy on the same day.             |
+//+------------------------------------------------------------------+
+datetime XServerDayStart(const datetime t)
+{
+   return t - (t % 86400);
+}
+
+bool XRunDailyLab(CXauEngine &le, const string sym, const ENUM_TIMEFRAMES tf, const ENUM_TIMEFRAMES htf,
+                  const int bars, const string inter_sym, const bool inter_invert,
+                  const double win_target, const int min_trades, const int folds, const datetime day_start)
+{
+   XRATESARR(b);
+   XRATESARR(h);
+   XRATESARR(x);
+   ArraySetAsSeries(b, false);
+   ArraySetAsSeries(h, false);
+   ArraySetAsSeries(x, false);
+   const datetime upto = day_start - 1;
+   const int gb = CopyRates(sym, tf, upto, bars, b);
+   if(gb < 600) return false;
+   const int need_h = (int)((double)gb * PeriodSeconds(tf) / PeriodSeconds(htf)) + 320;
+   const int gh = CopyRates(sym, htf, upto, need_h, h);
+   if(gh < 300) return false;
+   le.SetBase(b, gb);
+   le.SetHTF(h, gh);
+   if(StringLen(inter_sym) > 0)
+   {
+      const int gx = CopyRates(inter_sym, tf, upto, gb + 50, x);
+      if(gx > 100) le.SetInter(x, gx, inter_invert);
+   }
+   if(!le.Compute()) return false;
+   le.RunLab(le.cfg.warmup, le.n - 1, win_target, min_trades, folds);
+   return true;
 }
 
 #endif // XAU_PLATFORM_MQH

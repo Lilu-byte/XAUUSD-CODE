@@ -54,6 +54,27 @@
 #define XE_TP2        3
 #define XE_TIME       4
 #define XE_TP1_FULL   5
+#define XE_MR         6       // mean-reversion exit: price closed back across the fast mean
+
+//--- exit profiles (how a trade is managed after entry)
+#define XP_COUNT      4
+#define XP_CLASSIC    0       // half at 1R, break-even, runner to 2.5R with ATR trail
+#define XP_HIGHHIT    1       // 70% at 0.5R, break-even, runner to 1.5R: built for a high share of winners
+#define XP_QUICK      2       // everything out at 0.6R: highest hit-rate, smallest wins
+#define XP_MEANREV    3       // wide stop, exit when price closes back over the 5-bar mean (Connors style)
+
+//--- complete strategies (entry rule; the exit comes from a profile). Each is put on trial in the Strategy Lab.
+#define XS_COUNT      8
+#define XS_CONFLUENCE 0       // the nine-module confluence score
+#define XS_ORB        1       // opening range breakout (GOLD_ORB rules) with the trend
+#define XS_DIP        2       // RSI(2) dip against a trend (Connors RSI-2)
+#define XS_DOUBLE7    3       // close at a 7-bar low/high against a trend (Connors Double 7s)
+#define XS_IBS        4       // close in the bottom/top 15% of the bar against a trend (internal bar strength)
+#define XS_SWEEP      5       // liquidity sweep of a known level, with the trend
+#define XS_PULLBACK   6       // pullback to the 21 EMA with a rejection candle, with the trend
+#define XS_SQUEEZE    7       // volatility squeeze or Asian-range breakout, with the trend
+#define XLAB_CELLS    32      // XS_COUNT * XP_COUNT
+#define XLAB_MAXTR    6000    // trades kept per lab cell
 
 #define XR_OK         0
 #define XR_SESSION    1
@@ -73,6 +94,7 @@ double XMin(const double a, const double b) { return (a < b) ? a : b; }
 double XMax(const double a, const double b) { return (a > b) ? a : b; }
 int    XMinI(const int a, const int b)      { return (a < b) ? a : b; }
 int    XMaxI(const int a, const int b)      { return (a > b) ? a : b; }
+int    XClampI(const int x, const int lo, const int hi) { return (x < lo) ? lo : ((x > hi) ? hi : x); }
 double XAbs(const double a)                 { return (a < 0.0) ? -a : a; }
 double XClamp(const double x, const double lo, const double hi)
 {
@@ -111,6 +133,22 @@ string XModuleShort(const int m)
       case XM_FVG:      return "FG";
       case XM_ROUND:    return "RN";
       case XM_ORB:      return "OR";
+   }
+   return "?";
+}
+
+string XStratName(const int s)
+{
+   switch(s)
+   {
+      case XS_CONFLUENCE: return "Confluence (9 modules)";
+      case XS_ORB:        return "Opening-range breakout";
+      case XS_DIP:        return "RSI-2 dip in trend";
+      case XS_DOUBLE7:    return "Double-7 dip in trend";
+      case XS_IBS:        return "Weak-close dip in trend";
+      case XS_SWEEP:      return "Stop-hunt reversal";
+      case XS_PULLBACK:   return "EMA pullback";
+      case XS_SQUEEZE:    return "Squeeze breakout";
    }
    return "?";
 }
@@ -226,6 +264,7 @@ struct XConfig
    int    hold_minutes;
    int    min_hold_bars;
    double cost_price;        // round-turn spread+slippage in price units (simulation only)
+   int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
 
    // forecast
    double fc_drift, fc_decay, fc_mr;
@@ -257,7 +296,7 @@ struct XConfig
       sl_atr_min = 0.9;  sl_atr_max = 2.6;  sl_buffer_atr = 0.15;  sl_lookback = 3;
       tp1_r = 1.0;  tp2_r = 2.5;  partial_pct = 0.5;  trail_atr = 2.0;
       max_hold_bars = 0;  hold_minutes = 480;  min_hold_bars = 8;
-      cost_price = 0.30;
+      cost_price = 0.30;  path_mode = 1;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
    }
@@ -266,6 +305,48 @@ struct XConfig
 //+------------------------------------------------------------------+
 //| result structures                                                |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| exit profile                                                     |
+//+------------------------------------------------------------------+
+struct XExit
+{
+   int    id;
+   double tp1_r;       // first target in R (0 = none)
+   double part;        // share closed at the first target (1 = all)
+   double tp2_r;       // final target in R (0 = none)
+   double be_lock_r;   // after the first target the stop moves to entry + be_lock_r x R
+   double trail_atr;   // ATR trail on the rest after the first target (0 = off)
+   int    mr_exit;     // 1 = close when a candle closes back across the 5-bar mean
+   int    max_hold;    // bars (0 = the configured time stop)
+   double sl_min_atr, sl_max_atr;
+};
+
+string XExitName(const int p)
+{
+   switch(p)
+   {
+      case XP_CLASSIC: return "Classic 1R+runner";
+      case XP_HIGHHIT: return "High-hit 0.5R";
+      case XP_QUICK:   return "Quick 0.6R";
+      case XP_MEANREV: return "Mean-revert exit";
+   }
+   return "?";
+}
+
+void XMakeExit(const int p, const XConfig &c, XExit &x)
+{
+   x.id = p;
+   x.tp1_r = c.tp1_r; x.part = c.partial_pct; x.tp2_r = c.tp2_r; x.be_lock_r = 0.0; x.trail_atr = c.trail_atr;
+   x.mr_exit = 0; x.max_hold = 0; x.sl_min_atr = c.sl_atr_min; x.sl_max_atr = c.sl_atr_max;
+   if(p == XP_HIGHHIT) { x.tp1_r = 0.5; x.part = 0.7; x.tp2_r = 1.5; x.trail_atr = 1.5; }
+   else if(p == XP_QUICK) { x.tp1_r = 0.6; x.part = 1.0; x.tp2_r = 0.0; x.trail_atr = 0.0; }
+   else if(p == XP_MEANREV)
+   {
+      x.tp1_r = 0.0; x.part = 0.0; x.tp2_r = 0.0; x.trail_atr = 0.0; x.mr_exit = 1;
+      x.max_hold = 12; x.sl_min_atr = 1.5; x.sl_max_atr = 3.2;
+   }
+}
+
 struct XSignal
 {
    int    dir;        // +1 buy, -1 sell, 0 none
@@ -367,6 +448,16 @@ struct XStats
       if(idx > cnt - 1) idx = cnt - 1;
       return tmp[idx];
    }
+};
+
+// one (strategy, exit profile) combination put on trial
+struct XLabCell
+{
+   XStats all;         // every simulated trade on the loaded history (in-sample for the auto-pick)
+   XStats recent;      // the last 40% of the history
+   bool   qualified;   // meets the win-rate target with positive expectancy on the whole history
+   double score;
+   void Reset() { all.Reset(); recent.Reset(); qualified = false; score = -1e9; }
 };
 
 struct XTrial
@@ -606,6 +697,7 @@ public:
    XTARR(m_t); XDARR(m_o); XDARR(m_h); XDARR(m_l); XDARR(m_c); XDARR(m_v);
    // base indicators
    XDARR(m_ema1); XDARR(m_ema2); XDARR(m_ema3); XDARR(m_atr); XDARR(m_atrref);
+   XDARR(m_sma5); XDARR(m_rsi2);   // fast mean and 2-period RSI (short-term mean reversion)
    XDARR(m_rsi); XDARR(m_adx); XDARR(m_pdi); XDARR(m_mdi);
    XDARR(m_bbw); XDARR(m_bbp); XDARR(m_donh); XDARR(m_donl); XDARR(m_vavg);
    XDARR(m_vwap); XDARR(m_vsd); XDARR(m_hour);
@@ -634,7 +726,9 @@ public:
    double  fc_rmse;      // realised one-step error of the drift model (calibrates the cone)
    bool    fc_nomap;     // choppy / spiking market: show range only, no directional path
 
-   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false; }
+   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false;
+                  lab_buffer = 3.0; lab_window = 0; lab_recent = 1; lab_se_k = 1.0; lab_k = 0; lab_pick_s = -1; lab_pick_p = -1; lab_qualified = 0;
+                  lab_auto_folds = 0; lab_first = 0; lab_last = 0; lab_target = 60.0; }
 
    //--- data loading ------------------------------------------------
    bool SetBase(XCRATES(r), const int cnt)
@@ -848,6 +942,12 @@ public:
    // Structural stop, then TP levels in R multiples.
    bool BuildPlan(const int i, const int dir, XSignal &s) const
    {
+      return BuildPlanEx(i, dir, s, cfg.sl_atr_min, cfg.sl_atr_max, cfg.tp1_r, cfg.tp2_r);
+   }
+
+   bool BuildPlanEx(const int i, const int dir, XSignal &s, const double slmin, const double slmax,
+                    const double tp1_r, const double tp2_r) const
+   {
       const double a = m_atr[i];
       if(a <= 0.0) return false;
       const double entry = m_c[i];
@@ -857,26 +957,34 @@ public:
       {
          sl = LowestLow(i - lb + 1, i) - cfg.sl_buffer_atr * a;
          dist = entry - sl;
-         if(dist < cfg.sl_atr_min * a) { sl = entry - cfg.sl_atr_min * a; dist = entry - sl; }
+         if(dist < slmin * a) { sl = entry - slmin * a; dist = entry - sl; }
       }
       else
       {
          sl = HighestHigh(i - lb + 1, i) + cfg.sl_buffer_atr * a;
          dist = sl - entry;
-         if(dist < cfg.sl_atr_min * a) { sl = entry + cfg.sl_atr_min * a; dist = sl - entry; }
+         if(dist < slmin * a) { sl = entry + slmin * a; dist = sl - entry; }
       }
-      if(dist > cfg.sl_atr_max * a) return false;
+      if(dist > slmax * a) return false;
       s.entry = entry; s.sl = sl; s.risk = dist; s.atr = a;
-      s.tp1 = entry + dir * cfg.tp1_r * dist;
-      s.tp2 = entry + dir * cfg.tp2_r * dist;
+      s.tp1 = (tp1_r > 0.0) ? entry + dir * tp1_r * dist : 0.0;
+      s.tp2 = (tp2_r > 0.0) ? entry + dir * tp2_r * dist : 0.0;
       return true;
    }
 
    //--- bar-based trade simulator ------------------------------------
-   // Entry at the OPEN of bar i+1. Bars up to last_idx may be used.
-   // Pessimistic tie-breaks: a bar touching both stop and target counts as stopped;
-   // the runner cannot reach TP2 on the same bar that TP1 was filled.
    bool SimulateTrade(const int i, const int dir, const double sl_price, const int last_idx, XTradeResult &r) const
+   {
+      XExit x;
+      XMakeExit(XP_CLASSIC, cfg, x);
+      return SimulateTradeEx(i, dir, sl_price, last_idx, x, r);
+   }
+
+   // Entry at the OPEN of bar i+1; bars up to last_idx may be used.
+   // path_mode 1: inside a bar price is assumed to travel O-L-H-C (bullish bar) or O-H-L-C (bearish bar),
+   // so a bar that touches both levels is resolved in that order. path_mode 0: the stop always wins.
+   // Gaps through a level fill at the open. The trail moves at bar closes only.
+   bool SimulateTradeEx(const int i, const int dir, const double sl_price, const int last_idx, const XExit &x, XTradeResult &r) const
    {
       r.Reset();
       const int e = i + 1;
@@ -886,52 +994,95 @@ public:
       const double risk = (dir > 0) ? (entry - sl_price) : (sl_price - entry);
       if(risk < 0.4 * a || risk <= 0.0) return false;
 
-      const int maxh = MaxHold();
+      const int maxh = (x.max_hold > 0) ? x.max_hold : MaxHold();
       const int jend = XMinI(last_idx, e + maxh - 1);
+      const bool has_tp1 = (x.tp1_r > 0.0 && x.part > 0.0);
+      const double tp1f = x.tp1_r * risk;
+      const double tp2f = (x.tp2_r > 0.0) ? x.tp2_r * risk : 1e300;
       double stopf = -risk;
-      const double tp1f = cfg.tp1_r * risk, tp2f = cfg.tp2_r * risk;
       double rem = 1.0, real = 0.0, ext = 0.0, mfe = 0.0, mae = 0.0, lastfcl = 0.0;
       int stage = 0;
       bool closed = false;
       int exit_idx = jend;
       int ek = XE_NONE;
+      double pf[4];
 
       r.ok = true; r.dir = dir; r.entry_idx = e; r.entry = entry; r.risk = risk;
 
-      for(int j = e; j <= jend; j++)
+      for(int j = e; j <= jend && !closed; j++)
       {
+         const double fo = dir * (m_o[j] - entry);
          const double fhi = (dir > 0) ? (m_h[j] - entry) : (entry - m_l[j]);
          const double flo = (dir > 0) ? (m_l[j] - entry) : (entry - m_h[j]);
-         const double fcl = (dir > 0) ? (m_c[j] - entry) : (entry - m_c[j]);
+         const double fcl = dir * (m_c[j] - entry);
          lastfcl = fcl;
          if(fhi > mfe) mfe = fhi;
          if(flo < mae) mae = flo;
 
-         if(stage == 0)
+         // gap through a level at the open
+         if(fo <= stopf) { real += rem * (fo / risk); rem = 0.0; closed = true; exit_idx = j; ek = (stage == 0) ? XE_STOP : XE_TRAIL; break; }
+
+         if(cfg.path_mode == 1)
          {
-            if(flo <= stopf) { real += rem * (stopf / risk); rem = 0.0; closed = true; exit_idx = j; ek = XE_STOP; break; }
-            if(fhi >= tp1f)
+            const bool bull_path = ((m_c[j] >= m_o[j]) == (dir > 0));   // favourable extreme comes second
+            pf[0] = fo;
+            pf[1] = bull_path ? flo : fhi;
+            pf[2] = bull_path ? fhi : flo;
+            pf[3] = fcl;
+            for(int k = 1; k <= 3 && !closed; k++)
             {
-               real += cfg.partial_pct * cfg.tp1_r;
-               rem = 1.0 - cfg.partial_pct;
-               stage = 1; stopf = 0.0; ext = fhi;
-               r.tp1_hit = true; r.bars_to_tp1 = j - e + 1;
-               if(rem <= 1e-9) { rem = 0.0; closed = true; exit_idx = j; ek = XE_TP1_FULL; break; }
-               if(flo <= stopf) { rem = 0.0; closed = true; exit_idx = j; ek = XE_TRAIL; break; }
-               const double tr0 = ext - cfg.trail_atr * a;
-               if(tr0 > stopf) stopf = tr0;
-               if(j - e + 1 >= maxh) { real += rem * (fcl / risk); rem = 0.0; closed = true; exit_idx = j; ek = XE_TIME; break; }
-               continue;
+               const double fa = pf[k - 1], fb = pf[k];
+               if(fb < fa)
+               {
+                  if(fb <= stopf) { real += rem * (stopf / risk); rem = 0.0; closed = true; exit_idx = j; ek = (stage == 0) ? XE_STOP : XE_TRAIL; }
+               }
+               else if(fb > fa)
+               {
+                  if(stage == 0 && has_tp1 && fb >= tp1f)
+                  {
+                     const double fill = XMax(tp1f, fa);
+                     real += x.part * (fill / risk);
+                     rem = 1.0 - x.part;
+                     stage = 1; stopf = x.be_lock_r * risk; ext = fb;
+                     r.tp1_hit = true; r.bars_to_tp1 = j - e + 1;
+                     if(rem <= 1e-9) { rem = 0.0; closed = true; exit_idx = j; ek = XE_TP1_FULL; }
+                  }
+                  if(!closed && (stage == 1 || !has_tp1) && fb >= tp2f)
+                  {
+                     const double fill = XMax(tp2f, fa);
+                     real += rem * (fill / risk); rem = 0.0; closed = true; exit_idx = j; ek = XE_TP2;
+                  }
+               }
             }
          }
          else
          {
-            if(flo <= stopf) { real += rem * (stopf / risk); rem = 0.0; closed = true; exit_idx = j; ek = XE_TRAIL; break; }
-            if(fhi >= tp2f)  { real += rem * cfg.tp2_r;      rem = 0.0; closed = true; exit_idx = j; ek = XE_TP2; break; }
-            if(fhi > ext) ext = fhi;
-            const double tr1 = ext - cfg.trail_atr * a;
-            if(tr1 > stopf) stopf = tr1;
+            if(flo <= stopf) { real += rem * (stopf / risk); rem = 0.0; closed = true; exit_idx = j; ek = (stage == 0) ? XE_STOP : XE_TRAIL; break; }
+            if(stage == 0 && has_tp1 && fhi >= tp1f)
+            {
+               real += x.part * x.tp1_r;
+               rem = 1.0 - x.part;
+               stage = 1; stopf = x.be_lock_r * risk; ext = fhi;
+               r.tp1_hit = true; r.bars_to_tp1 = j - e + 1;
+               if(rem <= 1e-9) { rem = 0.0; closed = true; exit_idx = j; ek = XE_TP1_FULL; break; }
+               if(flo <= stopf) { real += rem * (stopf / risk); rem = 0.0; closed = true; exit_idx = j; ek = XE_TRAIL; break; }
+            }
+            else if((stage == 1 || !has_tp1) && fhi >= tp2f) { real += rem * x.tp2_r; rem = 0.0; closed = true; exit_idx = j; ek = XE_TP2; break; }
          }
+         if(closed) break;
+
+         // after the bar: trail, mean-reversion exit, time stop
+         if(stage == 1)
+         {
+            if(fhi > ext) ext = fhi;
+            if(x.trail_atr > 0.0)
+            {
+               const double tr = ext - x.trail_atr * a;
+               if(tr > stopf) stopf = tr;
+            }
+         }
+         if(x.mr_exit == 1 && ((dir > 0 && m_c[j] > m_sma5[j]) || (dir < 0 && m_c[j] < m_sma5[j])))
+         { real += rem * (fcl / risk); rem = 0.0; closed = true; exit_idx = j; ek = XE_MR; break; }
          if(j - e + 1 >= maxh) { real += rem * (fcl / risk); rem = 0.0; closed = true; exit_idx = j; ek = XE_TIME; break; }
       }
 
@@ -1010,6 +1161,280 @@ public:
       }
       ComputeScores();
       return off;
+   }
+
+   //--- complete strategies ---------------------------------------------
+   // Trend used by the dip strategies: price on the right side of the 200 EMA and a higher timeframe that does not disagree.
+   int TrendDir(const int i) const
+   {
+      if(m_c[i] > m_ema3[i] && m_bias[i] >= 0) return 1;
+      if(m_c[i] < m_ema3[i] && m_bias[i] <= 0) return -1;
+      return 0;
+   }
+
+   // Direction strategy s wants to trade after closed bar i (0 = nothing). Uses data <= i only.
+   int StrategyDir(const int st, const int i) const
+   {
+      if(i < cfg.warmup + 10 || i >= n) return 0;
+      const int o = i * XM_COUNT;
+      const int t = TrendDir(i);
+      switch(st)
+      {
+         case XS_CONFLUENCE:
+         {
+            const double sl = m_scl[i], ss = m_scs[i];
+            if(sl >= cfg.score_min && m_nal[i] >= cfg.min_confluence && (sl - ss) >= cfg.min_margin) return 1;
+            if(ss >= cfg.score_min && m_nas[i] >= cfg.min_confluence && (ss - sl) >= cfg.min_margin) return -1;
+            return 0;
+         }
+         case XS_ORB:
+         {
+            if(cfg.en[XM_ORB] == 0) return 0;
+            const double v = m_vote[o + XM_ORB];
+            const int d = (v > 0.0) ? 1 : ((v < 0.0) ? -1 : 0);
+            return (d != 0 && (cfg.orb_need_bias == 0 || m_bias[i] * d > 0) && t != -d) ? d : 0;
+         }
+         case XS_DIP:
+            if(t > 0 && m_rsi2[i] < 10.0) return 1;
+            if(t < 0 && m_rsi2[i] > 90.0) return -1;
+            return 0;
+         case XS_DOUBLE7:
+         {
+            double lo = m_c[i - 1], hi = m_c[i - 1];
+            for(int k = i - 6; k < i; k++) { if(m_c[k] < lo) lo = m_c[k]; if(m_c[k] > hi) hi = m_c[k]; }
+            if(t > 0 && m_c[i] < lo) return 1;
+            if(t < 0 && m_c[i] > hi) return -1;
+            return 0;
+         }
+         case XS_IBS:
+         {
+            const double rng = m_h[i] - m_l[i];
+            if(rng <= 0.0 || rng < 0.5 * m_atr[i]) return 0;
+            const double ibs = (m_c[i] - m_l[i]) / rng;
+            if(t > 0 && ibs < 0.15 && m_c[i] < m_c[i - 1]) return 1;
+            if(t < 0 && ibs > 0.85 && m_c[i] > m_c[i - 1]) return -1;
+            return 0;
+         }
+         case XS_SWEEP:
+         {
+            const double v = m_vote[o + XM_SWEEP];
+            const int d = (v > 0.0) ? 1 : ((v < 0.0) ? -1 : 0);
+            return (d != 0 && t == d) ? d : 0;
+         }
+         case XS_PULLBACK:
+         {
+            const double v = m_vote[o + XM_PULLBACK];
+            return (v > 0.0) ? 1 : ((v < 0.0) ? -1 : 0);
+         }
+         case XS_SQUEEZE:
+         {
+            double v = m_vote[o + XM_SQUEEZE];
+            if(v == 0.0) v = m_vote[o + XM_BREAKOUT];
+            const int d = (v > 0.0) ? 1 : ((v < 0.0) ? -1 : 0);
+            return (d != 0 && t != -d) ? d : 0;
+         }
+      }
+      return 0;
+   }
+
+   // Full signal for strategy st at closed bar i with exit profile x: filters, direction, stop, targets.
+   bool StrategySignal(const int st, const int i, const XExit &x, XSignal &sig) const
+   {
+      sig.Reset();
+      if(i < 0 || i >= n) return false;
+      const int fr = FilterReason(i);
+      if(fr != XR_OK) { sig.reason = fr; return false; }
+      const int d = StrategyDir(st, i);
+      if(d == 0) { sig.reason = XR_NOSETUP; return false; }
+      sig.dir = d;
+      sig.primary = -1;
+      sig.n_agree = (d > 0) ? m_nal[i] : m_nas[i];
+      sig.mask = (d > 0) ? m_mkl[i] : m_mks[i];
+      sig.score = (d > 0) ? m_scl[i] : m_scs[i];
+      sig.score_opp = (d > 0) ? m_scs[i] : m_scl[i];
+      sig.grade = 1;
+      if(sig.score >= cfg.score_min + cfg.grade_a_add) sig.grade = 2;
+      if(sig.score >= cfg.score_min + cfg.grade_ap_add && sig.n_agree >= 3) sig.grade = 3;
+      if(!BuildPlanEx(i, d, sig, x.sl_min_atr, x.sl_max_atr, x.tp1_r, (x.tp2_r > 0.0) ? x.tp2_r : ((x.part >= 0.999) ? x.tp1_r : 0.0)))
+      { sig.dir = 0; sig.reason = XR_SL_WIDE; return false; }
+      sig.reason = XR_OK;
+      return true;
+   }
+
+   //--- Strategy Lab ----------------------------------------------------
+   // Every (strategy, exit profile) pair is traded through the loaded history, one trade at a time.
+   // The auto-pick is chosen WALK-FORWARD: for each of the later folds it is chosen using only the folds
+   // before it, and only its trades inside that later fold are counted. lab_auto is therefore an honest,
+   // out-of-sample record of "let the lab choose", not the flattering record of the best cell.
+   XLabCell lab[XLAB_CELLS];
+   XStats   lab_auto;          // walk-forward record of the auto-pick process
+   int      lab_auto_folds;    // folds in which a qualified pick existed
+   int      lab_pick_s, lab_pick_p;   // current pick (-1 = nothing qualified)
+   int      lab_qualified;     // cells that qualify on the whole history
+   int      lab_first, lab_last;
+   double   lab_target;        // win-rate target in % used for the last run
+   // selection rules (tested variants: see research/results)
+   double   lab_buffer;        // in-sample win rate must beat the target by this many points (room for out-of-sample decay)
+   int      lab_window;        // folds of history the choice looks at (0 = everything before)
+   int      lab_recent;        // 1 = the cell must also be profitable in the most recent fold
+   double   lab_se_k;          // expectancy must stay positive after subtracting this many standard errors
+   int      lab_bounds[16];
+   int      lab_k;
+   XIARR(m_lt_e); XDARR(m_lt_r); XIARR(m_lt_b); XIARR(m_lt_cnt);
+
+   bool LabQualifies(const XStats &st, const double win_target, const int min_trades) const
+   {
+      if(st.n < min_trades) return false;
+      if(st.WinRate() < win_target) return false;
+      return (st.Expectancy() - lab_se_k * st.ExpStdErr()) > 0.0;
+   }
+
+   double LabScore(const XStats &st) const { return st.Expectancy() - lab_se_k * st.ExpStdErr(); }
+
+   void RunLab(const int from_i, const int last_closed, const double win_target, const int min_trades, const int folds)
+   {
+      lab_target = win_target;
+      lab_auto.Reset(); lab_auto_folds = 0; lab_pick_s = -1; lab_pick_p = -1; lab_qualified = 0;
+      const int start = XMaxI(from_i, cfg.warmup + 10);
+      lab_first = start; lab_last = last_closed;
+      ArrayResize(m_lt_e, XLAB_CELLS * XLAB_MAXTR);
+      ArrayResize(m_lt_r, XLAB_CELLS * XLAB_MAXTR);
+      ArrayResize(m_lt_b, XLAB_CELLS * XLAB_MAXTR);
+      ArrayResize(m_lt_cnt, XLAB_CELLS);
+      const int recent_from = start + (int)(0.6 * (last_closed - start));
+      XSignal sg;
+      XTradeResult r;
+      for(int c = 0; c < XLAB_CELLS; c++)
+      {
+         lab[c].Reset();
+         m_lt_cnt[c] = 0;
+         const int st = c / XP_COUNT, pr = c % XP_COUNT;
+         XExit x;
+         XMakeExit(pr, cfg, x);
+         int busy = -1;
+         for(int i = start; i < last_closed; i++)
+         {
+            if(i <= busy) continue;
+            if(StrategyDir(st, i) == 0) continue;               // cheap test first
+            if(!StrategySignal(st, i, x, sg)) continue;
+            if(!SimulateTradeEx(i, sg.dir, sg.sl, last_closed, x, r)) continue;
+            busy = r.exit_idx;
+            if(!r.closed) continue;
+            lab[c].all.Add(r);
+            if(i >= recent_from) lab[c].recent.Add(r);
+            if(m_lt_cnt[c] < XLAB_MAXTR)
+            {
+               const int k = c * XLAB_MAXTR + m_lt_cnt[c];
+               m_lt_e[k] = i; m_lt_r[k] = r.r_net; m_lt_b[k] = r.bars;
+               m_lt_cnt[c]++;
+            }
+         }
+         lab[c].qualified = LabQualifies(lab[c].all, win_target, min_trades);
+         lab[c].score = LabScore(lab[c].all);
+         if(lab[c].qualified) lab_qualified++;
+      }
+      // walk-forward record of the auto-pick
+      const int K = XClampI(folds, 2, 15);
+      lab_k = K;
+      for(int k = 0; k <= K; k++) lab_bounds[k] = start + (int)((double)k * (last_closed - start) / K);
+      for(int k = 1; k < K; k++)
+      {
+         const int f0 = lab_bounds[k];
+         const int f1 = lab_bounds[k + 1];
+         const int best = LabPickFold(k, win_target, min_trades);
+         if(best < 0) continue;
+         lab_auto_folds++;
+         for(int q = 0; q < m_lt_cnt[best]; q++)
+         {
+            const int kk = best * XLAB_MAXTR + q;
+            if(m_lt_e[kk] < f0 || m_lt_e[kk] >= f1) continue;
+            XTradeResult t;
+            t.Reset();
+            t.r_net = m_lt_r[kk]; t.bars = m_lt_b[kk]; t.mfe_r = 0.0;
+            lab_auto.Add(t);
+         }
+      }
+      // the pick for live trading: same rule, with everything up to now
+      const int now = LabPickFold(K, win_target, min_trades);
+      if(now >= 0) { lab_pick_s = now / XP_COUNT; lab_pick_p = now % XP_COUNT; }
+   }
+
+   // Best qualifying cell for trading fold k, looking only at trades that ENTERED before fold k starts
+   // (k = lab_k means "now"). -1 when nothing qualifies.
+   int LabPickFold(const int k, const double win_target, const int min_trades) const
+   {
+      const int before = (k >= lab_k) ? lab_last + 1 : lab_bounds[k];
+      const int from = (lab_window > 0) ? lab_bounds[XMaxI(0, k - lab_window)] : lab_bounds[0];
+      const int rec_from = lab_bounds[XMaxI(0, k - 1)];
+      int best = -1;
+      double best_sc = -1e9;
+      for(int c = 0; c < XLAB_CELLS; c++)
+      {
+         XStats st, rc;
+         st.Reset(); rc.Reset();
+         for(int q = 0; q < m_lt_cnt[c]; q++)
+         {
+            const int kk = c * XLAB_MAXTR + q;
+            if(m_lt_e[kk] >= before) break;
+            if(m_lt_e[kk] < from) continue;
+            XTradeResult t;
+            t.Reset();
+            t.r_net = m_lt_r[kk]; t.bars = m_lt_b[kk];
+            st.Add(t);
+            if(m_lt_e[kk] >= rec_from) rc.Add(t);
+         }
+         if(!LabQualifies(st, win_target + lab_buffer, min_trades)) continue;
+         if(lab_recent == 1 && rc.n >= 5 && rc.Expectancy() <= 0.0) continue;
+         const double sc = LabScore(st);
+         if(sc > best_sc) { best_sc = sc; best = c; }
+      }
+      return best;
+   }
+
+   // The cell the tools should use. proven = it passed the lab. Otherwise the best cell that at least reaches the
+   // win-rate target (or simply the best cell) is returned as UNPROVEN. -1 = nothing has enough trades yet.
+   int LabActiveCell(const int min_trades, bool &proven) const
+   {
+      proven = false;
+      if(lab_pick_s >= 0) { proven = true; return lab_pick_s * XP_COUNT + lab_pick_p; }
+      int best = -1;
+      double sc = -1e9;
+      for(int c = 0; c < XLAB_CELLS; c++)
+         if(lab[c].all.n >= min_trades && lab[c].all.WinRate() >= lab_target && lab[c].score > sc) { sc = lab[c].score; best = c; }
+      if(best >= 0) return best;
+      for(int c = 0; c < XLAB_CELLS; c++)
+         if(lab[c].all.n >= min_trades && lab[c].score > sc) { sc = lab[c].score; best = c; }
+      return best;
+   }
+
+   // k-th cell of the leaderboard (0 = best): the live pick first, then qualified cells, then by score.
+   int LabRanked(const int k) const
+   {
+      bool used[XLAB_CELLS];
+      for(int c = 0; c < XLAB_CELLS; c++) used[c] = false;
+      int pick = (lab_pick_s >= 0) ? lab_pick_s * XP_COUNT + lab_pick_p : -1;
+      int res = -1;
+      for(int r = 0; r <= k; r++)
+      {
+         res = -1;
+         double best = -1e18;
+         for(int c = 0; c < XLAB_CELLS; c++)
+         {
+            if(used[c] || lab[c].all.n < 1) continue;
+            double key = lab[c].score + (lab[c].qualified ? 1000.0 : 0.0) + ((c == pick) ? 1e6 : 0.0);
+            if(key > best) { best = key; res = c; }
+         }
+         if(res < 0) return -1;
+         used[res] = true;
+      }
+      return res;
+   }
+
+   // Median bars a trade of cell c lasted (for "how long to stay").
+   int LabHoldMedian(const int c) const
+   {
+      if(c < 0 || c >= XLAB_CELLS) return 0;
+      return lab[c].all.HoldPct(false, 0.5);
    }
 
    //--- forecast --------------------------------------------------------
@@ -1301,6 +1726,7 @@ private:
    {
       ArrayResize(m_ema1, n); ArrayResize(m_ema2, n); ArrayResize(m_ema3, n);
       ArrayResize(m_atr, n);  ArrayResize(m_atrref, n);
+      ArrayResize(m_sma5, n); ArrayResize(m_rsi2, n);
       ArrayResize(m_rsi, n);  ArrayResize(m_adx, n);  ArrayResize(m_pdi, n); ArrayResize(m_mdi, n);
       ArrayResize(m_bbw, n);  ArrayResize(m_bbp, n);  ArrayResize(m_donh, n); ArrayResize(m_donl, n);
       ArrayResize(m_vavg, n); ArrayResize(m_vwap, n); ArrayResize(m_vsd, n);  ArrayResize(m_hour, n);
@@ -1322,6 +1748,14 @@ private:
       XCalcATR(m_h, m_l, m_c, m_atr, n, cfg.atr_p);
       XCalcEMA(m_atr, m_atrref, n, 100);
       XCalcRSI(m_c, m_rsi, n, cfg.rsi_p);
+      XCalcRSI(m_c, m_rsi2, n, 2);
+      for(int i = 0; i < n; i++)
+      {
+         double sm = 0.0;
+         const int a0 = XMaxI(0, i - 4);
+         for(int k = a0; k <= i; k++) sm += m_c[k];
+         m_sma5[i] = sm / (i - a0 + 1);
+      }
       XCalcADX(m_h, m_l, m_c, m_pdi, m_mdi, m_adx, n, cfg.adx_p);
 
       // Bollinger bandwidth (relative) and its percentile over 100 bars
@@ -1953,8 +2387,8 @@ public:
       pt[pn] = signal_bar_time; pd[pn] = dir; ps[pn] = sl; pn++;
    }
 
-   // Resolve every pending paper trade that has finished on closed bars.
-   void Update(const CXauEngine &e)
+   // Resolve every pending paper trade that has finished on closed bars (managed with exit profile x).
+   void Update(const CXauEngine &e, const XExit &x)
    {
       const int last = e.n - 2;
       for(int k = pn - 1; k >= 0; k--)
@@ -1965,7 +2399,7 @@ public:
          if(!drop)
          {
             XTradeResult r;
-            if(e.SimulateTrade(idx, pd[k], ps[k], last, r) && r.closed)
+            if(e.SimulateTradeEx(idx, pd[k], ps[k], last, x, r) && r.closed)
             {
                if(rn >= 16) { for(int q = 1; q < rn; q++) res[q - 1] = res[q]; rn--; }
                res[rn] = r.r_net; rn++;

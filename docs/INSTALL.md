@@ -13,7 +13,10 @@ In MetaTrader 5: **File > Open Data Folder**, then open `MQL5`.
 |---|---|
 | `MQL5/Indicators/XAU_Oracle.mq5` | `MQL5/Indicators/` |
 | `MQL5/Experts/XAU_Sniper_EA.mq5` | `MQL5/Experts/` |
+| `MQL5/Scripts/XAU_DataExport.mq5` | `MQL5/Scripts/` |
 | `MQL5/Presets/*.set` (optional) | anywhere; load from the EA inputs dialog |
+
+Replace the old versions: v2 inputs changed, and old `.set` files will not load correctly.
 
 (An earlier version needed `MQL5/Include/XAU/`; that caused the error `file 'Include\XAU\XAU_Platform.mqh' not found`. It is gone.
 The editable sources live in `src/`; `python3 research/bundle.py` regenerates the two files.)
@@ -30,13 +33,24 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
      If your broker's clock never changes, choose *fixed*; if it follows EU time, choose *EU*. If the Asian box or session names look shifted, tick
      *Set broker GMT offset by hand* and enter the **winter** offset.
    * **Risk % and Balance override** (used only for the position-size line; 0 = your account equity).
-4. Leave the chart scrolled to the latest bar. *Leave room on the right for projections* shifts the chart so the ghost candles fit.
-5. Give it a minute to load history. Rebuilds happen on every new bar; the dashboard refreshes every second.
+   * **Strategy / Exit style**: leave both on AUTO to let the Strategy Lab choose. **Strategy Lab: minimum % of winning trades** is 60 by default.
+4. The first load runs the Strategy Lab (a few seconds). It re-runs once a day. The scoreboard (bottom right) shows the result.
+5. Leave the chart scrolled to the latest bar. *Leave room on the right for projections* shifts the chart so the ghost candles fit.
+6. Give it a minute to load history. Rebuilds happen on every new bar; the dashboard refreshes every second.
+   For a longer test window raise Tools > Options > Charts > *Max bars in chart* (e.g. 500000) and scroll back once to load history.
 
 ## 4. Expert Advisor
 1. Tools > Options > Expert Advisors: tick **Allow algorithmic trading**. Press the **AutoTrading** toolbar button.
 2. Attach `XAU_Sniper_EA` to an XAUUSD **M15** chart (one chart per symbol per magic number).
-3. Load a preset: inputs dialog > **Load** > `XAU_Sniper_Balanced.set` (or `XAU_Sniper_DemoTurbo.set` on a demo account to watch many trades, or `XAU_Sniper_GoldORB.set` on an **H1** chart for the opening-range strategy alone).
+3. Load a preset: inputs dialog > **Load**:
+   | Preset | Use |
+   |---|---|
+   | `XAU_Sniper_Balanced.set` | Default: Lab choice, 1% risk |
+   | `XAU_Sniper_Conservative.set` | 0.5% risk, Lab must see 65% winners |
+   | `XAU_Sniper_HighWin.set` | Every trade uses the High-hit exit, Lab target 65% |
+   | `XAU_Sniper_Growth.set` / `XAU_Sniper_Aggressive.set` | 2% / 4% risk |
+   | `XAU_Sniper_DemoTurbo.set` | Demo only: all day, several positions, trades the closest strategy even when none passed |
+   | `XAU_Sniper_GoldORB.set` | The GOLD_ORB opening-range strategy alone (H1 chart) |
 4. **Start on a demo account.** See [TESTING.md](TESTING.md).
 5. Optional: add a DXY-like symbol (`USDX`, `DXY`, ...) to Market Watch. Without it the EA uses EURUSD as a proxy.
 
@@ -47,8 +61,11 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
 * **State.** The EA keeps its peak equity, kill-switch flag and per-position management state in terminal global variables. To clear a kill-switch, start the EA once with *InpResetKill = true*, then turn it off again.
 * Only one instance of the EA per symbol/magic number; change `InpMagic` if you run several.
 
+## Export your data (optional, recommended)
+Navigator > Scripts > **XAU_DataExport**, drag onto the XAUUSD chart, OK. Files appear in `<Data Folder>\MQL5\Files\XAU_Export\`. Zip that folder and share it: the whole Strategy Lab and the live replay can then be run on your real broker data.
+
 ## Demo accounts
-With *Demo testing > InpDemoUnlocked* on (default) and a **demo** account, every protection only warns: no kill-switch, no daily limits, up to 5 concurrent EA trades, minimum-lot trades allowed even if they risk several percent. On a real account the switch is ignored.
+With *Demo testing > InpDemoUnlocked* on (default) and a **demo** account, every protection only warns: no kill-switch, no daily limits, up to 5 concurrent EA trades, minimum-lot trades allowed even if they risk several percent. With *InpDemoTradeUnproven* it also trades the closest strategy when none passed the Lab (marked UNPROVEN). On a real account both switches are ignored.
 Two practical limits still apply: your free margin (manual positions use it too; 0.01 lot of gold needs roughly $40 of margin at 1:100) and the spread filter.
 
 ## Troubleshooting
@@ -60,4 +77,7 @@ Two practical limits still apply: your free margin (manual positions use it too;
 | Panel says STOPPED - loss limit hit (old version) | Update the EA; on a demo account it now clears the stale kill-switch at start. On a real account set *InpResetKill* for one start |
 | EA never trades | Check AutoTrading is on, the panel status line, and the Experts tab of the Toolbox |
 | Signals appear at odd hours | Broker clock setting wrong (fixed / US / EU DST) or winter offset wrong; set it manually |
+| Panel says LEARNING for a long time | Not enough history yet; scroll the chart back or raise *Max bars in chart* |
+| Scoreboard shows no PASS | Nothing reached the win-rate target with profit on this chart. The EA stands aside (live) or trades UNPROVEN (demo). Try another timeframe, or lower the target |
+| EA logs "sizing note - broker tick value is off" | Expected on some brokers; the EA already uses the correct figure |
 | EA logs "another instance is already running" | A second chart with the same magic (or a crashed run; wait 15 seconds and reattach) |

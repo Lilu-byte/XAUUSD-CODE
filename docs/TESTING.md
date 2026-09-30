@@ -2,9 +2,18 @@
 
 No number in this repository proves profitability. This protocol does. Do the steps in order and stop at the first failure.
 
-## Step 0: read the indicator's Trial block
-Attach `XAU_Oracle` to XAUUSD M15 (and try M5, H1). The **TRIAL** lines run the same signal rules, one trade at a time, over
-the loaded history (default 6000 bars, about 2-3 months of M15).
+## Step 0a: export your data and let it be tested offline
+Run `MQL5/Scripts/XAU_DataExport.mq5` on your XAUUSD chart and share `MQL5/Files/XAU_Export`. With the files in hand:
+```
+g++ -std=c++17 -O2 -o harness research/sim/harness.cpp
+./harness real XAUUSD_M15.csv XAUUSD_H1.csv 2 1      # base, higher timeframe, winter GMT offset, DST mode (1 = US)
+```
+prints the Strategy Lab on your newest 10,000 bars, the forecaster's hit-rates, and a **live replay** of the whole file
+(the daily Lab re-run each day and its choice traded, exactly as the EA would have).
+
+## Step 0: read the indicator's Strategy Lab scoreboard
+Attach `XAU_Oracle` to XAUUSD M15 (and try H1). The scoreboard (bottom right) lists the best of 32 strategy/exit combinations tested
+one trade at a time on the last 10,000 bars, and the main panel quotes the **walk-forward** record of the automatic choice.
 
 | You see | Meaning |
 |---|---|
@@ -15,12 +24,12 @@ the loaded history (default 6000 bars, about 2-3 months of M15).
 | Module list: mostly negative | The market is not behaving the way these setups assume right now |
 | "Direction call ... right" near 50% | The projection has no directional skill on this chart; treat ghost candles as range only |
 
-The trial uses a pessimistic simulator (a bar touching both stop and target counts as stopped; measured bias roughly -0.1R
-in a no-edge world), so a small positive number here is a better sign than it looks. Tick volume is used for VWAP and spikes.
+Since v2 the trial resolves a bar that touches both stop and target by the candle's likely path; measured against minute-level
+truth its average error is under 0.01R per trade (v1 was about 0.1R too harsh). Tick volume is used for VWAP and spikes.
 
 ## Step 1: Strategy Tester on real ticks
 * Symbol XAUUSD, period M15, **Modelling: Every tick based on real ticks**, at least **2 years**, your real deposit and leverage.
-* Inputs: `XAU_Sniper_Balanced.set`. Set the broker clock **manually** (*InpManualGmt* on, winter offset, and the daylight-saving mode that matches your broker).
+* Inputs: `XAU_Sniper_Balanced.set`. The EA re-runs the Strategy Lab every simulated day, so the tester reproduces the live behaviour. Set the broker clock **manually** (*InpManualGmt* on, winter offset, and the daylight-saving mode that matches your broker).
 * The calendar is unavailable in the tester, so the static 12:30/13:30 GMT window is used instead.
 * Split the period: **first 70% in-sample, last 30% out-of-sample.** Look at the out-of-sample part last, once.
 

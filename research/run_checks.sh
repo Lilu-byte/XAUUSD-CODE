@@ -12,11 +12,12 @@ OUT=research/results
 BIN=$(mktemp -d)
 mkdir -p "$OUT"
 
-echo "[0/5] build self-contained MT5 files"
+echo "[0/5] build self-contained MT5 files and presets"
 python3 research/bundle.py
+python3 research/make_presets.py
 
 echo "[1/5] MQL5 syntax check (translated to C++)"
-python3 research/mock/check_mq5.py MQL5/Indicators/XAU_Oracle.mq5 MQL5/Experts/XAU_Sniper_EA.mq5
+python3 research/mock/check_mq5.py MQL5/Indicators/XAU_Oracle.mq5 MQL5/Experts/XAU_Sniper_EA.mq5 MQL5/Scripts/XAU_DataExport.mq5
 
 echo "[2-4/5] engine harness"
 g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/harness" research/sim/harness.cpp

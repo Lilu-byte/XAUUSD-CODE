@@ -24,12 +24,14 @@
 //---------------------------------------------------------------------------
 // synthetic data
 //---------------------------------------------------------------------------
-enum World { W_NULL = 0, W_TREND = 1, W_MEANREV = 2, W_MIXED = 3 };
+enum World { W_NULL = 0, W_TREND = 1, W_MEANREV = 2, W_MIXED = 3, W_BULL = 4 };
 
 struct Series
 {
    std::vector<MqlRates> m15;
    std::vector<MqlRates> h1;
+   std::vector<MqlRates> m1;        // minute bars (only with keep_m1)
+   std::vector<int>      m15_first; // index of the first minute of each M15 bar
 };
 
 static double hour_profile(int h)
@@ -39,7 +41,7 @@ static double hour_profile(int h)
    return p[h];
 }
 
-static Series make_series(World w, int nbars_m15, unsigned seed)
+static Series make_series(World w, int nbars_m15, unsigned seed, bool keep_m1 = false)
 {
    std::mt19937_64 rng(seed);
    std::normal_distribution<double> nd(0.0, 1.0);
@@ -85,7 +87,8 @@ static Series make_series(World w, int nbars_m15, unsigned seed)
          if(reg != last_reg) { anchor = price; last_reg = reg; }
       }
       double drift = 0.0;
-      if(ew == W_TREND)
+      if(ew == W_BULL) drift = 0.008 * sig1;          // steady bull market, roughly +70% a year
+      else if(ew == W_TREND)
       {
          if(ud(rng) < 1.0 / 900.0) drift_state = (int)(ud(rng) * 3.0) - 1;
          drift = 0.05 * sig1 * drift_state;
@@ -107,6 +110,7 @@ static Series make_series(World w, int nbars_m15, unsigned seed)
       if(!open15 || cur15.time != b15)
       {
          if(open15) { S.m15.push_back(cur15); produced++; if(produced >= nbars_m15) break; }
+         if(keep_m1) S.m15_first.push_back((int)S.m1.size());
          cur15.time = b15; cur15.open = o1; cur15.high = hi1; cur15.low = lo1; cur15.close = price;
          cur15.tick_volume = vol1; cur15.spread = 30; cur15.real_volume = 0;
          open15 = true;
@@ -130,8 +134,15 @@ static Series make_series(World w, int nbars_m15, unsigned seed)
          cur1h.high = std::max(cur1h.high, hi1); cur1h.low = std::min(cur1h.low, lo1);
          cur1h.close = price; cur1h.tick_volume += vol1;
       }
+      if(keep_m1)
+      {
+         MqlRates m{};
+         m.time = t; m.open = o1; m.high = hi1; m.low = lo1; m.close = price; m.tick_volume = vol1;
+         S.m1.push_back(m);
+      }
       t += 60;
    }
+   if(keep_m1) { S.m15_first.resize(S.m15.size() + 1); S.m15_first[S.m15.size()] = (int)S.m1.size(); }
    return S;
 }
 
@@ -279,6 +290,19 @@ static void test_platform()
    XPlanLots("XAUUSD", 100000.0, 1.0, 10.0, true, 4000.0, 1.5, 0.0, 300.0, 0.5, p);
    CHECK(p.ok && p.lots < 1.0, "free-margin cap scales the lot down");
 
+   // the bug seen on a live MetaQuotes-Demo screen: tick value reported 10x too small
+   g_mock_tick_value = 0.1;
+   XPlanLots("XAUUSD", 10000.0, 1.0, 10.0, true, 4000.0, 1.5, 0.0, 9000.0, 0.5, p);
+   CHECK(p.ok && near(p.lots, 0.10) && near(p.risk_pct, 1.0, 1e-6) && p.src_note.size() > 0,
+         "broker tick value 10x too small: sizing still 0.10 lot (broker profit formula), and the mismatch is reported");
+   XPlanLots("XAUUSD", 53.93, 1.0, 14.18, false, 4191.60, 1000.0, 0.0, -29.77, 1.0, p);
+   CHECK(p.ok && near(p.lots, 0.01) && near(p.risk_money, 14.18, 1e-6), "screenshot case: 0.01 lot with a $14.18 stop loses $14.18, not $1.42");
+   g_mock_calcprofit_ok = false;
+   XPlanLots("XAUUSD", 10000.0, 1.0, 10.0, true, 4000.0, 1.5, 0.0, 9000.0, 0.5, p);
+   CHECK(p.ok && near(p.lots, 0.10), "profit formula unavailable: falls back to contract size, still 0.10 lot");
+   g_mock_calcprofit_ok = true;
+   g_mock_tick_value = 1.0;
+
    CXauNews nw;
    nw.gmt_offset_sec = 0;
    nw.fallback_static = true;
@@ -395,6 +419,379 @@ static void run_orb_worlds()
          CHECK(z < 3.0, "no-edge world: ORB solo is not significantly profitable (no look-ahead in the range logic)");
       }
    }
+}
+
+
+static void merge_stats(XStats &a, const XStats &b)
+{
+   a.n += b.n; a.wins += b.wins; a.losses += b.losses; a.scratch += b.scratch; a.tp1_hits += b.tp1_hits;
+   a.sum_r += b.sum_r; a.sum_r2 += b.sum_r2; a.sum_win += b.sum_win; a.sum_loss += b.sum_loss; a.sum_mfe += b.sum_mfe;
+   for(int i = 0; i < b.nh_all && a.nh_all < XHOLD_MAX; i++) a.hold_all[a.nh_all++] = b.hold_all[i];
+}
+
+static void run_lab_world(World w, const char *label, int seeds, int nbars, bool print_cells)
+{
+   std::printf("\n== Strategy Lab on world %s (%d seeds x %d M15 bars, target 60%% wins, min 50 trades, 5 folds) ==\n", label, seeds, nbars);
+   XStats cells[XLAB_CELLS], autoo;
+   for(int c = 0; c < XLAB_CELLS; c++) cells[c].Reset();
+   autoo.Reset();
+   int qual = 0, folds = 0, picks[XLAB_CELLS];
+   for(int c = 0; c < XLAB_CELLS; c++) picks[c] = 0;
+   for(int sd = 1; sd <= seeds; sd++)
+   {
+      Series S = make_series(w, nbars, 9000 + sd);
+      CXauEngine e; load(e, S, nbars);
+      e.RunLab(e.cfg.warmup, nbars - 2, 60.0, 50, 5);
+      for(int c = 0; c < XLAB_CELLS; c++) merge_stats(cells[c], e.lab[c].all);
+      merge_stats(autoo, e.lab_auto);
+      qual += e.lab_qualified; folds += e.lab_auto_folds;
+      if(e.lab_pick_s >= 0) picks[e.lab_pick_s * XP_COUNT + e.lab_pick_p]++;
+   }
+   if(print_cells)
+   {
+      std::printf("  %-24s", "strategy \\ exit");
+      for(int p = 0; p < XP_COUNT; p++) std::printf(" | %-22s", XExitName(p).c_str());
+      std::printf("\n");
+      for(int st = 0; st < XS_COUNT; st++)
+      {
+         std::printf("  %-24s", XStratName(st).c_str());
+         for(int p = 0; p < XP_COUNT; p++)
+         {
+            const XStats &x = cells[st * XP_COUNT + p];
+            const bool good = x.n >= 30 && x.WinRate() >= 60.0 && x.Expectancy() > 0.0;
+            std::printf(" | %s%4.0f%% %+6.3fR n=%-5d", good ? "*" : " ", x.WinRate(), x.Expectancy(), x.n);
+         }
+         std::printf("\n");
+      }
+      std::printf("  (* = at least 60%% won AND positive average R on the whole history, all seeds pooled)\n");
+   }
+   std::printf("  qualified cells per seed: %.1f of %d | final pick counts:", (double)qual / seeds, XLAB_CELLS);
+   for(int c = 0; c < XLAB_CELLS; c++) if(picks[c]) std::printf(" [%s + %s] x%d", XStratName(c / XP_COUNT).c_str(), XExitName(c % XP_COUNT).c_str(), picks[c]);
+   std::printf("\n  AUTO-PICK walk-forward (out-of-sample, honest): traded in %d of %d folds;", folds, seeds * 4);
+   print_stats("", autoo);
+   if(w == W_NULL)
+   {
+      const double z = autoo.n > 1 ? autoo.Expectancy() / std::max(autoo.ExpStdErr(), 1e-9) : 0.0;
+      CHECK(z < 2.5, "no-edge world: the auto-pick's out-of-sample record is not significantly profitable (selection bias contained)");
+   }
+   if(w == W_TREND)
+      CHECK(autoo.n >= 200 && autoo.WinRate() >= 60.0 && autoo.Expectancy() > 0.0,
+            "trending world (clear edge): the auto-pick holds >= 60% wins AND positive expectancy out-of-sample");
+}
+
+
+static void run_lab_variants()
+{
+   std::printf("\n== Strategy Lab selection rules compared (auto-pick walk-forward record, 4 seeds x 30000 M15 bars, target 60%%) ==\n");
+   struct V { double buf; int win; int rec; const char *name; };
+   const V vs[] = {{0.0, 0, 0, "A expanding, no buffer"}, {3.0, 0, 0, "B expanding, +3pt buffer"},
+                   {3.0, 2, 0, "C last 2 folds, +3pt buffer"}, {3.0, 0, 1, "D expanding, +3pt, recent fold > 0"},
+                   {3.0, 2, 1, "E last 2 folds, +3pt, recent > 0"}};
+   struct W { World w; const char *n; };
+   const W ws[] = {{W_NULL, "null"}, {W_BULL, "bull"}, {W_TREND, "trend"}, {W_MEANREV, "meanrev"}, {W_MIXED, "mixed"}};
+   for(const V &v : vs)
+   {
+      std::printf("  %s\n", v.name);
+      for(const W &w : ws)
+      {
+         XStats a; a.Reset();
+         int folds = 0;
+         for(int sd = 1; sd <= 4; sd++)
+         {
+            Series S = make_series(w.w, 30000, 9000 + sd);
+            CXauEngine e; load(e, S, 30000);
+            e.lab_buffer = v.buf; e.lab_window = v.win; e.lab_recent = v.rec;
+            e.RunLab(e.cfg.warmup, 29998, 60.0, 30, 5);
+            merge_stats(a, e.lab_auto);
+            folds += e.lab_auto_folds;
+         }
+         std::printf("    %-8s traded %2d/16 folds", w.n, folds);
+         print_stats("", a);
+      }
+   }
+}
+
+
+//---------------------------------------------------------------------------
+// LIVE REPLAY: what the EA would have done, day by day.
+// Every server day the Strategy Lab is re-run on the previous `lab_bars` bars (exactly like the EA and the
+// indicator), the pick is taken, and that day's signals of the pick are traded one at a time.
+// Signals come from one engine over the whole series (tested: identical to a shorter live window).
+//---------------------------------------------------------------------------
+struct ReplayOut { XStats live, demo; int days, days_traded; int picks[XLAB_CELLS]; };
+static double g_rp_se = 1.0, g_rp_buf = 3.0; static int g_rp_win = 0, g_rp_min = 50, g_rp_rec = 1;   // = engine defaults
+
+static void live_replay(const std::vector<MqlRates> &base, const std::vector<MqlRates> &htf, int base_sec, int htf_sec,
+                        int lab_bars, double target, int min_trades, int gmt_off, int dst, ReplayOut &o)
+{
+   o.live.Reset(); o.demo.Reset(); o.days = 0; o.days_traded = 0;
+   for(int c = 0; c < XLAB_CELLS; c++) o.picks[c] = 0;
+   const int N = (int)base.size();
+   CXauEngine E;
+   E.cfg.Defaults(); E.cfg.base_sec = base_sec; E.cfg.htf_sec = htf_sec; E.cfg.gmt_offset_sec = gmt_off; E.cfg.dst_mode = dst;
+   E.SetBase(base, N);
+   E.SetHTF(htf, (int)htf.size());
+   if(!E.Compute()) return;
+   int busy_live = -1, busy_demo = -1;
+   long cur_day = -1;
+   int pick_live = -1, pick_demo = -1;
+   for(int i = lab_bars; i < N - 2; i++)
+   {
+      const long day = (long)base[i].time / 86400;
+      if(day != cur_day)
+      {
+         cur_day = day;
+         o.days++;
+         // lab on the lab_bars bars that closed before today (same window rule as XRunDailyLab)
+         std::vector<MqlRates> lb(base.begin() + (i - lab_bars), base.begin() + i);
+         std::vector<MqlRates> lh;
+         const long long upto = base[i].time;
+         for(const MqlRates &h : htf) if(h.time + htf_sec <= upto && h.time >= lb.front().time - (long long)htf_sec * 400) lh.push_back(h);
+         CXauEngine L;
+         L.cfg = E.cfg;
+         L.lab_se_k = g_rp_se; L.lab_buffer = g_rp_buf; L.lab_window = g_rp_win; L.lab_recent = g_rp_rec;
+         L.SetBase(lb, (int)lb.size());
+         L.SetHTF(lh, (int)lh.size());
+         pick_live = -1; pick_demo = -1;
+         if(L.Compute())
+         {
+            L.RunLab(L.cfg.warmup, L.n - 1, target, (g_rp_min > 0) ? g_rp_min : min_trades, 5);
+            bool proven;
+            const int c = L.LabActiveCell(min_trades, proven);
+            pick_demo = c;
+            if(proven) { pick_live = c; o.picks[c]++; o.days_traded++; }
+         }
+      }
+      XSignal sg;
+      XTradeResult r;
+      if(pick_live >= 0 && i > busy_live)
+      {
+         XExit x; XMakeExit(pick_live % XP_COUNT, E.cfg, x);
+         if(E.StrategySignal(pick_live / XP_COUNT, i, x, sg) && E.SimulateTradeEx(i, sg.dir, sg.sl, N - 2, x, r))
+         { busy_live = r.exit_idx; if(r.closed) o.live.Add(r); }
+      }
+      if(pick_demo >= 0 && i > busy_demo)
+      {
+         XExit x; XMakeExit(pick_demo % XP_COUNT, E.cfg, x);
+         if(E.StrategySignal(pick_demo / XP_COUNT, i, x, sg) && E.SimulateTradeEx(i, sg.dir, sg.sl, N - 2, x, r))
+         { busy_demo = r.exit_idx; if(r.closed) o.demo.Add(r); }
+      }
+   }
+}
+
+static void print_replay(const char *label, const ReplayOut &o, double days_per_bar)
+{
+   (void)days_per_bar;
+   std::printf("  %-10s days %4d, a proven strategy existed on %4d (%3.0f%%)\n", label, o.days, o.days_traded, o.days ? 100.0 * o.days_traded / o.days : 0.0);
+   std::printf("  %-10s LIVE (proven picks only)   %.2f trades/day", "", o.days ? (double)o.live.n / o.days : 0.0);
+   print_stats("", o.live);
+   std::printf("  %-10s DEMO (closest pick always) %.2f trades/day", "", o.days ? (double)o.demo.n / o.days : 0.0);
+   print_stats("", o.demo);
+   std::printf("  %-10s most used picks:", "");
+   for(int k = 0; k < 3; k++)
+   {
+      int best = -1;
+      for(int c = 0; c < XLAB_CELLS; c++)
+      {
+         bool seen = false;
+         (void)seen;
+         if(o.picks[c] > 0 && (best < 0 || o.picks[c] > o.picks[best])) best = c;
+      }
+      if(best < 0) break;
+      std::printf(" [%s / %s: %d days]", XStratName(best / XP_COUNT).c_str(), XExitName(best % XP_COUNT).c_str(), o.picks[best]);
+      const_cast<ReplayOut &>(o).picks[best] = -o.picks[best];
+   }
+   for(int c = 0; c < XLAB_CELLS; c++) if(o.picks[c] < 0) const_cast<ReplayOut &>(o).picks[c] = -o.picks[c];
+   std::printf("\n");
+}
+
+
+static void run_replay_variants()
+{
+   std::printf("\n== LIVE REPLAY: selection strictness compared (2 seeds x 30,000 M15 bars per world) ==\n");
+   struct V { double se, buf; int win, mn, rec; const char *n; };
+   const V vs[] = {{0.5, 3.0, 2, 30, 0, "default: E-0.5se, +3pt, last 2 folds, 30 trades"},
+                   {1.0, 3.0, 2, 30, 0, "E-1.0se"},
+                   {1.0, 3.0, 2, 50, 0, "E-1.0se, 50 trades"},
+                   {0.5, 3.0, 0, 30, 0, "all folds"},
+                   {1.0, 3.0, 0, 50, 1, "E-1.0se, all folds, 50 trades, recent fold > 0"}};
+   struct W { World w; const char *n; };
+   const W ws[] = {{W_NULL, "null"}, {W_BULL, "bull"}, {W_TREND, "trend"}, {W_MIXED, "mixed"}};
+   for(const V &v : vs)
+   {
+      g_rp_se = v.se; g_rp_buf = v.buf; g_rp_win = v.win; g_rp_min = v.mn; g_rp_rec = v.rec;
+      std::printf("  %s\n", v.n);
+      for(const W &w : ws)
+      {
+         XStats a; a.Reset(); int days = 0, dt = 0;
+         for(int sd = 1; sd <= 2; sd++)
+         {
+            Series S = make_series(w.w, 30000, 5100 + sd);
+            ReplayOut o;
+            live_replay(S.m15, S.h1, 900, 3600, 10000, 60.0, 30, 0, 0, o);
+            merge_stats(a, o.live); days += o.days; dt += o.days_traded;
+         }
+         std::printf("    %-6s traded on %3.0f%% of days, %.2f/day", w.n, days ? 100.0 * dt / days : 0.0, days ? (double)a.n / days : 0.0);
+         print_stats("", a);
+      }
+   }
+   g_rp_se = 1.0; g_rp_buf = 3.0; g_rp_win = 0; g_rp_min = 50; g_rp_rec = 1;
+}
+
+
+static void run_replay_confirm()
+{
+   std::printf("\n== LIVE REPLAY confirmation on FRESH seeds (4 seeds x 30,000 M15 bars per world) ==\n");
+   struct V { double se; int win, mn, rec; const char *n; };
+   const V vs[] = {{0.5, 2, 30, 0, "previous default"}, {1.0, 0, 50, 1, "strict: E-1.0se, all folds, 50 trades, recent fold > 0"}};
+   struct W { World w; const char *n; };
+   const W ws[] = {{W_NULL, "null"}, {W_BULL, "bull"}, {W_TREND, "trend"}, {W_MEANREV, "meanrev"}, {W_MIXED, "mixed"}};
+   for(const V &v : vs)
+   {
+      g_rp_se = v.se; g_rp_buf = 3.0; g_rp_win = v.win; g_rp_min = v.mn; g_rp_rec = v.rec;
+      std::printf("  %s\n", v.n);
+      for(const W &w : ws)
+      {
+         XStats a; a.Reset(); int days = 0, dt = 0;
+         for(int sd = 11; sd <= 14; sd++)
+         {
+            Series S = make_series(w.w, 30000, 6200 + sd);
+            ReplayOut o;
+            live_replay(S.m15, S.h1, 900, 3600, 10000, 60.0, 30, 0, 0, o);
+            merge_stats(a, o.live); days += o.days; dt += o.days_traded;
+         }
+         std::printf("    %-7s traded on %3.0f%% of days, %.2f/day", w.n, days ? 100.0 * dt / days : 0.0, days ? (double)a.n / days : 0.0);
+         print_stats("", a);
+      }
+   }
+   g_rp_se = 1.0; g_rp_buf = 3.0; g_rp_win = 0; g_rp_min = 50; g_rp_rec = 1;
+}
+
+static void run_replay_worlds()
+{
+   std::printf("\n== LIVE REPLAY on synthetic worlds: the daily Strategy Lab + trading, exactly as the EA does it ==\n");
+   std::printf("   (M15, 10,000-bar lab window, target 60%% wins, 3 seeds x 30,000 bars each: about 200 trading days after warm-up)\n");
+   struct W { World w; const char *n; };
+   const W ws[] = {{W_NULL, "null"}, {W_BULL, "bull"}, {W_TREND, "trend"}, {W_MEANREV, "meanrev"}, {W_MIXED, "mixed"}};
+   for(const W &w : ws)
+   {
+      ReplayOut agg; agg.live.Reset(); agg.demo.Reset(); agg.days = 0; agg.days_traded = 0;
+      for(int c = 0; c < XLAB_CELLS; c++) agg.picks[c] = 0;
+      for(int sd = 1; sd <= 3; sd++)
+      {
+         Series S = make_series(w.w, 30000, 5100 + sd);
+         ReplayOut o;
+         live_replay(S.m15, S.h1, 900, 3600, 10000, 60.0, 30, 0, 0, o);
+         merge_stats(agg.live, o.live); merge_stats(agg.demo, o.demo);
+         agg.days += o.days; agg.days_traded += o.days_traded;
+         for(int c = 0; c < XLAB_CELLS; c++) agg.picks[c] += o.picks[c];
+      }
+      print_replay(w.n, agg, 0.0);
+      if(w.w == W_NULL)
+      {
+         const double z = agg.live.n > 1 ? agg.live.Expectancy() / std::max(agg.live.ExpStdErr(), 1e-9) : 0.0;
+         CHECK(z < 2.5, "live replay, no-edge world: not significantly profitable (the daily lab does not invent an edge)");
+      }
+      if(w.w == W_TREND)
+         CHECK(agg.live.n >= 100 && agg.live.WinRate() >= 60.0 && agg.live.Expectancy() > 0.0,
+               "live replay, trending world: >= 60% winning trades AND positive expectancy");
+      if(w.w == W_BULL)
+         CHECK(agg.live.n >= 100 && agg.live.WinRate() >= 60.0, "live replay, bull world: >= 60% winning trades");
+   }
+}
+
+//---------------------------------------------------------------------------
+// REAL DATA: CSV files written by MQL5/Scripts/XAU_DataExport.mq5
+//---------------------------------------------------------------------------
+static bool load_csv(const char *path, std::vector<MqlRates> &out)
+{
+   FILE *f = std::fopen(path, "r");
+   if(!f) return false;
+   char line[512];
+   out.clear();
+   while(std::fgets(line, sizeof line, f))
+   {
+      int Y, M, D, h, m;
+      double o, hi, lo, c;
+      long long tv = 0;
+      int sp = 0;
+      if(std::sscanf(line, "%d.%d.%d %d:%d,%lf,%lf,%lf,%lf,%lld,%d", &Y, &M, &D, &h, &m, &o, &hi, &lo, &c, &tv, &sp) < 9) continue;
+      MqlRates r{};
+      r.time = XDaysFromCivil(Y, M, D) * 86400LL + h * 3600 + m * 60;
+      r.open = o; r.high = hi; r.low = lo; r.close = c; r.tick_volume = tv; r.spread = sp;
+      out.push_back(r);
+   }
+   std::fclose(f);
+   return out.size() > 100;
+}
+
+static int bar_seconds(const std::vector<MqlRates> &v)
+{
+   std::vector<long long> d;
+   for(size_t i = 1; i < v.size() && i < 2000; i++) d.push_back(v[i].time - v[i - 1].time);
+   std::sort(d.begin(), d.end());
+   return d.empty() ? 0 : (int)d[d.size() / 2];
+}
+
+static void test_csv_roundtrip()
+{
+   std::printf("\n== real-data loader: CSV round trip (the format XAU_DataExport.mq5 writes) ==\n");
+   Series S = make_series(W_TREND, 3000, 3);
+   const char *path = "/tmp/xau_roundtrip_M15.csv";
+   FILE *f = std::fopen(path, "w");
+   std::fprintf(f, "time,open,high,low,close,tick_volume,spread\n");
+   for(const MqlRates &r : S.m15)
+      std::fprintf(f, "%s,%.2f,%.2f,%.2f,%.2f,%lld,%d\n", TimeToString(r.time).c_str(), r.open, r.high, r.low, r.close, (long long)r.tick_volume, r.spread);
+   std::fclose(f);
+   std::vector<MqlRates> back;
+   const bool ok = load_csv(path, back);
+   CHECK(ok && back.size() == S.m15.size() && back[100].time == S.m15[100].time && std::fabs(back[100].close - S.m15[100].close) < 0.006,
+         "CSV written in the export format loads back with identical times and prices");
+   CHECK(bar_seconds(back) == 900, "bar size detected as M15");
+   std::remove(path);
+}
+
+static int run_real(int argc, char **argv)
+{
+   // harness real <base.csv> <higher_tf.csv> [gmt_winter_hours=2] [dst: 0 fixed / 1 US / 2 EU = 1]
+   if(argc < 4) { std::printf("usage: harness real BASE.csv HIGHER_TF.csv [gmt_winter_hours] [dst 0/1/2]\n"); return 2; }
+   std::vector<MqlRates> base, htf;
+   if(!load_csv(argv[2], base) || !load_csv(argv[3], htf)) { std::printf("cannot read the CSV files\n"); return 2; }
+   const int bs = bar_seconds(base), hs = bar_seconds(htf);
+   const int gmt = (int)((argc > 4 ? std::atof(argv[4]) : 2.0) * 3600);
+   const int dst = argc > 5 ? std::atoi(argv[5]) : 1;
+   std::printf("\n== REAL DATA: %s (%zu bars of %d s) with %s (%zu bars of %d s) ==\n", argv[2], base.size(), bs, argv[3], htf.size(), hs);
+   std::printf("   from %s to %s\n", TimeToString(base.front().time).c_str(), TimeToString(base.back().time).c_str());
+   // 1) the Strategy Lab exactly as the indicator shows it today (last 10,000 bars)
+   const int NL = std::min<int>((int)base.size(), 10000);
+   std::vector<MqlRates> lb(base.end() - NL, base.end());
+   CXauEngine L;
+   L.cfg.Defaults(); L.cfg.base_sec = bs; L.cfg.htf_sec = hs; L.cfg.gmt_offset_sec = gmt; L.cfg.dst_mode = dst;
+   L.SetBase(lb, NL); L.SetHTF(htf, (int)htf.size());
+   if(!L.Compute()) { std::printf("not enough bars\n"); return 2; }
+   L.RunLab(L.cfg.warmup, NL - 2, 60.0, 30, 5);
+   std::printf("  Strategy Lab on the newest %d bars (what the indicator shows):\n", NL);
+   for(int k = 0; k < XLAB_CELLS; k++)
+   {
+      const int c = L.LabRanked(k);
+      if(c < 0) break;
+      const XStats &x = L.lab[c].all;
+      std::printf("   %s %-26s %-18s won %5.1f%%  avg %+6.3fR  PF %5.2f  n=%d\n", L.lab[c].qualified ? "PASS" : "    ",
+                  XStratName(c / XP_COUNT).c_str(), XExitName(c % XP_COUNT).c_str(), x.WinRate(), x.Expectancy(), x.ProfitFactor(), x.n);
+   }
+   std::printf("  auto-pick walk-forward:");
+   print_stats("", L.lab_auto);
+   // 2) forecaster audit
+   XAnalogAudit au;
+   L.AnalogAudit(NL - 2, 4000, 4, au);
+   std::printf("  pattern-match forecast, last 4,000 bars: next bar %.1f%% (n=%d), 4 bars %.1f%%, confident 4-bar calls %.1f%% (n=%d)\n",
+               100.0 * au.Rate(au.hit1, au.n1), au.n1, 100.0 * au.Rate(au.hit4, au.n4), 100.0 * au.Rate(au.hitc4, au.nc4), au.nc4);
+   // 3) live replay over the whole file
+   ReplayOut o;
+   live_replay(base, htf, bs, hs, 10000, 60.0, 30, gmt, dst, o);
+   std::printf("  LIVE REPLAY over the whole file (daily lab, as the EA trades):\n");
+   print_replay("real", o, 0.0);
+   return 0;
 }
 
 static void run_filter_ab()
@@ -534,9 +931,208 @@ static void test_orb()
       orb_engine(e, d, f0);
       CXPaper q;
       q.Add(e.m_t[f0 + 4], 1, 4008.0);
-      q.Update(e);
+      XExit qx; XMakeExit(XP_CLASSIC, e.cfg, qx);
+      q.Update(e, qx);
       CHECK(q.pn == 0 && q.rn == 1 && q.res[0] > 0.0, "paper long that runs to target is resolved as a winner and removed from the pending list");
    }
+}
+
+
+static void test_exits()
+{
+   std::printf("\n== unit tests: exit profiles and candle-path fills ==\n");
+   XTradeResult r;
+   XExit x;
+   { // bearish bar touching both: long path is O-H-L-C, so TP1 comes first, then break-even
+      CXauEngine e; tiny(e, {{100,100,100,100},{100,101.5,98.5,99.0},{99,99,99,99}});
+      XMakeExit(XP_CLASSIC, e.cfg, x);
+      e.cfg.path_mode = 1; e.SimulateTradeEx(0, 1, 99.0, 2, x, r);
+      CHECK(r.closed && near(r.r_net, 0.5), "path mode: bearish bar hits TP1 before the low -> +0.5R (half banked, rest at break-even)");
+      e.cfg.path_mode = 0; e.SimulateTradeEx(0, 1, 99.0, 2, x, r);
+      CHECK(r.closed && near(r.r_net, -1.0), "pessimistic mode: same bar counts as a full stop");
+   }
+   { // high-hit profile: 70% at 0.5R then break-even
+      CXauEngine e; tiny(e, {{100,100,100,100},{100,100.6,99.9,100.5},{100.5,100.6,99.8,99.9}});
+      XMakeExit(XP_HIGHHIT, e.cfg, x);
+      e.SimulateTradeEx(0, 1, 99.0, 2, x, r);
+      CHECK(r.closed && near(r.r_net, 0.35), "high-hit: 70% closed at +0.5R, rest stopped at entry -> +0.35R");
+   }
+   { // quick profile: everything out at 0.6R
+      CXauEngine e; tiny(e, {{100,100,100,100},{100,100.7,99.9,100.6},{100.6,100.6,100.6,100.6}});
+      XMakeExit(XP_QUICK, e.cfg, x);
+      e.SimulateTradeEx(0, 1, 99.0, 2, x, r);
+      CHECK(r.closed && near(r.r_net, 0.6) && r.exit_kind == XE_TP1_FULL, "quick: all out at +0.6R");
+   }
+   { // mean-reversion exit: close back above the 5-bar mean
+      CXauEngine e; tiny(e, {{100,100,100,100},{100,100.2,99.4,99.5},{99.5,100.4,99.4,100.3},{100.3,100.3,100.3,100.3}});
+      ArrayResize(e.m_sma5, 4);
+      e.m_sma5[0] = 100.5; e.m_sma5[1] = 100.2; e.m_sma5[2] = 100.1; e.m_sma5[3] = 100.1;
+      XMakeExit(XP_MEANREV, e.cfg, x);
+      e.SimulateTradeEx(0, 1, 98.0, 3, x, r);
+      CHECK(r.closed && r.exit_kind == XE_MR && near(r.r_net, 0.15) && r.exit_idx == 2, "mean-revert: exits at the close that crosses the 5-bar mean (+0.3 on a 2.0 stop = +0.15R)");
+   }
+   { // gap through the stop fills at the open, not at the stop
+      CXauEngine e; tiny(e, {{100,100,100,100},{100,100.2,99.8,100.0},{98.5,98.8,98.2,98.6}});
+      XMakeExit(XP_CLASSIC, e.cfg, x);
+      e.SimulateTradeEx(0, 1, 99.0, 2, x, r);
+      CHECK(r.closed && near(r.r_net, -1.5), "gap below the stop fills at the open: -1.5R, not -1R");
+   }
+}
+
+// Replay a trade on the underlying 1-minute bars: the "truth" the bar simulator approximates.
+// Same rules as SimulateTradeEx (trail and exits at M15 closes); only the order of prices inside a bar is exact.
+static bool truth_trade(const Series &S, const CXauEngine &e, int i, int dir, double sl_price, const XExit &x, double &r_net)
+{
+   const int eidx = i + 1;
+   if(eidx >= (int)S.m15.size() - 1) return false;
+   const double a = e.m_atr[i];
+   const double entry = S.m15[eidx].open;
+   const double risk = (dir > 0) ? entry - sl_price : sl_price - entry;
+   if(risk < 0.4 * a || risk <= 0.0) return false;
+   const int maxh = (x.max_hold > 0) ? x.max_hold : e.MaxHold();
+   const int jend = std::min((int)S.m15.size() - 2, eidx + maxh - 1);
+   const bool has_tp1 = (x.tp1_r > 0.0 && x.part > 0.0);
+   const double tp1f = x.tp1_r * risk, tp2f = (x.tp2_r > 0.0) ? x.tp2_r * risk : 1e300;
+   double stopf = -risk, rem = 1.0, real = 0.0, ext = 0.0;
+   int stage = 0;
+   for(int j = eidx; j <= jend; j++)
+   {
+      double fhi_bar = -1e300;
+      for(int m = S.m15_first[j]; m < S.m15_first[j + 1]; m++)
+      {
+         const MqlRates &b = S.m1[m];
+         const double fo = dir * (b.open - entry);
+         const double fh = (dir > 0) ? b.high - entry : entry - b.low;
+         const double fl = (dir > 0) ? b.low - entry : entry - b.high;
+         const double fc = dir * (b.close - entry);
+         if(fh > fhi_bar) fhi_bar = fh;
+         if(fo <= stopf) { real += rem * fo / risk; r_net = real - e.cfg.cost_price / risk; return true; }
+         const bool bull = ((b.close >= b.open) == (dir > 0));
+         double pf[4] = {fo, bull ? fl : fh, bull ? fh : fl, fc};
+         for(int k = 1; k <= 3; k++)
+         {
+            const double fa = pf[k - 1], fb = pf[k];
+            if(fb < fa && fb <= stopf) { real += rem * stopf / risk; r_net = real - e.cfg.cost_price / risk; return true; }
+            if(fb > fa)
+            {
+               if(stage == 0 && has_tp1 && fb >= tp1f)
+               {
+                  real += x.part * std::max(tp1f, fa) / risk; rem = 1.0 - x.part; stage = 1; stopf = x.be_lock_r * risk; ext = fb;
+                  if(rem <= 1e-9) { r_net = real - e.cfg.cost_price / risk; return true; }
+               }
+               if((stage == 1 || !has_tp1) && fb >= tp2f) { real += rem * std::max(tp2f, fa) / risk; r_net = real - e.cfg.cost_price / risk; return true; }
+            }
+         }
+      }
+      const double fcl = dir * (S.m15[j].close - entry);
+      if(stage == 1)
+      {
+         if(fhi_bar > ext) ext = fhi_bar;
+         if(x.trail_atr > 0.0) stopf = std::max(stopf, ext - x.trail_atr * a);
+      }
+      if(x.mr_exit == 1 && ((dir > 0 && S.m15[j].close > e.m_sma5[j]) || (dir < 0 && S.m15[j].close < e.m_sma5[j])))
+      { real += rem * fcl / risk; r_net = real - e.cfg.cost_price / risk; return true; }
+      if(j - eidx + 1 >= maxh || j == jend) { real += rem * fcl / risk; r_net = real - e.cfg.cost_price / risk; return true; }
+   }
+   return false;
+}
+
+static void run_calibration()
+{
+   std::printf("\n== simulator calibration: bar-level fills vs minute-level truth (4 seeds x 16000 M15 bars, entries every 7th bar) ==\n");
+   std::printf("  %-18s %-8s %9s %9s %9s | %9s %9s %9s | %s\n", "exit profile", "world", "truthR", "pathR", "pessR", "truthW%", "pathW%", "pessW%", "mean |error| per trade: path / pessimistic");
+   const World ws[2] = {W_NULL, W_TREND};
+   const char *wn[2] = {"null", "trend"};
+   double worst_path_bias = 0.0;
+   for(int p = 0; p < XP_COUNT; p++)
+      for(int wi = 0; wi < 2; wi++)
+      {
+         double st = 0, sp = 0, ss = 0, ep = 0, es = 0; long wt = 0, wp = 0, wsum = 0, n = 0;
+         for(int sd = 1; sd <= 4; sd++)
+         {
+            Series S = make_series(ws[wi], 16000, 7000 + sd, true);
+            CXauEngine e; load(e, S, 16000);
+            XExit x; XMakeExit(p, e.cfg, x);
+            for(int i = e.cfg.warmup; i < 15900; i += 7)
+            {
+               const int dir = (e.m_ema1[i] >= e.m_ema2[i]) ? 1 : -1;
+               XSignal sg; sg.Reset();
+               e.cfg.sl_atr_min = x.sl_min_atr; e.cfg.sl_atr_max = x.sl_max_atr;
+               if(!e.BuildPlan(i, dir, sg)) continue;
+               double rt;
+               if(!truth_trade(S, e, i, dir, sg.sl, x, rt)) continue;
+               XTradeResult r1, r0;
+               e.cfg.path_mode = 1; const bool ok1 = e.SimulateTradeEx(i, dir, sg.sl, 15998, x, r1);
+               e.cfg.path_mode = 0; const bool ok0 = e.SimulateTradeEx(i, dir, sg.sl, 15998, x, r0);
+               e.cfg.path_mode = 1;
+               if(!ok1 || !ok0 || !r1.closed || !r0.closed) continue;
+               n++; st += rt; sp += r1.r_net; ss += r0.r_net;
+               ep += std::fabs(r1.r_net - rt); es += std::fabs(r0.r_net - rt);
+               if(rt > 0.05) wt++;
+               if(r1.r_net > 0.05) wp++;
+               if(r0.r_net > 0.05) wsum++;
+            }
+         }
+         std::printf("  %-18s %-8s %+9.3f %+9.3f %+9.3f | %8.1f%% %8.1f%% %8.1f%% | %.3f / %.3f  (n=%ld)\n",
+                     XExitName(p).c_str(), wn[wi], st / n, sp / n, ss / n, 100.0 * wt / n, 100.0 * wp / n, 100.0 * wsum / n, ep / n, es / n, n);
+         worst_path_bias = std::max(worst_path_bias, std::fabs(sp / n - st / n));
+      }
+   CHECK(worst_path_bias < 0.05, "candle-path fills are within 0.05R of minute-level truth on average for every exit profile");
+}
+
+
+// The EA computes live signals on 3,000 bars, the indicator on 10,000: every strategy and exit must agree.
+static void test_strategy_windows()
+{
+   std::printf("\n== strategy signals: 3,000-bar (EA) vs 10,000-bar (indicator) window, every strategy x exit ==\n");
+   const int N = 10000;
+   int cmp = 0, sig = 0, mism = 0;
+   for(unsigned seed = 31; seed < 35; seed++)
+   {
+      Series S = make_series(W_TREND, N, seed);
+      CXauEngine big, small;
+      load(big, S, N);
+      std::vector<MqlRates> base(S.m15.begin() + (N - 3000), S.m15.begin() + N);
+      std::vector<MqlRates> h = htf_upto(S, N - 1);
+      const int need_h = 3000 * 900 / 3600 + 320;
+      if((int)h.size() > need_h) h.erase(h.begin(), h.end() - need_h);
+      small.cfg.Defaults();
+      small.SetBase(base, 3000);
+      small.SetHTF(h, (int)h.size());
+      small.Compute();
+      for(int st = 0; st < XS_COUNT; st++)
+         for(int p = 0; p < XP_COUNT; p++)
+         {
+            XExit x; XMakeExit(p, big.cfg, x);
+            for(int back = 2; back <= 1500; back++)
+            {
+               XSignal a, b;
+               const bool sa = big.StrategySignal(st, N - back, x, a);
+               const bool sb = small.StrategySignal(st, 3000 - back, x, b);
+               cmp++;
+               if(sa) sig++;
+               if(sa != sb || (sa && (a.dir != b.dir || std::fabs(a.sl - b.sl) > 1e-9))) mism++;
+            }
+         }
+   }
+   std::printf("  %d comparisons, %d signals, %d differences\n", cmp, sig, mism);
+   CHECK(sig > 1000 && mism == 0, "EA (3,000 bars) and indicator (10,000 bars) produce identical signals for every strategy and exit");
+}
+
+static void test_resolve()
+{
+   std::printf("\n== choosing the strategy in use ==\n");
+   Series S = make_series(W_TREND, 20000, 77);
+   CXauEngine e; load(e, S, 20000);
+   e.RunLab(e.cfg.warmup, 19998, 60.0, 30, 5);
+   bool proven;
+   const int c_auto = XResolveCell(e, -1, -1, 30, proven);
+   CHECK(c_auto >= 0 && (e.lab_pick_s < 0 || (c_auto == e.lab_pick_s * XP_COUNT + e.lab_pick_p && proven)), "AUTO uses the lab's pick and marks it proven");
+   const int c_dip = XResolveCell(e, XS_DIP, -1, 30, proven);
+   CHECK(c_dip / XP_COUNT == XS_DIP && proven == e.lab[c_dip].qualified, "a fixed strategy with AUTO exit keeps the strategy and picks its best exit");
+   const int c_fix = XResolveCell(e, XS_ORB, XP_QUICK, 30, proven);
+   CHECK(c_fix == XS_ORB * XP_COUNT + XP_QUICK, "a fixed strategy and exit are used exactly as chosen");
+   CHECK(e.LabRanked(0) >= 0 && (e.lab_pick_s < 0 || e.LabRanked(0) == e.lab_pick_s * XP_COUNT + e.lab_pick_p), "scoreboard shows the pick first");
 }
 
 static void test_causality()
@@ -766,12 +1362,26 @@ int main(int argc, char **argv)
 {
    const char *mode = (argc > 1) ? argv[1] : "all";
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_platform(); test_time_and_filters(); test_orb(); }
-   if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); }
+   if(all || !std::strcmp(mode, "calib"))   run_calibration();
+   if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); test_strategy_windows(); test_resolve(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);
    if(all || !std::strcmp(mode, "trend"))   run_world(W_TREND,   "TREND - persistent drift regimes (edge planted)", 6, 40000);
    if(all || !std::strcmp(mode, "meanrev")) run_world(W_MEANREV, "MEANREV - price pulled back to a moving anchor", 6, 40000);
    if(all || !std::strcmp(mode, "analog"))  test_analog();
+   if(all || !std::strcmp(mode, "lab"))
+   {
+      run_lab_world(W_NULL, "NULL (no edge)", 4, 30000, true);
+      run_lab_world(W_BULL, "BULL (steady uptrend, gold 2024-26 style)", 4, 30000, true);
+      run_lab_world(W_TREND, "TREND (drift regimes)", 4, 30000, true);
+      run_lab_world(W_MEANREV, "MEANREV", 4, 30000, true);
+      run_lab_world(W_MIXED, "MIXED (alternating)", 4, 30000, true);
+   }
+   if(all || !std::strcmp(mode, "labrules")) run_lab_variants();
+   if(!std::strcmp(mode, "replayrules"))    run_replay_variants();
+   if(!std::strcmp(mode, "replayconfirm"))  run_replay_confirm();
+   if(all || !std::strcmp(mode, "replay"))  run_replay_worlds();
+   if(!std::strcmp(mode, "real"))           return run_real(argc, argv);
    if(all || !std::strcmp(mode, "orb"))     run_orb_worlds();
    if(all || !std::strcmp(mode, "veto"))    run_veto_ab();
    if(all || !std::strcmp(mode, "turbo"))   run_turbo();

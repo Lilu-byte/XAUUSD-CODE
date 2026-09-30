@@ -1,82 +1,71 @@
-# XAUUSD Toolkit for MetaTrader 5
+# XAUUSD Toolkit for MetaTrader 5 (v2)
 
-An indicator (**XAU Oracle**) and an Expert Advisor (**XAU Sniper**) for gold, built on one shared
-signal engine so the chart and the robot always agree.
+An indicator (**XAU Oracle**), an Expert Advisor (**XAU Sniper**) and a data-export script for gold. One shared engine, so the chart and the robot always agree.
 
 ## Read this first
+**Nothing here can guarantee profit, a fixed win-rate, or a doubled account.** What v2 does is make the tools *earn* the right to trade:
+every day a **Strategy Lab** tests 8 strategies x 4 exit styles on your chart's own history and uses only a combination that won
+**at least 60% of its trades with a positive average result**, measured walk-forward. When nothing qualifies, the EA stands aside on a live account.
 
-**Nothing here can guarantee profit, a fixed win-rate, or a doubled account.** No strategy can, and this
-one has not been proven on real XAUUSD data (the environment it was built in had no market-data access).
-What it *does* give you is a disciplined system, honest self-measurement on your own broker's data, and
-risk controls that stop a bad month from becoming a blown account.
+* **Win-rate alone means little.** A target half as far as the stop wins ~67% of trades even in a random market, and still loses money after costs. The tools therefore always show win-rate **and** the average result per trade (R). See [docs/STRATEGY_LAB.md](docs/STRATEGY_LAB.md).
+* **Tested on synthetic markets, not yet on real gold.** In a trending test market the full system (daily Lab + trading, replayed day by day) won **66% of trades at +0.31R** each; in a market with no edge it stood aside on 93% of days. Real XAUUSD has to be tested on your data: run `XAU_DataExport.mq5` and follow [docs/TESTING.md](docs/TESTING.md).
+* **"Double every month" needs about 10% risk per trade** and fails most months even with a strong edge ([docs/RISK_MATH.md](docs/RISK_MATH.md)). The EA caps risk at 5% per trade.
 
-* **Win-rate is not the goal, expectancy is.** Any strategy can show a "high win-rate" by taking tiny profits
-  and risking large losses. The tools report win-rate *and* expectancy (average R per trade) and profit factor.
-* **"Double every month" needs about 10% risk per trade** even with a genuinely strong edge, and even then it
-  fails most months and suffers 30%+ drawdowns about half the time. With no edge it destroys the account.
-  The numbers are in [docs/RISK_MATH.md](docs/RISK_MATH.md). The EA caps risk per trade at 5% on purpose.
-* **Validate before you trust it.** Follow [docs/TESTING.md](docs/TESTING.md): read the indicator's on-chart
-  trial, then run the Strategy Tester on real ticks, then forward-test on demo.
+## What changed in v2 (from your live screenshots)
+| Seen on your screen | Fixed |
+|---|---|
+| "0.01 lot: lose 1.42 if stopped" for a 14.18 stop | Your broker reports the gold tick value 10x too small. Sizing now uses the broker's own profit formula (0.01 lot = 14.18 USD there), so the EA can never open 10x too large |
+| Real trial: H1 42% won / -0.23R, H4 39% / -0.25R | One fixed strategy replaced by the daily Strategy Lab; the trial's fill model (which understated results by ~0.1R) replaced by a calibrated one |
+| EA and indicator panels on top of each other, text running past the box | Panels size themselves to their text; EA bottom-left, indicator top-left, scoreboard bottom-right |
+| Two sells without a stop loss, margin level 64% | Red RISK line in both panels when trades have no stop or the margin level is low |
+| Indicator said SELL NOW while the EA said no setup | Both now run the same Lab on the same bars and trade/show the same strategy; the EA panel says which one |
 
 ## What you get
-
 ### `XAU_Oracle` (indicator)
 | Feature | Detail |
 |---|---|
-| Simple panel | Five lines: what to do (BUY NOW / HOLD / EXIT NOW / WAIT), price, stop and target, lot size in money, and how much to trust the forecast. A full technical panel is one switch away |
-| Green/red trade box | When a setup is worth trading a TradingView-style box appears: **red = risk to the stop, green = profit to the targets**, with labels and an exit-by time |
-| Graded entries | Buy/Sell arrows graded **B / A / A+** by confluence score. Closed-bar logic: **never repaints**. |
-| Full trade plan | Entry, stop, TP1, TP2 drawn on the chart, plus a **time-stop line** ("exit by 14:30"). |
-| Position size | Lots, money at risk and margin for *your* balance and risk %. Refuses to over-risk tiny accounts. |
-| Hold guidance | Typical time to first target (measured from the indicator's own trial), status: BUY NOW / IN TRADE / EXIT NOW / MISSED / WAIT / AVOID. |
-| Projected candles | Pattern-matching forecast: the real future candles of the most typical of the 25 most similar past situations, plus a range cone. Drawn only when the forecaster has *earned* it in a walk-forward audit; otherwise it says so. See [docs/FORECASTING.md](docs/FORECASTING.md) |
-| Trial on your data | Win-rate, TP1 hit-rate, profit factor, expectancy by grade and by strategy module, over the loaded history. |
-| Opening range box | Today's opening range (from the GOLD_ORB strategy) drawn as a box, coloured building / settling / FINAL |
-| Context | Higher-timeframe bias, M5-D1 trend strip, session, ATR, spread, prev-day high/low, Asian range, VWAP, news countdown. |
-| Alerts | Popup, sound, push, email. |
+| Simple panel | BUY NOW / SELL NOW / HOLD / EXIT NOW / WAIT, entry-stop-target, lot size in money, how long to stay, the strategy in use with its tested record |
+| Green/red trade box | Red = risk to the stop, green = profit to the target(s), with labels and a "close by" time |
+| Strategy Lab scoreboard | The 6 best combinations on this chart with win-rate, average R, trades and PASS marks |
+| Graded history | Past entries of the strategy in use (green = proven, grey = unproven) and where each ended |
+| Next candles | Pattern-matching forecast (25 most similar past situations), drawn only when it has proven itself on this chart; plus a one-line call for M15 / H1 / H4 |
+| Context | Higher-timeframe trend, day range used, opening range box, yesterday's high/low, Asian range, news countdown |
 
 ### `XAU_Sniper_EA` (Expert Advisor)
-* Same engine and rules as the indicator. One trade at a time by default.
-* Fixed-fractional sizing on equity, reduced after loss streaks (optional scaling by setup grade, off by default). Refuses trades when the minimum lot would over-risk.
-* Account protection: daily loss limit, weekly loss limit, **drawdown kill-switch**, max trades/day, pause after N losses, cooldown.
-* Filters: spread (absolute and vs ATR), session window, high-impact USD news (MT5 calendar), Friday cut-off and weekend flatten.
-* Management: partial close at TP1, stop to break-even, ATR chandelier trail, time stop, retry on requotes.
-* **Demo mode**: on a demo account every protection only warns, so nothing can lock the EA out and you can watch many trades (`XAU_Sniper_DemoTurbo.set`). On a real account all protections stay on.
-* Restart-safe (state kept in terminal global variables); Strategy Tester custom criterion for optimisation.
+* Trades exactly the Lab's choice, with its exit style: partial at the first target, break-even, trail, mean-reversion exit, time stop.
+* Sizes every trade from the broker's profit formula; refuses trades the minimum lot would over-risk (live accounts).
+* Daily and weekly loss limits, drawdown kill-switch, loss-streak pause with paper-trade resume, spread / session / news filters, Friday flatten.
+* **Demo mode**: on demo accounts the protections only warn and it can trade the closest strategy even when none passed (labelled UNPROVEN), so you can watch it work.
 
-### The strategy in one paragraph
-Nine independent modules vote each closed bar: trend pullback, liquidity sweep, Asian-range breakout,
-volatility squeeze break, VWAP-extreme fade, RSI divergence, fair-value-gap retest, round-number
-rejection and the opening range breakout (ported from GOLD_ORB, [docs/GOLD_ORB.md](docs/GOLD_ORB.md)). The higher-timeframe trend and a DXY/EURUSD proxy add or subtract weight. A signal needs a
-minimum score **and** at least two agreeing modules, plus session, volatility and spread filters.
-The stop is structural (with ATR floor/ceiling); targets are multiples of that risk.
-Details: [docs/RESEARCH.md](docs/RESEARCH.md), [docs/IDEAS.md](docs/IDEAS.md) (90+ ideas, built/rejected and why), [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) (20 further improvements) and [docs/REFERENCE_REVIEW.md](docs/REFERENCE_REVIEW.md) and [docs/FORECASTING.md](docs/FORECASTING.md) (how the candle forecast works and how far to trust it).
+### `XAU_DataExport` (script)
+Saves your broker's XAUUSD history (M5 to D1) and contract details to CSV. Share the folder and every test in `research/` can be re-run on real data.
 
 ## Quick start
-1. Copy the two files `MQL5/Indicators/XAU_Oracle.mq5` and `MQL5/Experts/XAU_Sniper_EA.mq5` into your terminal's data folder (File > Open Data Folder > MQL5). Nothing else to install. See [docs/INSTALL.md](docs/INSTALL.md).
-2. Compile `XAU_Oracle.mq5` and `XAU_Sniper_EA.mq5` in MetaEditor (F7).
-3. Attach the indicator to an XAUUSD M15 chart. Read the **TRIAL** block first.
-4. Run the EA in the Strategy Tester (Every tick based on real ticks) with `Presets/XAU_Sniper_Balanced.set`.
-5. Demo-trade for at least four weeks before risking real money, starting at 0.25-0.5% risk.
+1. Copy `MQL5/Indicators/XAU_Oracle.mq5`, `MQL5/Experts/XAU_Sniper_EA.mq5` and `MQL5/Scripts/XAU_DataExport.mq5` into your terminal's `MQL5` folder (File > Open Data Folder). Each is one self-contained file. See [docs/INSTALL.md](docs/INSTALL.md).
+2. Compile them in MetaEditor (F7).
+3. Put the indicator on an XAUUSD chart (M15 or H1). Read the scoreboard: is anything marked PASS?
+4. Run the EA on a demo account with `XAU_Sniper_Balanced.set` (or `XAU_Sniper_DemoTurbo.set` to watch many trades).
+5. Run `XAU_DataExport` once and send the files, so the Lab can be checked against real gold.
 
 ## Repository layout
 ```
-MQL5/Indicators/XAU_Oracle.mq5      the indicator (single self-contained file, generated)
-MQL5/Experts/XAU_Sniper_EA.mq5      the EA (single self-contained file, generated)
-MQL5/Presets/*.set                  seven EA profiles (Conservative ... Aggressive, DemoTurbo, GoldORB)
-src/                                editable sources: XAU_Core.mqh (engine), XAU_Platform.mqh (MT5 glue), the two mains
-docs/                               ideas, research notes, risk maths, install/testing, reference review, improvements
-research/                           bundler, C++ harness, mock MT5 API, Monte Carlo, saved results
+MQL5/Indicators/XAU_Oracle.mq5      the indicator (single file, generated)
+MQL5/Experts/XAU_Sniper_EA.mq5      the EA (single file, generated)
+MQL5/Scripts/XAU_DataExport.mq5     history export script
+MQL5/Presets/*.set                  7 EA profiles, generated from the EA's inputs
+src/                                editable sources (engine, platform layer, the three programs)
+docs/                               Strategy Lab, ideas (165), research, risk maths, install, testing, reviews
+research/                           bundler, preset generator, C++ harness, MT5 mock, Monte Carlo, results
 ```
-Edit `src/`, then `python3 research/bundle.py` (or `research/run_checks.sh`) regenerates the two MT5 files.
+Edit `src/`, then run `research/run_checks.sh`: it rebuilds the MT5 files and presets and re-runs every test.
 
 ## What was and was not verified
-| Verified here | Not verified (cannot be, offline) |
+| Verified here (research/results) | Not verified (cannot be, offline) |
 |---|---|
-| Sources type-check as C++ against a mock of the MT5 API (`research/run_checks.sh`) | Compilation in MetaEditor itself |
-| Engine has **no look-ahead** (signals on truncated history are identical); indicator and EA windows give the same signals | Behaviour on real XAUUSD ticks |
-| Trade simulator and lot sizing unit-tested, incl. refusal to over-risk | Profitability, win-rate, drawdown on real data |
-| No-edge control: strategy does **not** invent an edge from noise | Broker-specific quirks (fills, stops level, GMT offset) |
-| Regime stress tests show where it wins and loses (trending vs mean-reverting) | Any future performance |
-
-`research/run_checks.sh` regenerates everything in `research/results/`.
+| All three programs type-check against a mock of the MT5 API | Compilation in MetaEditor itself |
+| Lot sizing correct even when the broker's tick value is 10x wrong | Behaviour on real XAUUSD ticks |
+| Fill model within 0.007R of minute-level truth | Profitability or win-rate on real gold |
+| No look-ahead in signals, forecasts, the opening range or the Lab | Broker quirks (fills, stops level, clock) |
+| EA (3,000 bars) and indicator (10,000 bars) give identical signals: 191,872 comparisons, 0 differences | Any future performance |
+| On markets with no edge, the Lab and the forecaster do not invent one | |
+| In a trending test market the daily Lab keeps >= 60% winners with positive expectancy | |

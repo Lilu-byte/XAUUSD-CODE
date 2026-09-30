@@ -1,40 +1,52 @@
 //+------------------------------------------------------------------+
 //|                                               XAU_Sniper_EA.mq5  |
-//|  Automated XAUUSD trader driven by the same engine as the        |
-//|  XAU_Oracle indicator (XAU_Core.mqh).                            |
+//|  Automated XAUUSD trader. Uses the same engine and the same       |
+//|  daily STRATEGY LAB as the XAU_Oracle indicator, so it trades     |
+//|  exactly the strategy the indicator shows: the one that won at    |
+//|  least the target share of trades (default 60%) with a positive   |
+//|  average result, walk-forward, on this chart's own history.       |
 //|                                                                  |
-//|  One trade at a time by default, fixed-fractional risk, hard     |
-//|  account protection (daily / weekly loss, drawdown kill-switch), |
-//|  spread / session / news filters, partial + break-even + trail,  |
-//|  time stop, Friday flatten.                                      |
+//|  Fixed-fractional risk sized with the broker's own profit formula,|
+//|  hard account protection (daily / weekly loss, drawdown kill-     |
+//|  switch), spread / session / news filters, per-strategy exits     |
+//|  (partial, break-even, trail, mean-reversion exit, time stop).    |
 //|                                                                  |
 //|  NO strategy wins every trade and none can guarantee profit.     |
 //|  Test on your broker's real ticks and start on a demo account.   |
 //+------------------------------------------------------------------+
 #property copyright   "XAU Sniper"
-#property version     "1.00"
-#property description "XAUUSD confluence EA with strict risk management."
-#property description "Not a guarantee of profit. Validate in the Strategy Tester first."
+#property version     "2.00"
+#property description "XAUUSD EA: trades only the strategy that passed the Strategy Lab on this chart"
+#property description "(>= 60% winning trades with profit, walk-forward). Strict risk management. Not a guarantee of profit."
 
 #include <Trade/Trade.mqh>
 #include <XAU/XAU_Platform.mqh>
 
-// Hard ceiling for risk per trade (percent of equity), applied after grade scaling.
-// Deliberate guard against typos and against chasing a "double every month" target:
-// see docs/RISK_MATH.md before raising it.
+// Hard ceiling for risk per trade (percent of equity). Guard against typos and against chasing a
+// "double every month" target: see docs/RISK_MATH.md before raising it.
 #define XS_MAX_RISK_PCT 5.0
 
 //--- inputs -----------------------------------------------------------
+input group "=== What to trade ==="
+input ENUM_XAU_STRAT InpStrategy     = XAU_ST_AUTO;  // Strategy (AUTO = the one that passed the Strategy Lab here)
+input ENUM_XAU_EXIT  InpExit         = XAU_EX_AUTO;  // Exit style (AUTO = chosen together with the strategy)
+input double InpWinTarget            = 60.0;   // Strategy Lab: minimum % of winning trades
+input int    InpLabMinTrades         = 50;     // Strategy Lab: minimum trades before a strategy can qualify
+input int    InpLabFolds             = 5;      // Strategy Lab: walk-forward folds
+input int    InpHistoryBars          = 10000;  // Bars the lab tests (keep equal to the indicator's setting)
+input int    InpSignalBars           = 3000;   // Bars used for live signals (faster; same signals, tested)
+input bool   InpDemoTradeUnproven    = true;   // DEMO accounts only: trade the closest strategy when none passed the lab
+
 input group "=== Risk ==="
-input double InpRiskPct         = 1.0;    // Risk per trade, % of equity (hard ceiling XS_MAX_RISK_PCT = 5)
-input bool   InpGradeScaling    = false;  // Scale risk by setup grade (B x0.6, A x1.0, A+ x1.4). Off: no evidence grades predict outcome; enable only if YOUR trial shows A/A+ beat B
+input double InpRiskPct         = 1.0;    // Risk per trade, % of equity (hard ceiling 5)
 input double InpStreakScale     = 0.5;    // Risk multiplier after 2+ consecutive losses
+input bool   InpD1Scale         = true;   // Halve risk when the daily trend opposes the trade
 input double InpMaxLots         = 0.0;    // Absolute lot cap (0 = none)
 input double InpMarginUsePct    = 50.0;   // Max % of free margin one trade may use
 input double InpMaxRiskOverrun  = 1.5;    // Refuse trade if min lot risks more than this x requested
 
 input group "=== Demo testing ==="
-input bool   InpDemoUnlocked    = true;   // On a DEMO account every protection below only WARNS - nothing can lock the EA out. Ignored on real accounts
+input bool   InpDemoUnlocked    = true;   // On a DEMO account every protection below only WARNS. Ignored on real accounts
 input int    InpDemoMaxPositions = 5;     // Simultaneous EA trades allowed while demo-unlocked
 
 input group "=== Account protection ==="
@@ -43,49 +55,13 @@ input double InpWeeklyLossPct   = 6.0;    // Stop for the week at this equity lo
 input double InpMaxDDPct        = 15.0;   // Kill-switch: drawdown from peak equity (0 = off)
 input bool   InpKillFlatten     = true;   // Kill-switch also closes open EA positions
 input bool   InpResetKill       = false;  // Set true for one start to clear a kill-switch / reset peak
-input int    InpMaxConsecLosses = 3;      // Pause for the rest of the day after N losses in a row
-input int    InpMaxTradesPerDay = 4;      // Entries per day
+input int    InpMaxConsecLosses = 3;      // Pause after N losses in a row (until tomorrow or until paper trades recover)
+input bool   InpPaperResume     = true;   // During that pause, paper-trade the signals and resume as soon as they recover
+input int    InpMaxTradesPerDay = 6;      // Entries per day
 input int    InpMaxPositions    = 1;      // Simultaneous EA positions
-input int    InpCooldownBars    = 4;      // Bars to wait after a losing trade
-input bool   InpPaperResume     = true;   // After a loss-streak pause, paper-trade the signals and resume as soon as they recover (else pause until tomorrow)
+input int    InpCooldownBars    = 2;      // Bars to wait after a losing trade
 input bool   InpOneTradePerSymbol = true; // Never open while ANY position (any magic, manual too) exists on this symbol
 input bool   InpDailyLossRealized = false;// Daily limit counts closed trades only (default: equity incl. floating)
-input bool   InpD1Scale         = true;   // Halve risk when the daily trend opposes the trade
-
-input group "=== Signal engine ==="
-input int             InpHistoryBars   = 3000;
-input ENUM_TIMEFRAMES InpHTF           = PERIOD_CURRENT;  // CURRENT = automatic
-input double          InpScoreMin      = 1.7;
-input int             InpMinConfluence = 2;
-input int             InpMinGrade      = 1;               // 1=B 2=A 3=A+
-input bool            InpModPullback   = true;
-input bool            InpModSweep      = true;
-input bool            InpModBreakout   = true;
-input bool            InpModSqueeze    = true;
-input bool            InpModVwap       = true;
-input bool            InpModDiverge    = true;
-input bool            InpModFvg        = true;
-input bool            InpModRound      = true;
-input bool            InpModOrb        = true;    // Opening range breakout (GOLD_ORB rules)
-input double          InpOrbStartHour  = 1.0;     // Daily open on the SERVER clock (New-York-close brokers: 1)
-input int             InpOrbRangeMin   = 60;      // Minutes that form the opening range
-input int             InpOrbSettleMin  = 180;     // Quiet minutes before a side of the range is final
-input bool            InpOrbSolo       = false;   // Trade the opening-range breakout on its own (GOLD_ORB mode; use the H1 chart)
-input bool            InpOrbNeedBias   = false;   // ...only in the direction of the higher-timeframe trend
-input bool            InpAdaptiveGate  = false;   // Switch off modules whose recent trial is clearly negative (see docs: can hurt)
-input string          InpInterSymbol   = "";      // DXY-like symbol (blank = auto / EURUSD fallback)
-input bool            InpPatternVeto   = true;    // Skip setups that a confident pattern-match contradicts (tested: small gain, fewer trades)
-input double          InpAdrBlock      = 0.90;    // Block trend continuation once this share of avg daily range is used (0 = off)
-input bool            InpRegimeWeights = false;   // Efficiency-ratio regime weighting (tested: no benefit, off)
-
-input group "=== Trade plan ==="
-input double InpTP1_R        = 1.0;
-input double InpTP2_R        = 2.5;
-input double InpPartialPct   = 50.0;
-input double InpTrailATR     = 2.0;
-input double InpSLMinATR     = 0.9;
-input double InpSLMaxATR     = 2.6;
-input int    InpHoldMinutes  = 480;
 
 input group "=== Filters (London local clock) ==="
 input bool   InpSessionFilter = true;
@@ -103,6 +79,24 @@ input bool   InpManualGmt     = false;
 input double InpGmtOffsetHrs  = 2.0;              // Broker server time minus GMT in WINTER (hours)
 input ENUM_XAU_DST InpServerDst = XAU_DST_US;     // Server clock daylight-saving behaviour
 input bool   InpLondonSessions = true;            // Session hours are London local time (follow UK DST)
+input double InpOrbStartHour  = 1.0;              // Daily open on the SERVER clock (New-York-close brokers: 1)
+
+input group "=== Engine details (advanced) ==="
+input ENUM_TIMEFRAMES InpHTF    = PERIOD_CURRENT; // Higher timeframe for the trend (CURRENT = automatic)
+input double InpScoreMin        = 1.7;    // Confluence strategy: score needed
+input int    InpMinConfluence   = 2;      // Confluence strategy: agreeing modules needed
+input double InpAdrBlock        = 0.90;   // No trend-continuation setups after this share of the daily range
+input int    InpOrbRangeMin     = 60;     // Opening range: minutes that form it
+input int    InpOrbSettleMin    = 180;    // Opening range: quiet minutes before it is final
+input bool   InpOrbSolo         = false;  // Force the opening-range strategy (GOLD_ORB mode)
+input double InpTP1_R           = 1.0;    // Classic exit: first target (R)
+input double InpTP2_R           = 2.5;    // Classic exit: runner target (R)
+input double InpPartialPct      = 50.0;   // Classic exit: % closed at the first target
+input double InpTrailATR        = 2.0;    // Classic exit: trail distance (ATR)
+input double InpSLMinATR        = 0.9;    // Minimum stop distance (ATR)
+input double InpSLMaxATR        = 2.6;    // Skip setups needing a wider stop (ATR)
+input int    InpHoldMinutes     = 480;    // Time stop for trades that go nowhere
+input string InpInterSymbol     = "";     // DXY-like symbol (blank = auto / EURUSD fallback)
 
 input group "=== Execution ==="
 input long   InpMagic         = 20260901;
@@ -111,8 +105,7 @@ input string InpComment       = "XAUS";
 
 input group "=== Display ==="
 input bool   InpShowPanel     = true;
-input int    InpPanelX        = 12;
-input int    InpPanelY        = 24;
+input ENUM_XAU_PANEL_POS InpPanelPos = XAU_PANEL_BOTTOM_LEFT;   // Panel position (the indicator uses the top left)
 input int    InpFontSize      = 10;
 
 //--- position bookkeeping ----------------------------------------------
@@ -120,16 +113,19 @@ input int    InpFontSize      = 10;
 ulong   g_st_ticket[XS_MAXPOS];
 double  g_st_r0[XS_MAXPOS];       // initial risk distance (price)
 double  g_st_vol0[XS_MAXPOS];
-int     g_st_stage[XS_MAXPOS];    // 0 = before TP1, 1 = after
+int     g_st_stage[XS_MAXPOS];    // 0 = before the first target, 1 = after
 double  g_st_ext[XS_MAXPOS];      // best favourable excursion (price distance)
 double  g_st_atr[XS_MAXPOS];      // ATR at entry (trail distance)
+int     g_st_prof[XS_MAXPOS];     // exit profile the trade was opened with
 int     g_st_n = 0;
 
 //--- state ----------------------------------------------------------------
-CXauEngine g_eng;
+CXauEngine g_eng;        // live signals
+CXauEngine g_lab;        // daily Strategy Lab (same window as the indicator)
 CXauNews   g_news;
 CTrade     g_trade;
 CXPaper    g_paper;      // paper trades while a loss-streak pause is active
+CXPanel    g_panel;
 XRATESARR(g_rates);
 XRATESARR(g_hrates);
 XRATESARR(g_irates);
@@ -142,14 +138,15 @@ XSignal  g_last_sig;
 int      g_last_reason = XR_WARMUP;
 string   g_skip_note = "";
 datetime g_last_loss_bar = 0;
-int      g_gate_off = 0;
-long     g_gate_day = -1;
-int      g_gate_en[XM_COUNT];
-int      g_rows_prev = 20;
-int      g_pheight = 200;
-int      g_py = 0;
 
-void DrawPanel();
+// strategy in use
+datetime g_lab_day = 0;
+bool     g_lab_ok = false;
+int      g_cell = -1;
+bool     g_proven = false;
+int      g_act_s = -1;
+int      g_act_p = XP_CLASSIC;
+XExit    g_act_x;
 
 // risk state
 double   g_day_start_eq = 0.0, g_week_start_eq = 0.0, g_peak_eq = 0.0;
@@ -166,6 +163,8 @@ double   g_day_pl = 0.0;
 
 string   g_news_note = "";
 bool     g_news_blocked = false;
+
+void DrawPanel();
 
 //+------------------------------------------------------------------+
 string GvName(const string tag)
@@ -189,50 +188,41 @@ double RiskCapped()
    return XClamp(InpRiskPct, 0.05, XS_MAX_RISK_PCT);
 }
 
-//+------------------------------------------------------------------+
-int InputModuleOn(const int m)
+string StratCode(const int s)
 {
-   switch(m)
+   switch(s)
    {
-      case XM_PULLBACK: return InpModPullback ? 1 : 0;
-      case XM_SWEEP:    return InpModSweep    ? 1 : 0;
-      case XM_BREAKOUT: return InpModBreakout ? 1 : 0;
-      case XM_SQUEEZE:  return InpModSqueeze  ? 1 : 0;
-      case XM_VWAP:     return InpModVwap     ? 1 : 0;
-      case XM_DIVERGE:  return InpModDiverge  ? 1 : 0;
-      case XM_FVG:      return InpModFvg      ? 1 : 0;
-      case XM_ROUND:    return InpModRound    ? 1 : 0;
-      case XM_ORB:      return InpModOrb      ? 1 : 0;
+      case XS_CONFLUENCE: return "CONF";
+      case XS_ORB:        return "ORB";
+      case XS_DIP:        return "DIP";
+      case XS_DOUBLE7:    return "D7";
+      case XS_IBS:        return "IBS";
+      case XS_SWEEP:      return "SWP";
+      case XS_PULLBACK:   return "PB";
+      case XS_SQUEEZE:    return "SQZ";
    }
-   return 0;
+   return "?";
 }
 
 //+------------------------------------------------------------------+
-void ApplyConfig()
+void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf)
 {
-   XConfig c;
    c.Defaults();
-   c.base_sec = PeriodSeconds((ENUM_TIMEFRAMES)_Period);
+   c.base_sec = PeriodSeconds(tf);
    c.htf_sec = PeriodSeconds(g_htf);
    c.dst_mode = (int)InpServerDst;
    c.gmt_offset_sec = XWinterOffsetSec(InpManualGmt, InpGmtOffsetHrs, c.dst_mode);
    c.london_sessions = InpLondonSessions;
-   c.adr_block = InpAdrBlock;
-   c.regime_on = InpRegimeWeights ? 1 : 0;
-   c.an_veto = InpPatternVeto ? 1 : 0;
-   c.orb_start_hour = InpOrbStartHour;
-   c.orb_range_min = InpOrbRangeMin;
-   c.orb_settle_min = InpOrbSettleMin;
-   c.orb_solo = InpOrbSolo ? 1 : 0;
-   c.orb_need_bias = InpOrbNeedBias ? 1 : 0;
    c.use_session_filter = InpSessionFilter;
    c.trade_start = InpTradeStartGMT;
    c.trade_end = InpTradeEndGMT;
    c.fri_cutoff = InpFridayCutGMT;
    c.score_min = InpScoreMin;
    c.min_confluence = InpMinConfluence;
-   c.min_grade = InpMinGrade;
-   for(int m = 0; m < XM_COUNT; m++) c.en[m] = InputModuleOn(m) & g_gate_en[m];
+   c.adr_block = InpAdrBlock;
+   c.orb_start_hour = InpOrbStartHour;
+   c.orb_range_min = InpOrbRangeMin;
+   c.orb_settle_min = InpOrbSettleMin;
    c.tp1_r = InpTP1_R;
    c.tp2_r = XMax(InpTP2_R, InpTP1_R + 0.1);
    c.partial_pct = XClamp(InpPartialPct / 100.0, 0.0, 1.0);
@@ -243,7 +233,6 @@ void ApplyConfig()
    const double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
    const double sp = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * pt;
    c.cost_price = XMax(sp * 1.5, 0.10);
-   g_eng.cfg = c;
 }
 
 //+------------------------------------------------------------------+
@@ -259,7 +248,6 @@ int OnInit()
    if(InpRiskPct > XS_MAX_RISK_PCT) Print("XAU Sniper: risk per trade capped at ", DoubleToString(XS_MAX_RISK_PCT, 1), "% (requested ", DoubleToString(InpRiskPct, 2), "%).");
    if(InpRiskPct > 2.0) Print("XAU Sniper: WARNING - risk above 2% per trade makes a losing streak very costly.");
 
-   for(int m = 0; m < XM_COUNT; m++) g_gate_en[m] = 1;
    if(MQLInfoInteger(MQL_TESTER)) { GlobalVariablesDeleteAll("XS_"); GlobalVariablesDeleteAll("XSP_"); }
    g_trade.SetExpertMagicNumber((ulong)InpMagic);
    g_trade.SetDeviationInPoints((ulong)InpSlippagePts);
@@ -280,7 +268,6 @@ int OnInit()
    }
    if(DemoFree())
    {
-      // demo: never start locked out by an old kill-switch or a stale equity peak
       GlobalVariableDel(GvName("KILL"));
       GlobalVariableDel(GvName("PEAK"));
       Print("XAU Sniper: DEMO account - guardrails are warnings only (InpDemoUnlocked). Real accounts keep every protection.");
@@ -291,10 +278,12 @@ int OnInit()
    g_day_start_eq = eq; g_week_start_eq = eq;
    g_day_id = -1; g_week_id = -1;
    g_last_sig.Reset();
-
-   // recover management state of positions that were open when the EA was restarted
    g_st_n = 0;
-   ApplyConfig();
+   FillConfig(g_eng.cfg, (ENUM_TIMEFRAMES)_Period);
+   XMakeExit(XP_CLASSIC, g_eng.cfg, g_act_x);
+
+   g_panel.prefix = "XS_PN_"; g_panel.fs = InpFontSize; g_panel.pos = InpPanelPos; g_panel.x = 12; g_panel.y = 30; g_panel.min_w = 330;
+
    EventSetTimer(2);
    g_stats_dirty = true;
    if(!MQLInfoInteger(MQL_TESTER))
@@ -330,6 +319,7 @@ void StSave(const int k)
    GlobalVariableSet(GvPos(t, "S"), (double)g_st_stage[k]);
    GlobalVariableSet(GvPos(t, "E"), g_st_ext[k]);
    GlobalVariableSet(GvPos(t, "A"), g_st_atr[k]);
+   GlobalVariableSet(GvPos(t, "X"), (double)g_st_prof[k]);
 }
 
 int StIndex(const ulong ticket, const bool create)
@@ -338,6 +328,7 @@ int StIndex(const ulong ticket, const bool create)
    if(!create || g_st_n >= XS_MAXPOS) return -1;
    const int k = g_st_n++;
    g_st_ticket[k] = ticket;
+   g_st_prof[k] = GlobalVariableCheck(GvPos(ticket, "X")) ? (int)GlobalVariableGet(GvPos(ticket, "X")) : g_act_p;
    if(GlobalVariableCheck(GvPos(ticket, "R")))
    {
       g_st_r0[k]    = GlobalVariableGet(GvPos(ticket, "R"));
@@ -364,12 +355,13 @@ void StDrop(const int k)
 {
    const ulong t = g_st_ticket[k];
    GlobalVariableDel(GvPos(t, "R")); GlobalVariableDel(GvPos(t, "V")); GlobalVariableDel(GvPos(t, "S"));
-   GlobalVariableDel(GvPos(t, "E")); GlobalVariableDel(GvPos(t, "A"));
+   GlobalVariableDel(GvPos(t, "E")); GlobalVariableDel(GvPos(t, "A")); GlobalVariableDel(GvPos(t, "X"));
    g_st_n--;
    if(k < g_st_n)
    {
       g_st_ticket[k] = g_st_ticket[g_st_n]; g_st_r0[k] = g_st_r0[g_st_n]; g_st_vol0[k] = g_st_vol0[g_st_n];
       g_st_stage[k] = g_st_stage[g_st_n]; g_st_ext[k] = g_st_ext[g_st_n]; g_st_atr[k] = g_st_atr[g_st_n];
+      g_st_prof[k] = g_st_prof[g_st_n];
    }
 }
 
@@ -442,11 +434,11 @@ void CloseAllOurs(const string why)
 }
 
 //+------------------------------------------------------------------+
-//| per-tick position management                                      |
+//| per-tick position management (each trade follows its exit style)  |
 //+------------------------------------------------------------------+
 void ManagePositions()
 {
-   if(PositionsTotal() == 0) { if(g_st_n > 0) { while(g_st_n > 0) StDrop(g_st_n - 1); } return; }
+   if(PositionsTotal() == 0) { while(g_st_n > 0) StDrop(g_st_n - 1); return; }
    MqlTick tick;
    if(!SymbolInfoTick(_Symbol, tick)) return;
    const double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
@@ -455,7 +447,6 @@ void ManagePositions()
    const double stops = (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * pt;
    const double spread_px = tick.ask - tick.bid;
    const int period_sec = PeriodSeconds((ENUM_TIMEFRAMES)_Period);
-   const int maxh = g_eng.MaxHold();
    const datetime now = TimeCurrent();
    const int gmt_off = XOffsetAt(g_eng.cfg, now);
 
@@ -471,6 +462,8 @@ void ManagePositions()
       const int k = StIndex(ticket, true);
       if(k < 0) continue;
       seen[k] = true;
+      XExit x;
+      XMakeExit(g_st_prof[k], g_eng.cfg, x);
 
       const bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
       const int dir = buy ? 1 : -1;
@@ -478,12 +471,13 @@ void ManagePositions()
       const double cur_sl = PositionGetDouble(POSITION_SL);
       const double cur_tp = PositionGetDouble(POSITION_TP);
       const double vol = PositionGetDouble(POSITION_VOLUME);
-      const double px = buy ? tick.bid : tick.ask;              // price we would close at
+      const double px = buy ? tick.bid : tick.ask;
       const double fav = dir * (px - open);
       const double r0 = g_st_r0[k];
-      if(fav > g_st_ext[k]) { g_st_ext[k] = fav; }
+      if(fav > g_st_ext[k]) g_st_ext[k] = fav;
 
       // --- time stop and Friday flatten
+      const int maxh = (x.max_hold > 0) ? x.max_hold : g_eng.MaxHold();
       const datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
       if(now - opened >= (datetime)(maxh * period_sec))
       {
@@ -499,18 +493,17 @@ void ManagePositions()
       }
       if(r0 <= 0.0) continue;
 
-      // --- first target: partial close, stop to break-even
-      if(g_st_stage[k] == 0 && fav >= InpTP1_R * r0)
+      // --- first target: bank the planned share, stop to break-even (or the profile's lock)
+      if(g_st_stage[k] == 0 && x.tp1_r > 0.0 && x.part > 0.0 && fav >= x.tp1_r * r0)
       {
-         const double want = XClamp(InpPartialPct / 100.0, 0.0, 1.0);
-         const double vc = MathFloor(g_st_vol0[k] * want / vstep + 1e-9) * vstep;
-         const bool close_all = (want >= 0.999) || (vc > 0.0 && (vol - vc) < vmin - 1e-9);
+         const double vc = MathFloor(g_st_vol0[k] * x.part / vstep + 1e-9) * vstep;
+         const bool close_all = (x.part >= 0.999) || (vc > 0.0 && (vol - vc) < vmin - 1e-9);
          if(close_all) { ClosePart(ticket, 0.0); continue; }
          if(vc >= vmin - 1e-9)
          {
             if(!ClosePart(ticket, vc)) continue;
          }
-         const double be = NormalizeDouble(open + dir * spread_px, _Digits);
+         const double be = NormalizeDouble(open + dir * (x.be_lock_r * r0 + spread_px), _Digits);
          const bool sl_ok = buy ? (be > cur_sl && (tick.bid - be) > stops)
                                 : ((cur_sl == 0.0 || be < cur_sl) && (be - tick.ask) > stops);
          if(sl_ok) g_trade.PositionModify(ticket, be, cur_tp);
@@ -519,22 +512,46 @@ void ManagePositions()
          continue;
       }
 
-      // --- runner: ATR chandelier trail on the best excursion
-      if(g_st_stage[k] == 1 && g_st_atr[k] > 0.0)
+      // --- after the first target: ATR trail on the best excursion
+      if(g_st_stage[k] == 1 && x.trail_atr > 0.0 && g_st_atr[k] > 0.0)
       {
-         double tsl = open + dir * (g_st_ext[k] - InpTrailATR * g_st_atr[k]);
+         double tsl = open + dir * (g_st_ext[k] - x.trail_atr * g_st_atr[k]);
          tsl = NormalizeDouble(tsl, _Digits);
          const double step = 2.0 * pt;
-         bool better = buy ? (tsl > cur_sl + step) : (cur_sl == 0.0 || tsl < cur_sl - step);
-         bool room = buy ? ((tick.bid - tsl) > stops) : ((tsl - tick.ask) > stops);
+         const bool better = buy ? (tsl > cur_sl + step) : (cur_sl == 0.0 || tsl < cur_sl - step);
+         const bool room = buy ? ((tick.bid - tsl) > stops) : ((tsl - tick.ask) > stops);
          if(better && room)
          {
             if(g_trade.PositionModify(ticket, tsl, cur_tp)) StSave(k);
          }
       }
    }
-   // forget state of positions that no longer exist
    for(int k = g_st_n - 1; k >= 0; k--) if(!seen[k]) StDrop(k);
+}
+
+// Mean-reversion exit, checked when a bar closes: price closed back across the 5-bar mean.
+void CheckMeanExits()
+{
+   if(!g_engine_ok) return;
+   const int i = g_eng.n - 2;
+   for(int p = PositionsTotal() - 1; p >= 0; p--)
+   {
+      const ulong ticket = PositionGetTicket(p);
+      if(ticket == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+      const int k = StIndex(ticket, true);
+      if(k < 0) continue;
+      XExit x;
+      XMakeExit(g_st_prof[k], g_eng.cfg, x);
+      if(x.mr_exit != 1) continue;
+      const bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      if((buy && g_eng.m_c[i] > g_eng.m_sma5[i]) || (!buy && g_eng.m_c[i] < g_eng.m_sma5[i]))
+      {
+         Print("XAU Sniper: mean-reversion exit on ", (long)ticket, " (close ", DoubleToString(g_eng.m_c[i], _Digits),
+               " past the 5-bar mean ", DoubleToString(g_eng.m_sma5[i], _Digits), ")");
+         ClosePart(ticket, 0.0);
+      }
+   }
 }
 
 //+------------------------------------------------------------------+
@@ -734,53 +751,6 @@ string EntryBlocked(const XSignal &s)
    return "";
 }
 
-//+------------------------------------------------------------------+
-//| engine refresh + entry                                            |
-//+------------------------------------------------------------------+
-bool RefreshEngine()
-{
-   const int want = XMaxI(InpHistoryBars, 900);
-   const int got = XLoadRates(_Symbol, (ENUM_TIMEFRAMES)_Period, want, g_rates);
-   if(got < 700) { g_engine_ok = false; return false; }
-   ApplyConfig();
-   const int need_h = (int)((double)got * g_eng.cfg.base_sec / g_eng.cfg.htf_sec) + 320;
-   const int gh = XLoadRates(_Symbol, g_htf, need_h, g_hrates);
-   if(gh < 300) { g_engine_ok = false; return false; }   // never trade without the higher-timeframe bias
-   g_eng.SetBase(g_rates, got);
-   g_eng.SetHTF(g_hrates, gh);
-   if(StringLen(g_inter_sym) > 0)
-   {
-      const int gi = XLoadRates(g_inter_sym, (ENUM_TIMEFRAMES)_Period, got + 50, g_irates);
-      if(gi > 100) g_eng.SetInter(g_irates, gi, g_inter_invert);
-   }
-   if(!g_eng.Compute()) { g_engine_ok = false; return false; }
-   g_engine_ok = true;
-
-   if(InpAdaptiveGate)
-   {
-      const long day = (long)TimeTradeServer() / 86400;
-      if(day != g_gate_day)
-      {
-         g_gate_day = day;
-         XTrial tr;
-         g_eng.RunTrial(g_eng.cfg.warmup, g_eng.n - 2, tr);
-         g_gate_off = g_eng.ApplyGating(tr, 20, -0.25);
-         for(int m = 0; m < XM_COUNT; m++) g_gate_en[m] = g_eng.cfg.en[m];
-      }
-      for(int m = 0; m < XM_COUNT; m++) g_eng.cfg.en[m] = InputModuleOn(m) & g_gate_en[m];
-      g_eng.ComputeScores();
-   }
-   return true;
-}
-
-double GradeMult(const int grade)
-{
-   if(!InpGradeScaling) return 1.0;
-   if(grade >= 3) return 1.4;
-   if(grade == 2) return 1.0;
-   return 0.6;
-}
-
 // Some brokers refuse SL/TP on the market request itself. Open, attach the stops, and if they cannot be
 // attached close the position at once: this EA never leaves a naked position open.
 bool SendOrderThenProtect(const bool buy, const double lots, const double sl, const double tp, const string cmt)
@@ -823,16 +793,72 @@ bool SendOrder(const bool buy, const double lots, const double sl, const double 
    return false;
 }
 
+//+------------------------------------------------------------------+
+//| engine refresh, daily Strategy Lab and entry                       |
+//+------------------------------------------------------------------+
+bool RefreshEngine()
+{
+   const int want = XMaxI(InpSignalBars, 900);
+   const int got = XLoadRates(_Symbol, (ENUM_TIMEFRAMES)_Period, want, g_rates);
+   if(got < 700) { g_engine_ok = false; return false; }
+   FillConfig(g_eng.cfg, (ENUM_TIMEFRAMES)_Period);
+   const int need_h = (int)((double)got * g_eng.cfg.base_sec / g_eng.cfg.htf_sec) + 320;
+   const int gh = XLoadRates(_Symbol, g_htf, need_h, g_hrates);
+   if(gh < 300) { g_engine_ok = false; return false; }   // never trade without the higher-timeframe trend
+   g_eng.SetBase(g_rates, got);
+   g_eng.SetHTF(g_hrates, gh);
+   if(StringLen(g_inter_sym) > 0)
+   {
+      const int gi = XLoadRates(g_inter_sym, (ENUM_TIMEFRAMES)_Period, got + 50, g_irates);
+      if(gi > 100) g_eng.SetInter(g_irates, gi, g_inter_invert);
+   }
+   if(!g_eng.Compute()) { g_engine_ok = false; return false; }
+   g_engine_ok = true;
+   return true;
+}
+
+// Once per server day on the same fixed window as the indicator, so both choose the same strategy.
+void RunLabIfNeeded()
+{
+   const datetime ds = XServerDayStart(TimeCurrent());
+   if(g_lab_ok && ds == g_lab_day) return;
+   FillConfig(g_lab.cfg, (ENUM_TIMEFRAMES)_Period);
+   const bool ok = XRunDailyLab(g_lab, _Symbol, (ENUM_TIMEFRAMES)_Period, g_htf, InpHistoryBars, g_inter_sym, g_inter_invert,
+                                InpWinTarget, InpLabMinTrades, InpLabFolds, ds);
+   if(!ok) return;                       // try again on the next bar
+   g_lab_ok = true;
+   g_lab_day = ds;
+   int us = (int)InpStrategy;
+   if(InpOrbSolo) us = XS_ORB;
+   g_cell = XResolveCell(g_lab, us, (int)InpExit, InpLabMinTrades, g_proven);
+   if(g_cell < 0) { g_act_s = -1; return; }
+   g_act_s = g_cell / XP_COUNT;
+   g_act_p = g_cell % XP_COUNT;
+   XMakeExit(g_act_p, g_eng.cfg, g_act_x);
+   Print("XAU Sniper: Strategy Lab -> ", XStratName(g_act_s), " + ", XExitName(g_act_p), (g_proven ? " [PROVEN]" : " [UNPROVEN]"),
+         ": ", DoubleToString(g_lab.lab[g_cell].all.WinRate(), 1), "% won, avg ", DoubleToString(g_lab.lab[g_cell].all.Expectancy(), 3),
+         "R over ", g_lab.lab[g_cell].all.n, " trades; auto-pick walk-forward ", DoubleToString(g_lab.lab_auto.WinRate(), 1), "% / ",
+         DoubleToString(g_lab.lab_auto.Expectancy(), 3), "R (", g_lab.lab_auto.n, " trades)");
+}
+
 void TryEnter()
 {
    g_skip_note = "";
+   if(g_act_s < 0) { g_last_reason = XR_WARMUP; return; }
    const int i = g_eng.n - 2;                       // last CLOSED bar
+   XMakeExit(g_act_p, g_eng.cfg, g_act_x);
    XSignal s;
-   const bool has = g_eng.Evaluate(i, s);
+   const bool has = g_eng.StrategySignal(g_act_s, i, g_act_x, s);
    g_last_reason = s.reason;
    if(!has) return;
    g_last_sig = s;
 
+   if(!g_proven && !(DemoFree() && InpDemoTradeUnproven))
+   {
+      g_skip_note = "signal skipped: no strategy has passed the Strategy Lab on this chart";
+      Print("XAU Sniper: ", g_skip_note);
+      return;
+   }
    // while a loss-streak pause is active, follow the signals on paper so we know when to resume
    if(!DemoFree() && InpPaperResume && StreakPauseActive()) g_paper.Add(g_eng.m_t[i], s.dir, s.sl);
 
@@ -844,7 +870,7 @@ void TryEnter()
    const bool buy = (s.dir > 0);
    const double entry = buy ? tk.ask : tk.bid;
    const double dist = buy ? (entry - s.sl) : (s.sl - entry);
-   if(dist < 0.4 * s.atr || dist > g_eng.cfg.sl_atr_max * s.atr * 1.3)
+   if(dist < 0.4 * s.atr || dist > g_act_x.sl_max_atr * s.atr * 1.3)
    {
       g_skip_note = "signal skipped: price moved, stop distance no longer valid";
       Print("XAU Sniper: ", g_skip_note);
@@ -853,7 +879,7 @@ void TryEnter()
    const double stops = (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * SymbolInfoDouble(_Symbol, SYMBOL_POINT);
    if(dist <= stops) { g_skip_note = "signal skipped: stop inside broker minimum distance"; return; }
 
-   double risk = RiskCapped() * GradeMult(s.grade);
+   double risk = RiskCapped();
    if(g_consec_losses >= 2) risk *= XClamp(InpStreakScale, 0.1, 1.0);
    if(InpD1Scale)
    {
@@ -873,15 +899,22 @@ void TryEnter()
       Print("XAU Sniper: ", g_skip_note);
       return;
    }
+   if(StringLen(lp.src_note) > 0) Print("XAU Sniper: sizing note - ", lp.src_note);
+   // targets in price from the ACTUAL entry, using the profile's multiples
    const double sl = NormalizeDouble(s.sl, _Digits);
-   const double tp = NormalizeDouble(entry + s.dir * g_eng.cfg.tp2_r * dist, _Digits);
-   const string cmt = InpComment + " " + XGradeName(s.grade) + " " + (s.primary >= 0 ? XModuleShort(s.primary) : "-");
+   double tp = 0.0;
+   if(g_act_x.tp2_r > 0.0)                                  tp = entry + s.dir * g_act_x.tp2_r * dist;
+   else if(g_act_x.tp1_r > 0.0 && g_act_x.part >= 0.999)   tp = entry + s.dir * g_act_x.tp1_r * dist;
+   tp = (tp > 0.0) ? NormalizeDouble(tp, _Digits) : 0.0;
+   const string cmt = InpComment + " " + StratCode(g_act_s) + "/" + IntegerToString(g_act_p);
    if(SendOrder(buy, lp.lots, sl, tp, cmt))
    {
+      const ulong ord = g_trade.ResultOrder();
+      if(ord > 0) GlobalVariableSet(GvPos(ord, "X"), (double)g_act_p);
       if(demo && lp.risk_pct > risk * 1.5)
          Print("XAU Sniper: DEMO note - minimum lot risks ", DoubleToString(lp.risk_pct, 1), "% (target ", DoubleToString(risk, 2), "%). A live account would have refused this trade.");
-      Print("XAU Sniper: ", (buy ? "BUY " : "SELL "), DoubleToString(lp.lots, 2), " ", _Symbol, " grade ", XGradeName(s.grade),
-            " entry ", DoubleToString(entry, _Digits), " SL ", DoubleToString(sl, _Digits), " TP2 ", DoubleToString(tp, _Digits),
+      Print("XAU Sniper: ", (buy ? "BUY " : "SELL "), DoubleToString(lp.lots, 2), " ", _Symbol, " [", XStratName(g_act_s), " + ", XExitName(g_act_p), "]",
+            " entry ", DoubleToString(entry, _Digits), " SL ", DoubleToString(sl, _Digits), " TP ", DoubleToString(tp, _Digits),
             " risk ", DoubleToString(lp.risk_pct, 2), "% (", DoubleToString(lp.risk_money, 2), ")");
       g_stats_dirty = true;
       g_paper.Reset();
@@ -912,7 +945,9 @@ void OnTick()
    RefreshNews();
    if(g_stats_dirty) RecomputeStats();
    if(!RefreshEngine()) return;
-   if(!DemoFree() && InpPaperResume && g_paper.pn > 0) g_paper.Update(g_eng);
+   RunLabIfNeeded();
+   CheckMeanExits();
+   if(!DemoFree() && InpPaperResume && g_paper.pn > 0) g_paper.Update(g_eng, g_act_x);
    TryEnter();
    DrawPanel();
 }
@@ -945,56 +980,53 @@ double OnTester()
 }
 
 //+------------------------------------------------------------------+
-//| panel                                                             |
+//| panel (bottom left by default, so it never covers the indicator)  |
 //+------------------------------------------------------------------+
-void PutLine(const int row, const string text, const color clr, const int extra = 0)
-{
-   const int fs = InpFontSize + extra;
-   if(row == 0) g_py = InpPanelY + 8;
-   XObjLabel("XS_P_" + IntegerToString(row), InpPanelX + 10, g_py, text, clr, fs, "Consolas", CORNER_LEFT_UPPER);
-   g_py += fs + 7;
-}
-
 void DrawPanel()
 {
-   if(!InpShowPanel) { ObjectsDeleteAll(0, "XS_"); return; }
-   const color cText = XRGB(214, 222, 235), cDim = XRGB(132, 142, 158), cGreen = XRGB(0, 222, 132);
+   if(!InpShowPanel || (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE))) { g_panel.Clear(); return; }
+   const color cText = XRGB(214, 222, 235), cDim = XRGB(140, 150, 166), cGreen = XRGB(0, 222, 132);
    const color cRed = XRGB(255, 92, 92), cGold = XRGB(255, 200, 64), cCyan = XRGB(64, 200, 255);
    const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
    const int np = CountPositions();
-   XObjRectLabel("XS_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
-   int row = 0;
-   PutLine(row++, "XAU SNIPER  " + XTfName((ENUM_TIMEFRAMES)_Period) + (DemoFree() ? "   [DEMO - free run]" : "   [LIVE rules]"), cGold);
 
+   string mode = "   [LIVE rules]";
+   if(DemoFree()) mode = "   [DEMO - free run]";
    string status = "LOOKING FOR A SETUP";
    color sc = cCyan;
    string sub = StringLen(g_skip_note) > 0 ? g_skip_note : XReasonText(g_last_reason);
-   if(g_kill)                            { status = "STOPPED - loss limit hit"; sc = cRed; sub = "set InpResetKill = true for one start to resume"; }
-   else if(g_week_block || g_day_block)  { status = "PAUSED"; sc = cGold; sub = g_block_note; }
-   else if(np > 0)                       { status = "IN " + IntegerToString(np) + " TRADE" + (np > 1 ? "S" : ""); sc = cGreen; sub = "managing exits: half at target 1, stop to entry, trail, time stop"; }
-   else if(g_news_blocked)               { status = "PAUSED - NEWS"; sc = cGold; sub = g_news_note; }
-   else if(!g_engine_ok)                 { sub = "loading history"; }
-   PutLine(row++, status, sc, 3);
-   PutLine(row++, sub, cDim);
+   if(g_kill)                           { status = "STOPPED - loss limit hit"; sc = cRed; sub = "set InpResetKill = true for one start to resume"; }
+   else if(g_week_block || g_day_block) { status = "PAUSED"; sc = cGold; sub = g_block_note; }
+   else if(np > 0)                      { status = "IN " + IntegerToString(np) + " TRADE"; if(np > 1) status += "S"; sc = cGreen; sub = "managing the exit: " + XExitName(g_act_p); }
+   else if(g_news_blocked)              { status = "PAUSED - NEWS"; sc = cGold; sub = g_news_note; }
+   else if(!g_lab_ok)                   { status = "LEARNING"; sub = "Strategy Lab is testing this chart's history"; }
+   else if(g_act_s < 0)                 { status = "NO STRATEGY YET"; sc = cGold; sub = "not enough trades in the history to judge"; }
+   else if(!g_proven && !(DemoFree() && InpDemoTradeUnproven)) { status = "STANDING ASIDE"; sc = cGold; sub = "nothing passed the Strategy Lab here"; }
 
+   g_panel.Begin();
+   g_panel.Line("XAU SNIPER  " + XTfName((ENUM_TIMEFRAMES)_Period) + mode, cGold);
+   g_panel.Line(status, sc, 3);
+   g_panel.Line(sub, cDim);
+   if(g_act_s >= 0)
+   {
+      string badge = "  [PROVEN]";
+      if(!g_proven) badge = "  [UNPROVEN]";
+      g_panel.Line("Trading: " + XStratName(g_act_s) + " + " + XExitName(g_act_p) + badge, g_proven ? cGreen : cGold);
+      const XStats st = g_lab.lab[g_cell].all;
+      g_panel.Line("Lab here: " + DoubleToString(st.WinRate(), 0) + "% won, avg " + StringFormat("%+.2f", st.Expectancy()) + "R, "
+                   + IntegerToString(st.n) + " trades", cDim);
+   }
    const double dpl = (g_day_start_eq > 0.0) ? 100.0 * (eq - g_day_start_eq) / g_day_start_eq : 0.0;
-   PutLine(row++, "Equity " + DoubleToString(eq, 2) + "   today " + StringFormat("%+.2f%%", dpl) + "   trades today " + IntegerToString(g_trades_today), cText);
+   g_panel.Line("Equity " + DoubleToString(eq, 2) + "   today " + StringFormat("%+.2f%%", dpl) + "   trades today " + IntegerToString(g_trades_today), cText);
    if(g_tot_n > 0)
    {
       const double pf = (g_tot_gross_loss > 1e-9) ? g_tot_gross_win / g_tot_gross_loss : 99.0;
-      PutLine(row++, "Results (45d): " + IntegerToString(g_tot_n) + " trades, " + DoubleToString(100.0 * g_tot_win / g_tot_n, 0) + "% won, profit factor "
-                     + DoubleToString(pf, 2) + ", P/L " + DoubleToString(g_tot_profit, 2), g_tot_profit >= 0.0 ? cGreen : cRed);
+      g_panel.Line("Live results (45 days): " + IntegerToString(g_tot_n) + " trades, " + DoubleToString(100.0 * g_tot_win / g_tot_n, 0) + "% won, P/L "
+                   + DoubleToString(g_tot_profit, 2) + ", profit factor " + DoubleToString(pf, 2), g_tot_profit >= 0.0 ? cGreen : cRed);
    }
-   else PutLine(row++, "Results: no closed trades yet", cDim);
-   if(g_engine_ok)
-   {
-      const int tb = g_eng.m_bias[g_eng.n - 1];
-      PutLine(row++, "Trend " + XTfName(g_htf) + ": " + (tb > 0 ? "UP" : (tb < 0 ? "DOWN" : "SIDEWAYS")) + "   spread "
-                     + DoubleToString((double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * SymbolInfoDouble(_Symbol, SYMBOL_POINT), 2), cDim);
-   }
-   if(InpUseNews && StringFind(g_news_note, " in ") >= 0) PutLine(row++, "News: " + g_news_note, g_news_blocked ? cRed : cDim);
-
-   g_pheight = g_py - InpPanelY + 8;
-   XObjRectLabel("XS_PB", InpPanelX, InpPanelY, 440 + (InpFontSize - 10) * 35, g_pheight, XRGB(16, 20, 28), XRGB(58, 68, 88), CORNER_LEFT_UPPER);
-   for(int k = row; k < 30; k++) XObjDelete("XS_P_" + IntegerToString(k));
+   else g_panel.Line("Live results: no closed trades yet", cDim);
+   const string warn = XAccountWarning(_Symbol);
+   if(StringLen(warn) > 0) g_panel.Line("RISK: " + warn, cRed);
+   if(InpUseNews && StringFind(g_news_note, " in ") >= 0) g_panel.Line("News: " + g_news_note, g_news_blocked ? cRed : cDim);
+   g_panel.End();
 }

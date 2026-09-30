@@ -38,7 +38,19 @@ Probability of **doubling** (P2x), of a month ending **20% or more down** (P-20)
    The tools therefore report expectancy and profit factor next to win-rate.
 5. Small accounts have an additional floor: XAUUSD is 100 oz per lot, so 0.01 lot loses $1 per $1 move.
    With a $10 stop, one minimum lot risks $10; on a $100 account that is 10% per trade.
-   The EA and indicator **refuse** such a trade rather than silently over-risking. Use a cent/micro account, or a larger balance.
+   On a live account the EA **refuses** such a trade rather than silently over-risking; the indicator shows the minimum lot with a warning of the real percentage. Use a cent/micro account, or a larger balance.
+
+## Win-rate is set by the exits
+In a market with no edge the chance of reaching a target T before a stop S is about S / (S + T):
+
+| Target (x stop) | Winners (no edge) | Measured here | Average result |
+|---:|---:|---:|---|
+| 0.5 | 67% | 66.7% | zero minus costs |
+| 0.6 | 62.5% | 62.7% | zero minus costs |
+| 1.0 | 50% | 50.6% | zero minus costs |
+| 2.5 | 29% | - | zero minus costs |
+
+So a 60%+ win-rate is a design choice of the exit. Profit comes only from entries with a real edge; the Strategy Lab requires both (docs/STRATEGY_LAB.md).
 
 ## What the EA does about it
 

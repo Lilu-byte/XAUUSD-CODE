@@ -80,3 +80,22 @@ That is the only question that matters and it has to be answered on real data (s
 * Backtests that show win-rates above ~70% together with strong profit are, far more often than not, curve-fits or unrealistic fills.
 * Costs matter: on M15 a $0.30 round-trip on a ~$8 stop is ~0.04R per trade, which is a large share of a realistic edge.
 * See RISK_MATH.md for what doubling a month would require.
+
+## v2 additions (round 5)
+### New findings from the tests
+| Test | Result |
+|---|---|
+| Fill model vs minute-level truth (8,500 trades per cell) | Candle-path fills: average error 0.001-0.007R. The v1 rule (stop always first) was 0.095-0.110R too harsh. **All v1 trial numbers, including the ones on your screenshots, were about 0.1R per trade too pessimistic** |
+| Win-rate by exit style, no-edge market | Classic 50.6%, High-hit 66.7%, Quick 62.7%, Mean-revert 52.0%: geometry, not skill |
+| Strategy Lab, 32 combinations, 5 synthetic worlds | In trending and bull worlds several combinations reach >= 60% winners with profit; in no-edge and mean-reverting worlds none do (see STRATEGY_LAB.md) |
+| Selection rules, 5 variants, live replay on fresh seeds | Strict rule (1 standard error, whole window, 50 trades, recent fifth still profitable) best everywhere; adopted |
+| Live replay (daily Lab, as the EA trades) | Trend: 66% won, +0.31R, PF 1.88. Bull: 64% won, -0.02R. No-edge: stands aside 93% of days |
+| Indicator vs EA signal windows | 191,872 comparisons across 8 strategies x 4 exits: 0 differences |
+
+### Sources consulted this round
+* Tick-value errors on XAUUSD at some brokers and the OrderCalcProfit fix: MQL5 forum threads [wrong value for SYMBOL_TRADE_TICK_VALUE](https://www.mql5.com/en/forum/444637/page5), [Wrong value returned by SYMBOL_TRADE_TICK_VALUE_LOSS](https://www.mql5.com/en/forum/453450), [What can I use instead of SYMBOL_TRADE_TICK_VALUE](https://www.mql5.com/en/forum/440059).
+* Connors RSI(2) and Double 7s, including a GLD test (~72% winners over 76 trades): [Does Connors Double 7s work on GLD](https://www.edgestacker.com/tools/library/double7-gld/), [MQL5 article on RSI2 mean reversion](https://www.mql5.com/en/articles/17636), [WealthLab RSI2 Connors](https://www.wealth-lab.com/Strategy/RunBacktestPublished?strategyID=5).
+* Internal bar strength: [The IBS Effect: Daily Mean Reversion of Equity Indices](https://www.researchgate.net/publication/256065291_The_IBS_Effect_Daily_Mean_Reversion_of_Equity_Indices), [Using Internal Bar Strength as a Key Indicator (arXiv)](https://arxiv.org/abs/2306.12434).
+* Intraday momentum (first half-hour predicts the last), including precious-metal futures: [Market intraday momentum (JFE)](https://www.sciencedirect.com/science/article/abs/pii/S0304405X18301351), [Intraday return predictability in commodity ETFs](https://pmc.ncbi.nlm.nih.gov/articles/PMC7480318/).
+* Win-rate versus reward-to-risk under a random walk (first-passage probabilities): [TradingView explainer](https://www.tradingview.com/chart/SPX/HUmb4N1D-The-Math-Retail-Traders-Ignore-Risk-Reward-Ratios-Are-Worthless/).
+Market-data hosts (Yahoo, Stooq, Dukascopy, exchanges, FRED, Kaggle) remain blocked from this environment; the export script is the route to real data.
