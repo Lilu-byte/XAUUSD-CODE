@@ -1,0 +1,13 @@
+symbol=XAUUSD
+digits=2
+point=0.01000000
+contract_size=100.00
+tick_size=0.01000000
+tick_value=0.10000000
+tick_value_loss=0.10000000
+loss_1lot_10usd_move=-1000.00
+volume_min=0.01
+volume_step=0.01
+spread_points_now=28
+server_minus_gmt_seconds_now=10800
+account_currency=USD

@@ -23,6 +23,20 @@ echo "[2-4/5] engine harness"
 g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/harness" research/sim/harness.cpp
 "$BIN/harness" all | tee "$OUT/harness_results.txt" | tail -3
 
+echo "[real] broker data in research/data (if any)"
+for f in research/data/XAUUSD_*.csv; do
+  [ -e "$f" ] || continue
+  tf=$(basename "$f" .csv | sed 's/XAUUSD_//')
+  "$BIN/harness" real "$f" auto 2 1 10000 > "$OUT/real_${tf}_results.txt" 2>&1 || true
+  # daily/4-hour files are too short for a 10,000-bar replay window: replay with a shorter one as well
+  case "$tf" in
+    D1) "$BIN/harness" real "$f" auto 2 1 2500 2>&1 | sed -n '/LIVE REPLAY/,$p' >> "$OUT/real_${tf}_results.txt" || true ;;
+    H4) "$BIN/harness" real "$f" auto 2 1 6000 2>&1 | sed -n '/LIVE REPLAY/,$p' >> "$OUT/real_${tf}_results.txt" || true ;;
+  esac
+  "$BIN/harness" realblocks "$f" 5 >> "$OUT/real_${tf}_results.txt" 2>&1 || true
+  echo "  $f -> $OUT/real_${tf}_results.txt"
+done
+
 echo "[5/5] Monte Carlo"
 g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/montecarlo" research/sim/montecarlo.cpp
 "$BIN/montecarlo" > "$OUT/montecarlo_results.md"

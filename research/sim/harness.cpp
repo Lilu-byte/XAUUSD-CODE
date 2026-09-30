@@ -751,46 +751,149 @@ static void test_csv_roundtrip()
    std::remove(path);
 }
 
+// Higher-timeframe bars built from the base bars (weeks start on Sunday, like MT5's W1).
+static std::vector<MqlRates> aggregate(const std::vector<MqlRates> &v, int htf_sec)
+{
+   std::vector<MqlRates> out;
+   for(const MqlRates &r : v)
+   {
+      long long start;
+      if(htf_sec == 604800) { const long long d = r.time / 86400; start = (d - ((d + 4) % 7)) * 86400LL; }
+      else start = r.time - (r.time % htf_sec);
+      if(out.empty() || out.back().time != start)
+      {
+         MqlRates b = r; b.time = start; out.push_back(b);
+      }
+      else
+      {
+         MqlRates &b = out.back();
+         b.high = std::max(b.high, r.high); b.low = std::min(b.low, r.low); b.close = r.close; b.tick_volume += r.tick_volume;
+      }
+   }
+   return out;
+}
+
 static int run_real(int argc, char **argv)
 {
-   // harness real <base.csv> <higher_tf.csv> [gmt_winter_hours=2] [dst: 0 fixed / 1 US / 2 EU = 1]
-   if(argc < 4) { std::printf("usage: harness real BASE.csv HIGHER_TF.csv [gmt_winter_hours] [dst 0/1/2]\n"); return 2; }
+   // harness real <base.csv> <higher_tf.csv | auto> [gmt_winter_hours=2] [dst 0 fixed / 1 US / 2 EU = 1] [lab_bars=10000]
+   if(argc < 4) { std::printf("usage: harness real BASE.csv HIGHER_TF.csv|auto [gmt_winter_hours] [dst 0/1/2] [lab_bars]\n"); return 2; }
    std::vector<MqlRates> base, htf;
-   if(!load_csv(argv[2], base) || !load_csv(argv[3], htf)) { std::printf("cannot read the CSV files\n"); return 2; }
-   const int bs = bar_seconds(base), hs = bar_seconds(htf);
+   if(!load_csv(argv[2], base)) { std::printf("cannot read %s\n", argv[2]); return 2; }
+   base.pop_back();                                  // the export ends with the still-forming bar
+   const int bs = bar_seconds(base);
+   int hs;
+   if(!std::strcmp(argv[3], "auto"))
+   {
+      hs = (bs >= 86400) ? 604800 : ((bs >= 3600) ? 14400 : 3600);
+      htf = aggregate(base, hs);
+      htf.pop_back();                                // last higher-timeframe bar is incomplete
+   }
+   else
+   {
+      if(!load_csv(argv[3], htf)) { std::printf("cannot read %s\n", argv[3]); return 2; }
+      htf.pop_back();
+      hs = bar_seconds(htf);
+   }
    const int gmt = (int)((argc > 4 ? std::atof(argv[4]) : 2.0) * 3600);
    const int dst = argc > 5 ? std::atoi(argv[5]) : 1;
-   std::printf("\n== REAL DATA: %s (%zu bars of %d s) with %s (%zu bars of %d s) ==\n", argv[2], base.size(), bs, argv[3], htf.size(), hs);
-   std::printf("   from %s to %s\n", TimeToString(base.front().time).c_str(), TimeToString(base.back().time).c_str());
-   // 1) the Strategy Lab exactly as the indicator shows it today (last 10,000 bars)
-   const int NL = std::min<int>((int)base.size(), 10000);
+   const int lab_bars = argc > 6 ? std::atoi(argv[6]) : 10000;
+   std::printf("\n== REAL DATA: %s (%zu bars of %d s), higher timeframe %d s (%zu bars) ==\n", argv[2], base.size(), bs, hs, htf.size());
+   std::printf("   from %s to %s | cost per trade %.2f (price units) | lab window %d bars\n",
+               TimeToString(base.front().time).c_str(), TimeToString(base.back().time).c_str(), 0.30, lab_bars);
+   // 1) the Strategy Lab exactly as the indicator shows it today (newest lab_bars bars)
+   const int NL = std::min<int>((int)base.size(), lab_bars);
    std::vector<MqlRates> lb(base.end() - NL, base.end());
    CXauEngine L;
    L.cfg.Defaults(); L.cfg.base_sec = bs; L.cfg.htf_sec = hs; L.cfg.gmt_offset_sec = gmt; L.cfg.dst_mode = dst;
    L.SetBase(lb, NL); L.SetHTF(htf, (int)htf.size());
    if(!L.Compute()) { std::printf("not enough bars\n"); return 2; }
-   L.RunLab(L.cfg.warmup, NL - 2, 60.0, 30, 5);
-   std::printf("  Strategy Lab on the newest %d bars (what the indicator shows):\n", NL);
+   L.RunLab(L.cfg.warmup, NL - 1, 60.0, 50, 5);
+   std::printf("  STRATEGY LAB on the newest %d bars (what the indicator shows today), all 32 combinations:\n", NL);
    for(int k = 0; k < XLAB_CELLS; k++)
    {
       const int c = L.LabRanked(k);
       if(c < 0) break;
       const XStats &x = L.lab[c].all;
-      std::printf("   %s %-26s %-18s won %5.1f%%  avg %+6.3fR  PF %5.2f  n=%d\n", L.lab[c].qualified ? "PASS" : "    ",
-                  XStratName(c / XP_COUNT).c_str(), XExitName(c % XP_COUNT).c_str(), x.WinRate(), x.Expectancy(), x.ProfitFactor(), x.n);
+      const XStats &rc = L.lab[c].recent;
+      std::printf("   %s %-24s %-18s won %5.1f%%  avg %+6.3fR  PF %5.2f  n=%4d | last 40%%: won %5.1f%% avg %+6.3fR n=%d\n",
+                  L.lab[c].qualified ? "PASS" : "    ", XStratName(c / XP_COUNT).c_str(), XExitName(c % XP_COUNT).c_str(),
+                  x.WinRate(), x.Expectancy(), x.ProfitFactor(), x.n, rc.WinRate(), rc.Expectancy(), rc.n);
    }
-   std::printf("  auto-pick walk-forward:");
+   bool proven;
+   const int pick = L.LabActiveCell(50, proven);
+   if(pick >= 0) std::printf("  pick today: %s / %s %s\n", XStratName(pick / XP_COUNT).c_str(), XExitName(pick % XP_COUNT).c_str(), proven ? "[PROVEN]" : "[UNPROVEN]");
+   std::printf("  auto-pick walk-forward (%d folds traded):", L.lab_auto_folds);
    print_stats("", L.lab_auto);
+   // the old v1 composite, for comparison with the terminal screenshots (v1 used the pessimistic fill rule)
+   {
+      XTrial tr;
+      L.cfg.path_mode = 0; L.RunTrial(L.cfg.warmup, NL - 1, tr);
+      std::printf("  v1 confluence + classic exit, v1 fill rule:");
+      print_stats("", tr.all);
+      L.cfg.path_mode = 1; L.RunTrial(L.cfg.warmup, NL - 1, tr);
+      std::printf("  v1 confluence + classic exit, v2 fill rule:");
+      print_stats("", tr.all);
+   }
    // 2) forecaster audit
    XAnalogAudit au;
-   L.AnalogAudit(NL - 2, 4000, 4, au);
-   std::printf("  pattern-match forecast, last 4,000 bars: next bar %.1f%% (n=%d), 4 bars %.1f%%, confident 4-bar calls %.1f%% (n=%d)\n",
-               100.0 * au.Rate(au.hit1, au.n1), au.n1, 100.0 * au.Rate(au.hit4, au.n4), 100.0 * au.Rate(au.hitc4, au.nc4), au.nc4);
-   // 3) live replay over the whole file
-   ReplayOut o;
-   live_replay(base, htf, bs, hs, 10000, 60.0, 30, gmt, dst, o);
-   std::printf("  LIVE REPLAY over the whole file (daily lab, as the EA trades):\n");
-   print_replay("real", o, 0.0);
+   L.AnalogAudit(NL - 1, std::min(NL - 600, 4000), 2, au);
+   std::printf("  pattern-match forecast (walk-forward): next bar %.1f%% right (n=%d), 4 bars %.1f%% (n=%d); confident 4-bar calls %.1f%% (n=%d)\n",
+               100.0 * au.Rate(au.hit1, au.n1), au.n1, 100.0 * au.Rate(au.hit4, au.n4), au.n4, 100.0 * au.Rate(au.hitc4, au.nc4), au.nc4);
+   // 3) live replay over the file
+   if((int)base.size() > lab_bars + 200)
+   {
+      ReplayOut o;
+      live_replay(base, htf, bs, hs, lab_bars, 60.0, 50, gmt, dst, o);
+      std::printf("  LIVE REPLAY from %s (daily Lab on the previous %d bars, trading its pick, as the EA does):\n",
+                  TimeToString(base[lab_bars].time).c_str(), lab_bars);
+      print_replay("real", o, 0.0);
+   }
+   return 0;
+}
+
+
+// Fixed strategies on real data, split into time blocks: is an edge stable or one lucky stretch?
+static int run_real_blocks(int argc, char **argv)
+{
+   if(argc < 3) { std::printf("usage: harness realblocks BASE.csv [years_per_block=4]\n"); return 2; }
+   std::vector<MqlRates> base;
+   if(!load_csv(argv[2], base)) return 2;
+   base.pop_back();
+   const int yrs = argc > 3 ? std::atoi(argv[3]) : 4;
+   const int bs = bar_seconds(base);
+   const int hs = (bs >= 86400) ? 604800 : ((bs >= 3600) ? 14400 : 3600);
+   std::vector<MqlRates> htf = aggregate(base, hs);
+   htf.pop_back();
+   CXauEngine L;
+   L.cfg.Defaults(); L.cfg.base_sec = bs; L.cfg.htf_sec = hs; L.cfg.gmt_offset_sec = 7200; L.cfg.dst_mode = 1;
+   L.SetBase(base, (int)base.size()); L.SetHTF(htf, (int)htf.size());
+   if(!L.Compute()) return 2;
+   L.RunLab(L.cfg.warmup, (int)base.size() - 1, 60.0, 50, 5);
+   const int y0 = XYearOfDays(base[L.cfg.warmup].time / 86400), y1 = XYearOfDays(base.back().time / 86400);
+   std::printf("\n== REAL DATA by period: %s, blocks of %d years (won%% / avg R / trades) ==\n", argv[2], yrs);
+   std::printf("  %-26s %-18s", "strategy", "exit");
+   for(int y = y0; y <= y1; y += yrs) std::printf(" | %4d-%-4d          ", y, std::min(y + yrs - 1, y1));
+   std::printf(" | all\n");
+   for(int c = 0; c < XLAB_CELLS; c++)
+   {
+      if(L.lab[c].all.n < 40) continue;
+      std::printf("  %-26s %-18s", XStratName(c / XP_COUNT).c_str(), XExitName(c % XP_COUNT).c_str());
+      int pos_blocks = 0, blocks = 0;
+      for(int y = y0; y <= y1; y += yrs)
+      {
+         XStats st; st.Reset();
+         for(int q = 0; q < L.m_lt_cnt[c]; q++)
+         {
+            const int kk = c * XLAB_MAXTR + q;
+            const int yy = XYearOfDays(base[L.m_lt_e[kk]].time / 86400);
+            if(yy < y || yy > y + yrs - 1) continue;
+            XTradeResult t; t.Reset(); t.r_net = L.m_lt_r[kk]; st.Add(t);
+         }
+         if(st.n >= 5) { blocks++; if(st.Expectancy() > 0.0) pos_blocks++; }
+         std::printf(" | %3.0f%% %+6.3f %4d", st.WinRate(), st.Expectancy(), st.n);
+      }
+      std::printf(" | %3.0f%% %+6.3f %4d  (%d/%d blocks positive)\n", L.lab[c].all.WinRate(), L.lab[c].all.Expectancy(), L.lab[c].all.n, pos_blocks, blocks);
+   }
    return 0;
 }
 
@@ -1382,6 +1485,7 @@ int main(int argc, char **argv)
    if(!std::strcmp(mode, "replayconfirm"))  run_replay_confirm();
    if(all || !std::strcmp(mode, "replay"))  run_replay_worlds();
    if(!std::strcmp(mode, "real"))           return run_real(argc, argv);
+   if(!std::strcmp(mode, "realblocks"))     return run_real_blocks(argc, argv);
    if(all || !std::strcmp(mode, "orb"))     run_orb_worlds();
    if(all || !std::strcmp(mode, "veto"))    run_veto_ab();
    if(all || !std::strcmp(mode, "turbo"))   run_turbo();
