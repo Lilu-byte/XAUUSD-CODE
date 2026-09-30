@@ -95,6 +95,7 @@ inline string DoubleToString(double v, int digits = 8)
    return string(buf);
 }
 inline int StringLen(const string &s) { return (int)s.size(); }
+inline ushort StringGetCharacter(const string &s, int pos) { return (pos >= 0 && pos < (int)s.size()) ? (ushort)(unsigned char)s[pos] : (ushort)0; }
 template<typename T> inline T fmtarg(T v) { return v; }
 inline const char *fmtarg(const string &s) { return s.c_str(); }
 inline const char *fmtarg(const char *s) { return s; }

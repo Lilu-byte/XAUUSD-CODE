@@ -1,4 +1,4 @@
-# 75+ ideas, and what happened to each
+# 175+ ideas, and what happened to each
 
 Status key: **BUILT** = in the code and on by default. **BUILT (off)** = in the code, off by default. **TESTED - rejected** = tried,
 did not survive. **BACKLOG** = sensible, not done. **REJECTED** = deliberately not done, with the reason.
@@ -252,3 +252,19 @@ Status: **BUILT** (in the code, tested), **BUILT (option)**, **TESTED-OFF**, **P
 | 163 | Stop placed beyond the nearest round number (playbook idea) | PROPOSED |
 | 164 | Lab on M1-resolved fills (exact intrabar order) inside MT5 | PROPOSED |
 | 165 | Martingale / grid recovery | REJECTED: raises win-rate by hiding losses until one wipes the account |
+
+## Round 7: ten ideas to make the demo pay (tested on the real export of 30 Sep 2026)
+Full numbers: [REAL_DATA.md, section 7](REAL_DATA.md#7-round-7-the-demo-screenshot-of-30-sep-2026-and-ten-more-ideas-tested-on-this-data).
+| # | Idea | Status | Evidence / reason |
+|--:|---|---|---|
+| 166 | **Cost guard**: skip setups whose stop is shorter than 20 round-trip costs | BUILT | The only rule that helped in both halves of the M5, M15 and H1 files; in the EA replay at this broker's cost it lifted every timeframe (M5 -0.17R -> -0.01R, M15 -0.02R -> +0.01R, H4 -0.06R -> 0.00R) |
+| 167 | **Account-fit check** in the indicator: "TOO BIG, SKIP" instead of "BUY NOW" when 0.01 lot is over your risk, plus the balance the trade needs | BUILT | The weekly chart said BUY NOW with 514% of the account at risk |
+| 168 | **Demo rehearsal mode** (default): a demo account runs exactly the real-account rules | BUILT | A demo only previews a real account if it trades like one. Free run is still one switch (or the DemoTurbo preset) away. The inputs were renamed so an attached EA does not keep the old free-run values |
+| 169 | **Margin and spread guard** in every mode: no entry with free margin <= 0, margin level < 300%, or a spread above 1.5x the tested cost | BUILT | The screenshot showed margin level 79% and free margin -17.21 |
+| 170 | **Stops for your own trades** (`InpProtectManual`, off by default): positions without a stop get one at a chosen % of equity | BUILT (off) | Two manual sells without a stop were the whole loss on the screenshot. Off by default because it changes trades you opened yourself |
+| 171 | **Panel lines wrap** at 63 characters; weekly/daily charts show days/weeks and dates instead of "504h" and "close by 00:00" | BUILT | MT5 cuts a text label after 63 characters |
+| 172 | Session windows (London, overlap, New York afternoon) | TESTED - not adopted | New York afternoon (17-21 GMT) helped the dips in both halves on all four timeframes, but not in the EA replay (M5 -0.10R, H1 -0.01R). Kept in the engine, off (`dip_gmt_lo`) |
+| 173 | Market-condition filters: volatility, day range used, trend strength, higher-timeframe agreement, volume spike, day of week, 5/20-day momentum | TESTED - rejected | None helped on most timeframes in both halves; several flipped sign between timeframes |
+| 174 | Eight new entry rules (previous-day breakout and sweep, 3 lower closes, Bollinger, Donchian, 50-EMA touch, RSI-2 with higher timeframe, weak close early in the day) | TESTED - rejected | None positive in both halves on H1 or H4 |
+| 175 | Asian-open drift (buy the first hours after the daily break) and buys-only (gold's long drift) | TESTED - rejected | The drift sits in the widest-spread hour and bid-only data cannot show what a buyer pays; buys-only changed results by under 0.04R and flipped sign |
+| 176 | Higher Lab target (65-70%) to raise the win-rate | TESTED - rejected | Real win-rate stayed 61-67% and the average did not improve |

@@ -245,7 +245,14 @@ void XPlanLots(const string sym, const double equity, const double risk_pct, con
 
    double margin = 0.0;
    const ENUM_ORDER_TYPE ot = is_buy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-   if(OrderCalcMargin(ot, sym, lots, price, margin) && margin > 0.0 && free_margin > 0.0)
+   if(free_margin <= 0.0)
+   {
+      // report the size anyway (the indicator shows it), but it cannot be opened
+      p.lots = lots; p.risk_money = lots * loss_per_lot; p.risk_pct = 100.0 * p.risk_money / equity;
+      p.note = "no free margin left: open trades are using all of it";
+      return;
+   }
+   if(OrderCalcMargin(ot, sym, lots, price, margin) && margin > 0.0)
    {
       const double allowed = free_margin * margin_use_frac;
       if(margin > allowed)
@@ -519,12 +526,33 @@ public:
    CXPanel() { m_rows = 0; m_drawn = 0; prefix = "XP_"; font = "Consolas"; x = 12; y = 24; fs = 10; min_w = 300;
                pos = XAU_PANEL_TOP_LEFT; bg = XRGB(16, 20, 28); border = XRGB(58, 68, 88); }
    void Begin() { m_rows = 0; }
+   // MT5 cuts a text label after 63 characters, so longer lines are wrapped at a space
    void Line(const string text, const color clr, const int extra = 0)
    {
-      if(m_rows >= 48) return;
-      m_text[m_rows] = text; m_clr[m_rows] = clr; m_extra[m_rows] = extra; m_rows++;
+      string rest = text;
+      bool first = true;
+      while(m_rows < 48)
+      {
+         string part = rest;
+         const int lim = first ? 62 : 60;
+         if(StringLen(rest) > lim)
+         {
+            int cut = lim;
+            while(cut > 20 && StringGetCharacter(rest, cut) != ' ') cut--;
+            if(cut <= 20) cut = lim;
+            part = StringSubstr(rest, 0, cut);
+            rest = StringSubstr(rest, cut);
+            while(StringLen(rest) > 0 && StringGetCharacter(rest, 0) == ' ') rest = StringSubstr(rest, 1);
+         }
+         else rest = "";
+         m_text[m_rows] = first ? part : "  " + part;
+         m_clr[m_rows] = clr; m_extra[m_rows] = extra; m_rows++;
+         first = false;
+         if(StringLen(rest) == 0) break;
+      }
    }
    int Rows() const { return m_rows; }
+   string Text(const int k) const { return (k >= 0 && k < m_rows) ? m_text[k] : ""; }
    // measured size of the collected lines
    void Measure(int &w, int &h) const
    {

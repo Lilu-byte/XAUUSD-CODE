@@ -86,6 +86,7 @@
 #define XR_SL_WIDE    7
 #define XR_GRADE      8
 #define XR_ANALOG     9
+#define XR_COST       10
 
 //+------------------------------------------------------------------+
 //| small math helpers (avoid MathMax/MathMin overload ambiguity)    |
@@ -175,6 +176,7 @@ string XReasonText(const int r)
       case XR_SL_WIDE:  return "stop would be too wide";
       case XR_GRADE:    return "setup not strong enough";
       case XR_ANALOG:   return "pattern match disagrees with the setup";
+      case XR_COST:     return "setup skipped: stop too short for the spread";
    }
    return "";
 }
@@ -263,7 +265,9 @@ struct XConfig
    int    max_hold_bars;     // 0 = derive from hold_minutes
    int    hold_minutes;
    int    min_hold_bars;
-   double cost_price;        // round-turn spread+slippage in price units (simulation only)
+   double cost_price;        // round-turn spread+slippage in price units (simulation, and the cost guard below)
+   double min_stop_cost;     // cost guard: skip setups whose stop is shorter than this many round-trip costs (0 = off)
+   double dip_gmt_lo, dip_gmt_hi;   // dip strategies enter only in this GMT window on charts up to H1 (lo < 0 = all day)
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
 
    // forecast
@@ -296,7 +300,8 @@ struct XConfig
       sl_atr_min = 0.9;  sl_atr_max = 2.6;  sl_buffer_atr = 0.15;  sl_lookback = 3;
       tp1_r = 1.0;  tp2_r = 2.5;  partial_pct = 0.5;  trail_atr = 2.0;
       max_hold_bars = 0;  hold_minutes = 480;  min_hold_bars = 8;
-      cost_price = 0.30;  path_mode = 1;
+      cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
+      dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
    }
@@ -329,6 +334,19 @@ string XExitName(const int p)
       case XP_HIGHHIT: return "High-hit 0.5R";
       case XP_QUICK:   return "Quick 0.6R";
       case XP_MEANREV: return "Mean-revert exit";
+   }
+   return "?";
+}
+
+// short form for tables that must fit MT5's 63-character label limit
+string XExitShort(const int p)
+{
+   switch(p)
+   {
+      case XP_CLASSIC: return "Classic";
+      case XP_HIGHHIT: return "High-hit";
+      case XP_QUICK:   return "Quick";
+      case XP_MEANREV: return "Mean-rev";
    }
    return "?";
 }
@@ -902,7 +920,7 @@ public:
             XAnalog an0;
             if(AnalogQuery(i, an0) && AnalogConfident(an0) && an0.dir4 != d) { s.dir = 0; s.reason = XR_ANALOG; return false; }
          }
-         if(!BuildPlan(i, d, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
+         if(!BuildPlan(i, d, s)) { s.dir = 0; if(s.reason != XR_COST) s.reason = XR_SL_WIDE; return false; }
          s.reason = XR_OK;
          return true;
       }
@@ -934,7 +952,7 @@ public:
          XAnalog an;
          if(AnalogQuery(i, an) && AnalogConfident(an) && an.dir4 != dir) { s.dir = 0; s.reason = XR_ANALOG; return false; }
       }
-      if(!BuildPlan(i, dir, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
+      if(!BuildPlan(i, dir, s)) { s.dir = 0; if(s.reason != XR_COST) s.reason = XR_SL_WIDE; return false; }
       s.reason = XR_OK;
       return true;
    }
@@ -966,6 +984,9 @@ public:
          if(dist < slmin * a) { sl = entry + slmin * a; dist = sl - entry; }
       }
       if(dist > slmax * a) return false;
+      // cost guard: on real data a stop shorter than 20 round-trip costs lost money on every timeframe tested
+      // (docs/REAL_DATA.md, section 7): the spread alone takes 5%+ of every trade
+      if(cfg.min_stop_cost > 0.0 && dist < cfg.min_stop_cost * cfg.cost_price) { s.reason = XR_COST; return false; }
       s.entry = entry; s.sl = sl; s.risk = dist; s.atr = a;
       s.tp1 = (tp1_r > 0.0) ? entry + dir * tp1_r * dist : 0.0;
       s.tp2 = (tp2_r > 0.0) ? entry + dir * tp2_r * dist : 0.0;
@@ -1172,12 +1193,23 @@ public:
       return 0;
    }
 
+   // True when a dip strategy may enter after bar i: inside the configured GMT window (charts up to H1 only).
+   bool DipWindowOk(const int i) const
+   {
+      if(cfg.dip_gmt_lo < 0.0 || cfg.base_sec > 3600) return true;
+      double h = m_hour[i] + cfg.base_sec / 3600.0;           // entry = the next bar's open, GMT clock
+      if(h >= 24.0) h -= 24.0;
+      if(cfg.dip_gmt_lo <= cfg.dip_gmt_hi) return (h >= cfg.dip_gmt_lo && h < cfg.dip_gmt_hi);
+      return (h >= cfg.dip_gmt_lo || h < cfg.dip_gmt_hi);   // window across midnight
+   }
+
    // Direction strategy s wants to trade after closed bar i (0 = nothing). Uses data <= i only.
    int StrategyDir(const int st, const int i) const
    {
       if(i < cfg.warmup + 10 || i >= n) return 0;
       const int o = i * XM_COUNT;
       const int t = TrendDir(i);
+      if((st == XS_DIP || st == XS_DOUBLE7 || st == XS_IBS) && !DipWindowOk(i)) return 0;
       switch(st)
       {
          case XS_CONFLUENCE:
@@ -1256,7 +1288,7 @@ public:
       if(sig.score >= cfg.score_min + cfg.grade_a_add) sig.grade = 2;
       if(sig.score >= cfg.score_min + cfg.grade_ap_add && sig.n_agree >= 3) sig.grade = 3;
       if(!BuildPlanEx(i, d, sig, x.sl_min_atr, x.sl_max_atr, x.tp1_r, (x.tp2_r > 0.0) ? x.tp2_r : ((x.part >= 0.999) ? x.tp1_r : 0.0)))
-      { sig.dir = 0; sig.reason = XR_SL_WIDE; return false; }
+      { sig.dir = 0; if(sig.reason != XR_COST) sig.reason = XR_SL_WIDE; return false; }
       sig.reason = XR_OK;
       return true;
    }

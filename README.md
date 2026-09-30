@@ -8,8 +8,25 @@ every day a **Strategy Lab** tests 8 strategies x 4 exit styles on your chart's 
 **at least 60% of its trades with a positive average result**, measured walk-forward. When nothing qualifies, the EA stands aside on a live account.
 
 * **Win-rate alone means little.** A target half as far as the stop wins ~67% of trades even in a random market, and still loses money after costs. The tools therefore always show win-rate **and** the average result per trade (R). See [docs/STRATEGY_LAB.md](docs/STRATEGY_LAB.md).
-* **Tested on synthetic markets, not yet on real gold.** In a trending test market the full system (daily Lab + trading, replayed day by day) won **66% of trades at +0.31R** each; in a market with no edge it stood aside on 93% of days. Real XAUUSD has to be tested on your data: run `XAU_DataExport.mq5` and follow [docs/TESTING.md](docs/TESTING.md).
+* **Tested on your real XAUUSD history (M5 to D1, up to 22 years).** Replayed day by day exactly as the EA trades, it wins **58-65% of trades
+  at about break-even** (within +-0.05R per trade) on every timeframe, at this broker's cost. The 60% win-rate goal is met; a reliable profit
+  is not, and no filter tested so far supplies one. Details: [docs/REAL_DATA.md](docs/REAL_DATA.md).
+* **A demo account cannot guarantee a real one.** Treat the demo as a rehearsal: same balance you would really deposit, same rules
+  (the EA's default *Demo mode = Rehearsal*), and judge it after 100+ trades, not after 3.
 * **"Double every month" needs about 10% risk per trade** and fails most months even with a strong edge ([docs/RISK_MATH.md](docs/RISK_MATH.md)). The EA caps risk at 5% per trade.
+
+## What changed in round 7 (demo screenshot of 30 Sep 2026)
+| Seen on your screen | Changed |
+|---|---|
+| Equity 66 of 98: two manual sells with **no stop loss**, margin level 79% | EA: no entry while free margin <= 0 or margin level < 300% (every mode). Optional *InpProtectManual* puts a stop on positions that have none |
+| Weekly chart "BUY NOW", 0.01 lot = 514% of the account | Indicator: **TOO BIG, SKIP** with the balance that trade needs; no alert for trades the account cannot carry |
+| EA "[DEMO - free run]" trading an UNPROVEN strategy | New *Demo mode* input, default **Rehearsal** = real-account rules. The old inputs were renamed, so the attached EA cannot keep the old values |
+| Panel lines cut off | MT5 cuts labels at 63 characters; lines now wrap |
+| Losses from spread on short stops (real data) | **Cost guard**: no setup with a stop shorter than 20 round-trip costs. EA replay at this broker's cost: M5 -0.17R -> -0.01R, M15 -0.02R -> +0.01R per trade |
+
+**Account size.** 0.01 lot of gold moves 1 USD per 1 USD. For 1% risk at 0.01 lot you need roughly 550 USD on M5, 1,100 on M15,
+2,400 on H1 and 5,300 on H4 (Sep 2026 volatility). On about 100 USD every trade risks 5-25% of the account. Open a demo with the balance you
+would really deposit, or use a cent account.
 
 ## What changed in v2 (from your live screenshots)
 | Seen on your screen | Fixed |
@@ -35,7 +52,8 @@ every day a **Strategy Lab** tests 8 strategies x 4 exit styles on your chart's 
 * Trades exactly the Lab's choice, with its exit style: partial at the first target, break-even, trail, mean-reversion exit, time stop.
 * Sizes every trade from the broker's profit formula; refuses trades the minimum lot would over-risk (live accounts).
 * Daily and weekly loss limits, drawdown kill-switch, loss-streak pause with paper-trade resume, spread / session / news filters, Friday flatten.
-* **Demo mode**: on demo accounts the protections only warn and it can trade the closest strategy even when none passed (labelled UNPROVEN), so you can watch it work.
+* **Demo mode**: *Rehearsal* (default) runs a demo exactly like a real account. *Free run* (or the DemoTurbo preset) turns the protections into warnings and can trade the closest strategy when none passed (labelled UNPROVEN), capped at 10% of equity per trade, so you can watch it work.
+* Cost guard, margin and spread checks before every entry; optional stops for your own trades that have none.
 
 ### `XAU_DataExport` (script)
 Saves your broker's XAUUSD history (M5 to D1) and contract details to CSV. Share the folder and every test in `research/` can be re-run on real data.
@@ -44,7 +62,7 @@ Saves your broker's XAUUSD history (M5 to D1) and contract details to CSV. Share
 1. Copy `MQL5/Indicators/XAU_Oracle.mq5`, `MQL5/Experts/XAU_Sniper_EA.mq5` and `MQL5/Scripts/XAU_DataExport.mq5` into your terminal's `MQL5` folder (File > Open Data Folder). Each is one self-contained file. See [docs/INSTALL.md](docs/INSTALL.md).
 2. Compile them in MetaEditor (F7).
 3. Put the indicator on an XAUUSD chart (M15 or H1). Read the scoreboard: is anything marked PASS?
-4. Run the EA on a demo account with `XAU_Sniper_Balanced.set` (or `XAU_Sniper_DemoTurbo.set` to watch many trades).
+4. **Remove the old EA from the chart and attach it again** (MT5 keeps an attached EA's old inputs after a recompile), then load `XAU_Sniper_Balanced.set` on a demo account (or `XAU_Sniper_DemoTurbo.set` to watch many trades).
 5. Run `XAU_DataExport` once and send the files, so the Lab can be checked against real gold.
 
 ## Repository layout
@@ -54,7 +72,7 @@ MQL5/Experts/XAU_Sniper_EA.mq5      the EA (single file, generated)
 MQL5/Scripts/XAU_DataExport.mq5     history export script
 MQL5/Presets/*.set                  7 EA profiles, generated from the EA's inputs
 src/                                editable sources (engine, platform layer, the three programs)
-docs/                               Strategy Lab, ideas (165), research, risk maths, install, testing, reviews
+docs/                               Strategy Lab, ideas (176), real-data results, research, risk maths, install, testing, reviews
 research/                           bundler, preset generator, C++ harness, MT5 mock, Monte Carlo, results
 ```
 Edit `src/`, then run `research/run_checks.sh`: it rebuilds the MT5 files and presets and re-runs every test.
@@ -64,7 +82,7 @@ Edit `src/`, then run `research/run_checks.sh`: it rebuilds the MT5 files and pr
 |---|---|
 | All three programs type-check against a mock of the MT5 API | Compilation in MetaEditor itself |
 | Lot sizing correct even when the broker's tick value is 10x wrong | Behaviour on real XAUUSD ticks |
-| Fill model within 0.007R of minute-level truth | Profitability or win-rate on real gold |
+| Fill model within 0.007R of minute-level truth | Future profitability on real gold (the past, replayed: about break-even, 58-65% winners) |
 | No look-ahead in signals, forecasts, the opening range or the Lab | Broker quirks (fills, stops level, clock) |
 | EA (3,000 bars) and indicator (10,000 bars) give identical signals: 191,872 comparisons, 0 differences | Any future performance |
 | On markets with no edge, the Lab and the forecaster do not invent one | |

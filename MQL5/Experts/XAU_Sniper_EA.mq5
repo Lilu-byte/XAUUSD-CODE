@@ -120,6 +120,7 @@
 #define XR_SL_WIDE    7
 #define XR_GRADE      8
 #define XR_ANALOG     9
+#define XR_COST       10
 
 //+------------------------------------------------------------------+
 //| small math helpers (avoid MathMax/MathMin overload ambiguity)    |
@@ -209,6 +210,7 @@ string XReasonText(const int r)
       case XR_SL_WIDE:  return "stop would be too wide";
       case XR_GRADE:    return "setup not strong enough";
       case XR_ANALOG:   return "pattern match disagrees with the setup";
+      case XR_COST:     return "setup skipped: stop too short for the spread";
    }
    return "";
 }
@@ -297,7 +299,9 @@ struct XConfig
    int    max_hold_bars;     // 0 = derive from hold_minutes
    int    hold_minutes;
    int    min_hold_bars;
-   double cost_price;        // round-turn spread+slippage in price units (simulation only)
+   double cost_price;        // round-turn spread+slippage in price units (simulation, and the cost guard below)
+   double min_stop_cost;     // cost guard: skip setups whose stop is shorter than this many round-trip costs (0 = off)
+   double dip_gmt_lo, dip_gmt_hi;   // dip strategies enter only in this GMT window on charts up to H1 (lo < 0 = all day)
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
 
    // forecast
@@ -330,7 +334,8 @@ struct XConfig
       sl_atr_min = 0.9;  sl_atr_max = 2.6;  sl_buffer_atr = 0.15;  sl_lookback = 3;
       tp1_r = 1.0;  tp2_r = 2.5;  partial_pct = 0.5;  trail_atr = 2.0;
       max_hold_bars = 0;  hold_minutes = 480;  min_hold_bars = 8;
-      cost_price = 0.30;  path_mode = 1;
+      cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
+      dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
    }
@@ -363,6 +368,19 @@ string XExitName(const int p)
       case XP_HIGHHIT: return "High-hit 0.5R";
       case XP_QUICK:   return "Quick 0.6R";
       case XP_MEANREV: return "Mean-revert exit";
+   }
+   return "?";
+}
+
+// short form for tables that must fit MT5's 63-character label limit
+string XExitShort(const int p)
+{
+   switch(p)
+   {
+      case XP_CLASSIC: return "Classic";
+      case XP_HIGHHIT: return "High-hit";
+      case XP_QUICK:   return "Quick";
+      case XP_MEANREV: return "Mean-rev";
    }
    return "?";
 }
@@ -936,7 +954,7 @@ public:
             XAnalog an0;
             if(AnalogQuery(i, an0) && AnalogConfident(an0) && an0.dir4 != d) { s.dir = 0; s.reason = XR_ANALOG; return false; }
          }
-         if(!BuildPlan(i, d, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
+         if(!BuildPlan(i, d, s)) { s.dir = 0; if(s.reason != XR_COST) s.reason = XR_SL_WIDE; return false; }
          s.reason = XR_OK;
          return true;
       }
@@ -968,7 +986,7 @@ public:
          XAnalog an;
          if(AnalogQuery(i, an) && AnalogConfident(an) && an.dir4 != dir) { s.dir = 0; s.reason = XR_ANALOG; return false; }
       }
-      if(!BuildPlan(i, dir, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
+      if(!BuildPlan(i, dir, s)) { s.dir = 0; if(s.reason != XR_COST) s.reason = XR_SL_WIDE; return false; }
       s.reason = XR_OK;
       return true;
    }
@@ -1000,6 +1018,9 @@ public:
          if(dist < slmin * a) { sl = entry + slmin * a; dist = sl - entry; }
       }
       if(dist > slmax * a) return false;
+      // cost guard: on real data a stop shorter than 20 round-trip costs lost money on every timeframe tested
+      // (docs/REAL_DATA.md, section 7): the spread alone takes 5%+ of every trade
+      if(cfg.min_stop_cost > 0.0 && dist < cfg.min_stop_cost * cfg.cost_price) { s.reason = XR_COST; return false; }
       s.entry = entry; s.sl = sl; s.risk = dist; s.atr = a;
       s.tp1 = (tp1_r > 0.0) ? entry + dir * tp1_r * dist : 0.0;
       s.tp2 = (tp2_r > 0.0) ? entry + dir * tp2_r * dist : 0.0;
@@ -1206,12 +1227,23 @@ public:
       return 0;
    }
 
+   // True when a dip strategy may enter after bar i: inside the configured GMT window (charts up to H1 only).
+   bool DipWindowOk(const int i) const
+   {
+      if(cfg.dip_gmt_lo < 0.0 || cfg.base_sec > 3600) return true;
+      double h = m_hour[i] + cfg.base_sec / 3600.0;           // entry = the next bar's open, GMT clock
+      if(h >= 24.0) h -= 24.0;
+      if(cfg.dip_gmt_lo <= cfg.dip_gmt_hi) return (h >= cfg.dip_gmt_lo && h < cfg.dip_gmt_hi);
+      return (h >= cfg.dip_gmt_lo || h < cfg.dip_gmt_hi);   // window across midnight
+   }
+
    // Direction strategy s wants to trade after closed bar i (0 = nothing). Uses data <= i only.
    int StrategyDir(const int st, const int i) const
    {
       if(i < cfg.warmup + 10 || i >= n) return 0;
       const int o = i * XM_COUNT;
       const int t = TrendDir(i);
+      if((st == XS_DIP || st == XS_DOUBLE7 || st == XS_IBS) && !DipWindowOk(i)) return 0;
       switch(st)
       {
          case XS_CONFLUENCE:
@@ -1290,7 +1322,7 @@ public:
       if(sig.score >= cfg.score_min + cfg.grade_a_add) sig.grade = 2;
       if(sig.score >= cfg.score_min + cfg.grade_ap_add && sig.n_agree >= 3) sig.grade = 3;
       if(!BuildPlanEx(i, d, sig, x.sl_min_atr, x.sl_max_atr, x.tp1_r, (x.tp2_r > 0.0) ? x.tp2_r : ((x.part >= 0.999) ? x.tp1_r : 0.0)))
-      { sig.dir = 0; sig.reason = XR_SL_WIDE; return false; }
+      { sig.dir = 0; if(sig.reason != XR_COST) sig.reason = XR_SL_WIDE; return false; }
       sig.reason = XR_OK;
       return true;
    }
@@ -2700,7 +2732,14 @@ void XPlanLots(const string sym, const double equity, const double risk_pct, con
 
    double margin = 0.0;
    const ENUM_ORDER_TYPE ot = is_buy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-   if(OrderCalcMargin(ot, sym, lots, price, margin) && margin > 0.0 && free_margin > 0.0)
+   if(free_margin <= 0.0)
+   {
+      // report the size anyway (the indicator shows it), but it cannot be opened
+      p.lots = lots; p.risk_money = lots * loss_per_lot; p.risk_pct = 100.0 * p.risk_money / equity;
+      p.note = "no free margin left: open trades are using all of it";
+      return;
+   }
+   if(OrderCalcMargin(ot, sym, lots, price, margin) && margin > 0.0)
    {
       const double allowed = free_margin * margin_use_frac;
       if(margin > allowed)
@@ -2974,12 +3013,33 @@ public:
    CXPanel() { m_rows = 0; m_drawn = 0; prefix = "XP_"; font = "Consolas"; x = 12; y = 24; fs = 10; min_w = 300;
                pos = XAU_PANEL_TOP_LEFT; bg = XRGB(16, 20, 28); border = XRGB(58, 68, 88); }
    void Begin() { m_rows = 0; }
+   // MT5 cuts a text label after 63 characters, so longer lines are wrapped at a space
    void Line(const string text, const color clr, const int extra = 0)
    {
-      if(m_rows >= 48) return;
-      m_text[m_rows] = text; m_clr[m_rows] = clr; m_extra[m_rows] = extra; m_rows++;
+      string rest = text;
+      bool first = true;
+      while(m_rows < 48)
+      {
+         string part = rest;
+         const int lim = first ? 62 : 60;
+         if(StringLen(rest) > lim)
+         {
+            int cut = lim;
+            while(cut > 20 && StringGetCharacter(rest, cut) != ' ') cut--;
+            if(cut <= 20) cut = lim;
+            part = StringSubstr(rest, 0, cut);
+            rest = StringSubstr(rest, cut);
+            while(StringLen(rest) > 0 && StringGetCharacter(rest, 0) == ' ') rest = StringSubstr(rest, 1);
+         }
+         else rest = "";
+         m_text[m_rows] = first ? part : "  " + part;
+         m_clr[m_rows] = clr; m_extra[m_rows] = extra; m_rows++;
+         first = false;
+         if(StringLen(rest) == 0) break;
+      }
    }
    int Rows() const { return m_rows; }
+   string Text(const int k) const { return (k >= 0 && k < m_rows) ? m_text[k] : ""; }
    // measured size of the collected lines
    void Measure(int &w, int &h) const
    {
@@ -3095,6 +3155,13 @@ bool XRunDailyLab(CXauEngine &le, const string sym, const ENUM_TIMEFRAMES tf, co
 // "double every month" target: see docs/RISK_MATH.md before raising it.
 #define XS_MAX_RISK_PCT 5.0
 
+// How the EA behaves on a DEMO account. Real accounts always use the real-account rules.
+enum ENUM_XAU_DEMO
+{
+   XAU_DEMO_REHEARSAL = 0,   // Rehearsal: exactly the real-account rules (the demo proves what a real account would do)
+   XAU_DEMO_FREE      = 1    // Free run: protections only warn, more trades (not a preview of a real account)
+};
+
 //--- inputs -----------------------------------------------------------
 input group "=== What to trade ==="
 input ENUM_XAU_STRAT InpStrategy     = XAU_ST_AUTO;  // Strategy (AUTO = the one that passed the Strategy Lab here)
@@ -3104,7 +3171,6 @@ input int    InpLabMinTrades         = 50;     // Strategy Lab: minimum trades b
 input int    InpLabFolds             = 5;      // Strategy Lab: walk-forward folds
 input int    InpHistoryBars          = 10000;  // Bars the lab tests (keep equal to the indicator's setting)
 input int    InpSignalBars           = 3000;   // Bars used for live signals (faster; same signals, tested)
-input bool   InpDemoTradeUnproven    = false;  // DEMO accounts only: also trade the closest strategy when none passed the lab (lost on real data, see docs/REAL_DATA.md)
 
 input group "=== Risk ==="
 input double InpRiskPct         = 1.0;    // Risk per trade, % of equity (hard ceiling 5)
@@ -3114,9 +3180,15 @@ input double InpMaxLots         = 0.0;    // Absolute lot cap (0 = none)
 input double InpMarginUsePct    = 50.0;   // Max % of free margin one trade may use
 input double InpMaxRiskOverrun  = 1.5;    // Refuse trade if min lot risks more than this x requested
 
-input group "=== Demo testing ==="
-input bool   InpDemoUnlocked    = true;   // On a DEMO account every protection below only WARNS. Ignored on real accounts
-input int    InpDemoMaxPositions = 5;     // Simultaneous EA trades allowed while demo-unlocked
+input group "=== Demo accounts ==="
+input ENUM_XAU_DEMO InpDemoMode = XAU_DEMO_REHEARSAL;  // REHEARSAL = real-account rules (recommended); FREE RUN = warnings only. Ignored on real accounts
+input bool   InpDemoUnproven    = false;  // Free run only: also trade the closest strategy when none passed the lab (lost on real data)
+input double InpDemoMaxRiskPct  = 10.0;   // Free run only: skip a trade when even the smallest lot risks more than this % of equity
+input int    InpDemoMaxPositions = 5;     // Free run only: simultaneous EA trades
+
+input group "=== Your own trades ==="
+input bool   InpProtectManual   = false;  // Add a stop to ANY position on this symbol that has none (your manual trades too)
+input double InpProtectPct      = 5.0;    // ...placed where that position would lose this % of equity (from now if it is already losing)
 
 input group "=== Account protection ==="
 input double InpDailyLossPct    = 3.0;    // Stop for the day at this equity loss (0 = off)
@@ -3165,6 +3237,8 @@ input double InpTrailATR        = 2.0;    // Classic exit: trail distance (ATR)
 input double InpSLMinATR        = 0.9;    // Minimum stop distance (ATR)
 input double InpSLMaxATR        = 2.6;    // Skip setups needing a wider stop (ATR)
 input int    InpHoldMinutes     = 480;    // Time stop for trades that go nowhere
+input double InpCostPrice       = 0.35;   // Round-trip spread + slippage charged per tested trade (price units; keep equal to the indicator)
+input double InpMinStopCosts    = 20.0;   // Skip setups whose stop is shorter than this many round-trip costs (0 = off; keep equal to the indicator)
 input string InpInterSymbol     = "";     // DXY-like symbol (blank = auto / EURUSD fallback)
 
 input group "=== Execution ==="
@@ -3206,6 +3280,8 @@ bool     g_engine_ok = false;
 XSignal  g_last_sig;
 int      g_last_reason = XR_WARMUP;
 string   g_skip_note = "";
+bool     g_small = false;        // the last sized signal was refused: the account is too small for the smallest lot
+string   g_small_note = "";
 datetime g_last_loss_bar = 0;
 
 // strategy in use
@@ -3246,10 +3322,15 @@ string GvPos(const ulong ticket, const string tag)
    return "XSP_" + IntegerToString((long)ticket) + "_" + tag;
 }
 
-// True only on a DEMO account with the unlock switched on. Real accounts always keep every protection.
+bool IsDemo()
+{
+   return AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_DEMO;
+}
+
+// True only on a DEMO account set to free run. Real accounts (and demo rehearsal) keep every protection.
 bool DemoFree()
 {
-   return InpDemoUnlocked && (AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_DEMO);
+   return InpDemoMode == XAU_DEMO_FREE && IsDemo();
 }
 
 double RiskCapped()
@@ -3299,9 +3380,9 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf)
    c.sl_atr_min = InpSLMinATR;
    c.sl_atr_max = XMax(InpSLMaxATR, InpSLMinATR + 0.1);
    c.hold_minutes = InpHoldMinutes;
-   const double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
-   const double sp = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * pt;
-   c.cost_price = XMax(sp * 1.5, 0.10);
+   // a fixed cost (not the spread of the moment) so the EA and the indicator test and choose alike
+   c.cost_price = XMax(InpCostPrice, 0.01);
+   c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
 }
 
 //+------------------------------------------------------------------+
@@ -3339,8 +3420,9 @@ int OnInit()
    {
       GlobalVariableDel(GvName("KILL"));
       GlobalVariableDel(GvName("PEAK"));
-      Print("XAU Sniper: DEMO account - guardrails are warnings only (InpDemoUnlocked). Real accounts keep every protection.");
+      Print("XAU Sniper: DEMO free run - guardrails are warnings only. This is not a preview of a real account.");
    }
+   else if(IsDemo()) Print("XAU Sniper: DEMO rehearsal - the same rules as a real account (InpDemoMode).");
    g_kill = GlobalVariableCheck(GvName("KILL"));
    g_peak_eq = GlobalVariableCheck(GvName("PEAK")) ? GlobalVariableGet(GvName("PEAK")) : eq;
    if(g_peak_eq < eq) g_peak_eq = eq;
@@ -3783,9 +3865,24 @@ bool StreakPauseActive()
    return true;
 }
 
+// Checks that hold in every mode, demo free run included: they protect the account from a margin call
+// and from paying more spread than the Strategy Lab assumed.
+string TechnicalBlock()
+{
+   if(AccountInfoDouble(ACCOUNT_MARGIN_FREE) <= 0.0) return "no free margin: open trades are using all of it";
+   const double ml = AccountInfoDouble(ACCOUNT_MARGIN_LEVEL);
+   if(ml > 0.0 && ml < 300.0) return "margin level " + DoubleToString(ml, 0) + "% is too low for another trade";
+   MqlTick tk;
+   if(SymbolInfoTick(_Symbol, tk) && InpCostPrice > 0.0 && tk.ask - tk.bid > 1.5 * InpCostPrice)
+      return "spread " + DoubleToString(tk.ask - tk.bid, 2) + " is above 1.5x the tested cost (" + DoubleToString(InpCostPrice, 2) + ")";
+   return "";
+}
+
 // returns "" when a new entry is allowed
 string EntryBlocked(const XSignal &s)
 {
+   const string tb = TechnicalBlock();
+   if(StringLen(tb) > 0) return tb;
    if(DemoFree())
    {
       // demo: only hard technical limits apply; every risk rule is a warning
@@ -3922,7 +4019,7 @@ void TryEnter()
    if(!has) return;
    g_last_sig = s;
 
-   if(!g_proven && !(DemoFree() && InpDemoTradeUnproven))
+   if(!g_proven && !(DemoFree() && InpDemoUnproven))
    {
       g_skip_note = "signal skipped: no strategy has passed the Strategy Lab on this chart";
       Print("XAU Sniper: ", g_skip_note);
@@ -3960,11 +4057,25 @@ void TryEnter()
 
    XLotPlan lp;
    const bool demo = DemoFree();
-   XPlanLots(_Symbol, AccountInfoDouble(ACCOUNT_EQUITY), risk, dist, buy, entry, demo ? 1000.0 : InpMaxRiskOverrun,
-             InpMaxLots, AccountInfoDouble(ACCOUNT_MARGIN_FREE), demo ? 0.95 : XClamp(InpMarginUsePct, 5.0, 95.0) / 100.0, lp);
+   // free run may exceed the chosen risk with the smallest lot, but never beyond InpDemoMaxRiskPct of equity
+   const double overrun = demo ? XMax(InpMaxRiskOverrun, XClamp(InpDemoMaxRiskPct, 0.5, 50.0) / XMax(risk, 0.01)) : InpMaxRiskOverrun;
+   XPlanLots(_Symbol, AccountInfoDouble(ACCOUNT_EQUITY), risk, dist, buy, entry, overrun,
+             InpMaxLots, AccountInfoDouble(ACCOUNT_MARGIN_FREE), XClamp(InpMarginUsePct, 5.0, 95.0) / 100.0, lp);
    if(!lp.ok)
    {
       g_skip_note = "signal skipped: " + lp.note;
+      if(StringFind(lp.note, "account too small") >= 0)
+      {
+         // tell the user what balance this trade needs at the chosen risk
+         string snote = "";
+         const double per_lot = XLossPerLot(_Symbol, buy, entry, dist, snote);
+         const double vmin = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+         if(per_lot > 0.0 && vmin > 0.0)
+            g_skip_note += "; this trade needs about " + DoubleToString(vmin * per_lot * 100.0 / XMax(risk, 0.01), 0) + " " +
+                           AccountInfoString(ACCOUNT_CURRENCY) + " at " + DoubleToString(risk, 1) + "% risk";
+         g_small = true;
+         g_small_note = g_skip_note;
+      }
       Print("XAU Sniper: ", g_skip_note);
       return;
    }
@@ -3976,6 +4087,7 @@ void TryEnter()
    else if(g_act_x.tp1_r > 0.0 && g_act_x.part >= 0.999)   tp = entry + s.dir * g_act_x.tp1_r * dist;
    tp = (tp > 0.0) ? NormalizeDouble(tp, _Digits) : 0.0;
    const string cmt = InpComment + " " + StratCode(g_act_s) + "/" + IntegerToString(g_act_p);
+   g_small = false;
    if(SendOrder(buy, lp.lots, sl, tp, cmt))
    {
       const ulong ord = g_trade.ResultOrder();
@@ -3987,6 +4099,49 @@ void TryEnter()
             " risk ", DoubleToString(lp.risk_pct, 2), "% (", DoubleToString(lp.risk_money, 2), ")");
       g_stats_dirty = true;
       g_paper.Reset();
+   }
+}
+
+//+------------------------------------------------------------------+
+// Optional (InpProtectManual): give every position on this symbol that has no stop loss one, manual trades
+// included. The stop sits where the position would lose InpProtectPct of equity; a position that is already
+// losing more than that gets its stop InpProtectPct of equity beyond the current price, so the damage is
+// capped from here on instead of being closed at once.
+void ProtectManual()
+{
+   if(!InpProtectManual || InpProtectPct <= 0.0) return;
+   static datetime s_last = 0;
+   if(TimeCurrent() - s_last < 30) return;
+   s_last = TimeCurrent();
+   const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(eq <= 0.0) return;
+   MqlTick tk;
+   if(!SymbolInfoTick(_Symbol, tk)) return;
+   const double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   const double stops = (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * pt;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      const ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if(PositionGetDouble(POSITION_SL) > 0.0) continue;
+      const bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      const double vol = PositionGetDouble(POSITION_VOLUME);
+      const double open = PositionGetDouble(POSITION_PRICE_OPEN);
+      const double tp = PositionGetDouble(POSITION_TP);
+      string note = "";
+      const double per_unit = XLossPerLot(_Symbol, buy, open, 1.0, note);   // money per lot for a 1.0 price move
+      if(per_unit <= 0.0 || vol <= 0.0) continue;
+      const double dist = eq * InpProtectPct / 100.0 / (vol * per_unit);
+      const double px = buy ? tk.bid : tk.ask;
+      double sl = buy ? open - dist : open + dist;
+      const bool beyond = buy ? (sl >= px - stops) : (sl <= px + stops);
+      if(beyond) sl = buy ? px - XMax(dist, stops + pt) : px + XMax(dist, stops + pt);
+      sl = NormalizeDouble(sl, _Digits);
+      if(g_trade.PositionModify(t, sl, tp) && RetOk(g_trade.ResultRetcode()))
+         Print("XAU Sniper: added a stop at ", DoubleToString(sl, _Digits), " to position ", (long)t, " (it had none; InpProtectManual)");
+      else
+         Print("XAU Sniper: could not add a stop to position ", (long)t, ": ", g_trade.ResultRetcodeDescription());
    }
 }
 
@@ -4024,6 +4179,7 @@ void OnTick()
 void OnTimer()
 {
    if(!MQLInfoInteger(MQL_TESTER)) GlobalVariableSet(GvName("LOCK_" + _Symbol), (double)TimeLocal());
+   ProtectManual();
    if(g_stats_dirty) RecomputeStats();
    RefreshNews();
    DrawPanel();
@@ -4061,6 +4217,7 @@ void DrawPanel()
 
    string mode = "   [LIVE rules]";
    if(DemoFree()) mode = "   [DEMO - free run]";
+   else if(IsDemo()) mode = "   [DEMO rehearsal: real-account rules]";
    string status = "LOOKING FOR A SETUP";
    color sc = cCyan;
    string sub = StringLen(g_skip_note) > 0 ? g_skip_note : XReasonText(g_last_reason);
@@ -4070,7 +4227,8 @@ void DrawPanel()
    else if(g_news_blocked)              { status = "PAUSED - NEWS"; sc = cGold; sub = g_news_note; }
    else if(!g_lab_ok)                   { status = "LEARNING"; sub = "Strategy Lab is testing this chart's history"; }
    else if(g_act_s < 0)                 { status = "NO STRATEGY YET"; sc = cGold; sub = "not enough trades in the history to judge"; }
-   else if(!g_proven && !(DemoFree() && InpDemoTradeUnproven)) { status = "STANDING ASIDE"; sc = cGold; sub = "nothing passed the Strategy Lab here"; }
+   else if(!g_proven && !(DemoFree() && InpDemoUnproven)) { status = "STANDING ASIDE"; sc = cGold; sub = "nothing passed the Strategy Lab here"; }
+   else if(g_small)                     { status = "ACCOUNT TOO SMALL HERE"; sc = cGold; sub = g_small_note; }
 
    g_panel.Begin();
    g_panel.Line("XAU SNIPER  " + XTfName((ENUM_TIMEFRAMES)_Period) + mode, cGold);
@@ -4096,6 +4254,7 @@ void DrawPanel()
    else g_panel.Line("Live results: no closed trades yet", cDim);
    const string warn = XAccountWarning(_Symbol);
    if(StringLen(warn) > 0) g_panel.Line("RISK: " + warn, cRed);
+   if(StringFind(warn, "NO stop") >= 0 && !InpProtectManual) g_panel.Line("Tip: InpProtectManual = true lets the EA put a stop on them", cDim);
    if(InpUseNews && StringFind(g_news_note, " in ") >= 0) g_panel.Line("News: " + g_news_note, g_news_blocked ? cRed : cDim);
    g_panel.End();
 }

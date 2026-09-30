@@ -65,8 +65,23 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
 Navigator > Scripts > **XAU_DataExport**, drag onto the XAUUSD chart, OK. Files appear in `<Data Folder>\MQL5\Files\XAU_Export\`. Zip that folder and share it: the whole Strategy Lab and the live replay can then be run on your real broker data.
 
 ## Demo accounts
-With *Demo testing > InpDemoUnlocked* on (default) and a **demo** account, every protection only warns: no kill-switch, no daily limits, up to 5 concurrent EA trades, minimum-lot trades allowed even if they risk several percent. With *InpDemoTradeUnproven* it also trades the closest strategy when none passed the Lab (marked UNPROVEN). On a real account both switches are ignored.
-Two practical limits still apply: your free margin (manual positions use it too; 0.01 lot of gold needs roughly $40 of margin at 1:100) and the spread filter.
+*Demo accounts > Demo mode*:
+* **Rehearsal** (default): the demo runs exactly the rules of a real account, so what you see is what a real account would do.
+* **Free run** (also set by `XAU_Sniper_DemoTurbo.set`): every protection only warns (no kill-switch, no daily limits), up to 5 EA trades at once,
+  and the smallest lot is allowed even above your risk, up to *InpDemoMaxRiskPct* (10%) of equity per trade. With *InpDemoUnproven* it also
+  trades the closest strategy when none passed the Lab (marked UNPROVEN). Not a preview of a real account.
+
+On a real account the demo inputs are ignored. In every mode the EA will not enter while free margin is <= 0, the margin level is below 300%,
+or the spread is above 1.5x the tested cost (*InpCostPrice*, 0.35). 0.01 lot of gold needs roughly 42 USD of margin at 1:100 and 4,200 USD price.
+
+**After updating the EA, remove it from the chart and attach it again** (or load a preset): MT5 keeps the input values of an attached EA
+when it is recompiled. The demo inputs were renamed in round 7 so that old free-run values cannot carry over.
+
+**Your own trades.** *Your own trades > InpProtectManual* (off by default) lets the EA put a stop on any position on the symbol that has none,
+where it would lose *InpProtectPct* (5%) of equity; a position already losing more gets its stop 5% of equity beyond the current price.
+
+**Account size.** The indicator shows "TOO BIG, SKIP" when even 0.01 lot risks more than 1.5x your *Risk per trade*, and the balance the
+trade would need. Rough minimums for 1% risk at 0.01 lot (Sep 2026): M5 550 USD, M15 1,100, H1 2,400, H4 5,300.
 
 ## Troubleshooting
 | Symptom | Likely cause |
@@ -78,6 +93,9 @@ Two practical limits still apply: your free margin (manual positions use it too;
 | EA never trades | Check AutoTrading is on, the panel status line, and the Experts tab of the Toolbox |
 | Signals appear at odd hours | Broker clock setting wrong (fixed / US / EU DST) or winter offset wrong; set it manually |
 | Panel says LEARNING for a long time | Not enough history yet; scroll the chart back or raise *Max bars in chart* |
-| Scoreboard shows no PASS | Nothing reached the win-rate target with profit on this chart. The EA stands aside (live) or trades UNPROVEN (demo). Try another timeframe, or lower the target |
+| Scoreboard shows no PASS | Nothing reached the win-rate target with profit on this chart. The EA stands aside (live and demo rehearsal) or trades UNPROVEN (demo free run). Try another timeframe, or lower the target |
+| Indicator says "TOO BIG, SKIP" / EA says "ACCOUNT TOO SMALL HERE" | Even 0.01 lot risks more than 1.5x your risk setting on this timeframe. Use a lower timeframe, a larger (demo) balance, or a cent account |
+| EA status line mentions margin | Open trades (manual ones too) use the margin; close or protect them first |
+| EA panel still says "[DEMO - free run]" after an update | Remove the EA from the chart and attach it again |
 | EA logs "sizing note - broker tick value is off" | Expected on some brokers; the EA already uses the correct figure |
 | EA logs "another instance is already running" | A second chart with the same magic (or a crashed run; wait 15 seconds and reattach) |

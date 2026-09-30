@@ -9,8 +9,9 @@ OUT = os.path.join(ROOT, "MQL5", "Presets")
 
 def enum_values():
     vals = {"PERIOD_CURRENT": "0"}
-    for m in re.finditer(r'^\s*(XAU_\w+)\s*=\s*(-?\d+)', open(PLAT).read(), re.M):
-        vals[m.group(1)] = m.group(2)
+    for src in (PLAT, EA):
+        for m in re.finditer(r'^\s*(XAU_\w+)\s*=\s*(-?\d+)', open(src).read(), re.M):
+            vals[m.group(1)] = m.group(2)
     return vals
 
 def ea_inputs():
@@ -37,8 +38,8 @@ PRESETS = {
         {"InpRiskPct": "2.0", "InpDailyLossPct": "4.0", "InpWeeklyLossPct": "8.0", "InpMaxDDPct": "20.0"}),
     "XAU_Sniper_Aggressive": ("HIGH RISK: 4% per trade, the closest to a 'double it' attempt. Expect large drawdowns; read docs/RISK_MATH.md first. Demo only until proven.",
         {"InpRiskPct": "4.0", "InpDailyLossPct": "6.0", "InpWeeklyLossPct": "12.0", "InpMaxDDPct": "30.0"}),
-    "XAU_Sniper_DemoTurbo": ("DEMO WATCHING: trades all day (no session filter), several positions, and trades the closest strategy even when none passed the lab (demo accounts only). Many more trades, lower quality.",
-        {"InpSessionFilter": "false", "InpMaxTradesPerDay": "50", "InpCooldownBars": "0", "InpDemoMaxPositions": "5", "InpDemoTradeUnproven": "true", "InpWinTarget": "55.0"}),
+    "XAU_Sniper_DemoTurbo": ("DEMO WATCHING (free run): trades all day (no session filter), several positions, protections only warn, and trades the closest strategy even when none passed the lab (demo accounts only). Many more trades, lower quality, NOT a preview of a real account.",
+        {"InpDemoMode": "1", "InpSessionFilter": "false", "InpMaxTradesPerDay": "50", "InpCooldownBars": "0", "InpDemoMaxPositions": "5", "InpDemoUnproven": "true", "InpWinTarget": "55.0"}),
     "XAU_Sniper_GoldORB": ("The GOLD_ORB opening-range breakout on its own; the lab still chooses its best exit. Attach to an XAUUSD H1 chart.",
         {"InpStrategy": "1", "InpOrbSolo": "true"}),
 }

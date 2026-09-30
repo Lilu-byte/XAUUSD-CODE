@@ -165,6 +165,7 @@
 #define XR_SL_WIDE    7
 #define XR_GRADE      8
 #define XR_ANALOG     9
+#define XR_COST       10
 
 //+------------------------------------------------------------------+
 //| small math helpers (avoid MathMax/MathMin overload ambiguity)    |
@@ -254,6 +255,7 @@ string XReasonText(const int r)
       case XR_SL_WIDE:  return "stop would be too wide";
       case XR_GRADE:    return "setup not strong enough";
       case XR_ANALOG:   return "pattern match disagrees with the setup";
+      case XR_COST:     return "setup skipped: stop too short for the spread";
    }
    return "";
 }
@@ -342,7 +344,9 @@ struct XConfig
    int    max_hold_bars;     // 0 = derive from hold_minutes
    int    hold_minutes;
    int    min_hold_bars;
-   double cost_price;        // round-turn spread+slippage in price units (simulation only)
+   double cost_price;        // round-turn spread+slippage in price units (simulation, and the cost guard below)
+   double min_stop_cost;     // cost guard: skip setups whose stop is shorter than this many round-trip costs (0 = off)
+   double dip_gmt_lo, dip_gmt_hi;   // dip strategies enter only in this GMT window on charts up to H1 (lo < 0 = all day)
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
 
    // forecast
@@ -375,7 +379,8 @@ struct XConfig
       sl_atr_min = 0.9;  sl_atr_max = 2.6;  sl_buffer_atr = 0.15;  sl_lookback = 3;
       tp1_r = 1.0;  tp2_r = 2.5;  partial_pct = 0.5;  trail_atr = 2.0;
       max_hold_bars = 0;  hold_minutes = 480;  min_hold_bars = 8;
-      cost_price = 0.30;  path_mode = 1;
+      cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
+      dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
    }
@@ -408,6 +413,19 @@ string XExitName(const int p)
       case XP_HIGHHIT: return "High-hit 0.5R";
       case XP_QUICK:   return "Quick 0.6R";
       case XP_MEANREV: return "Mean-revert exit";
+   }
+   return "?";
+}
+
+// short form for tables that must fit MT5's 63-character label limit
+string XExitShort(const int p)
+{
+   switch(p)
+   {
+      case XP_CLASSIC: return "Classic";
+      case XP_HIGHHIT: return "High-hit";
+      case XP_QUICK:   return "Quick";
+      case XP_MEANREV: return "Mean-rev";
    }
    return "?";
 }
@@ -981,7 +999,7 @@ public:
             XAnalog an0;
             if(AnalogQuery(i, an0) && AnalogConfident(an0) && an0.dir4 != d) { s.dir = 0; s.reason = XR_ANALOG; return false; }
          }
-         if(!BuildPlan(i, d, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
+         if(!BuildPlan(i, d, s)) { s.dir = 0; if(s.reason != XR_COST) s.reason = XR_SL_WIDE; return false; }
          s.reason = XR_OK;
          return true;
       }
@@ -1013,7 +1031,7 @@ public:
          XAnalog an;
          if(AnalogQuery(i, an) && AnalogConfident(an) && an.dir4 != dir) { s.dir = 0; s.reason = XR_ANALOG; return false; }
       }
-      if(!BuildPlan(i, dir, s)) { s.dir = 0; s.reason = XR_SL_WIDE; return false; }
+      if(!BuildPlan(i, dir, s)) { s.dir = 0; if(s.reason != XR_COST) s.reason = XR_SL_WIDE; return false; }
       s.reason = XR_OK;
       return true;
    }
@@ -1045,6 +1063,9 @@ public:
          if(dist < slmin * a) { sl = entry + slmin * a; dist = sl - entry; }
       }
       if(dist > slmax * a) return false;
+      // cost guard: on real data a stop shorter than 20 round-trip costs lost money on every timeframe tested
+      // (docs/REAL_DATA.md, section 7): the spread alone takes 5%+ of every trade
+      if(cfg.min_stop_cost > 0.0 && dist < cfg.min_stop_cost * cfg.cost_price) { s.reason = XR_COST; return false; }
       s.entry = entry; s.sl = sl; s.risk = dist; s.atr = a;
       s.tp1 = (tp1_r > 0.0) ? entry + dir * tp1_r * dist : 0.0;
       s.tp2 = (tp2_r > 0.0) ? entry + dir * tp2_r * dist : 0.0;
@@ -1251,12 +1272,23 @@ public:
       return 0;
    }
 
+   // True when a dip strategy may enter after bar i: inside the configured GMT window (charts up to H1 only).
+   bool DipWindowOk(const int i) const
+   {
+      if(cfg.dip_gmt_lo < 0.0 || cfg.base_sec > 3600) return true;
+      double h = m_hour[i] + cfg.base_sec / 3600.0;           // entry = the next bar's open, GMT clock
+      if(h >= 24.0) h -= 24.0;
+      if(cfg.dip_gmt_lo <= cfg.dip_gmt_hi) return (h >= cfg.dip_gmt_lo && h < cfg.dip_gmt_hi);
+      return (h >= cfg.dip_gmt_lo || h < cfg.dip_gmt_hi);   // window across midnight
+   }
+
    // Direction strategy s wants to trade after closed bar i (0 = nothing). Uses data <= i only.
    int StrategyDir(const int st, const int i) const
    {
       if(i < cfg.warmup + 10 || i >= n) return 0;
       const int o = i * XM_COUNT;
       const int t = TrendDir(i);
+      if((st == XS_DIP || st == XS_DOUBLE7 || st == XS_IBS) && !DipWindowOk(i)) return 0;
       switch(st)
       {
          case XS_CONFLUENCE:
@@ -1335,7 +1367,7 @@ public:
       if(sig.score >= cfg.score_min + cfg.grade_a_add) sig.grade = 2;
       if(sig.score >= cfg.score_min + cfg.grade_ap_add && sig.n_agree >= 3) sig.grade = 3;
       if(!BuildPlanEx(i, d, sig, x.sl_min_atr, x.sl_max_atr, x.tp1_r, (x.tp2_r > 0.0) ? x.tp2_r : ((x.part >= 0.999) ? x.tp1_r : 0.0)))
-      { sig.dir = 0; sig.reason = XR_SL_WIDE; return false; }
+      { sig.dir = 0; if(sig.reason != XR_COST) sig.reason = XR_SL_WIDE; return false; }
       sig.reason = XR_OK;
       return true;
    }
@@ -2745,7 +2777,14 @@ void XPlanLots(const string sym, const double equity, const double risk_pct, con
 
    double margin = 0.0;
    const ENUM_ORDER_TYPE ot = is_buy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-   if(OrderCalcMargin(ot, sym, lots, price, margin) && margin > 0.0 && free_margin > 0.0)
+   if(free_margin <= 0.0)
+   {
+      // report the size anyway (the indicator shows it), but it cannot be opened
+      p.lots = lots; p.risk_money = lots * loss_per_lot; p.risk_pct = 100.0 * p.risk_money / equity;
+      p.note = "no free margin left: open trades are using all of it";
+      return;
+   }
+   if(OrderCalcMargin(ot, sym, lots, price, margin) && margin > 0.0)
    {
       const double allowed = free_margin * margin_use_frac;
       if(margin > allowed)
@@ -3019,12 +3058,33 @@ public:
    CXPanel() { m_rows = 0; m_drawn = 0; prefix = "XP_"; font = "Consolas"; x = 12; y = 24; fs = 10; min_w = 300;
                pos = XAU_PANEL_TOP_LEFT; bg = XRGB(16, 20, 28); border = XRGB(58, 68, 88); }
    void Begin() { m_rows = 0; }
+   // MT5 cuts a text label after 63 characters, so longer lines are wrapped at a space
    void Line(const string text, const color clr, const int extra = 0)
    {
-      if(m_rows >= 48) return;
-      m_text[m_rows] = text; m_clr[m_rows] = clr; m_extra[m_rows] = extra; m_rows++;
+      string rest = text;
+      bool first = true;
+      while(m_rows < 48)
+      {
+         string part = rest;
+         const int lim = first ? 62 : 60;
+         if(StringLen(rest) > lim)
+         {
+            int cut = lim;
+            while(cut > 20 && StringGetCharacter(rest, cut) != ' ') cut--;
+            if(cut <= 20) cut = lim;
+            part = StringSubstr(rest, 0, cut);
+            rest = StringSubstr(rest, cut);
+            while(StringLen(rest) > 0 && StringGetCharacter(rest, 0) == ' ') rest = StringSubstr(rest, 1);
+         }
+         else rest = "";
+         m_text[m_rows] = first ? part : "  " + part;
+         m_clr[m_rows] = clr; m_extra[m_rows] = extra; m_rows++;
+         first = false;
+         if(StringLen(rest) == 0) break;
+      }
    }
    int Rows() const { return m_rows; }
+   string Text(const int k) const { return (k >= 0 && k < m_rows) ? m_text[k] : ""; }
    // measured size of the collected lines
    void Measure(int &w, int &h) const
    {
@@ -3197,6 +3257,8 @@ input double          InpTrailATR       = 2.0;           // Classic exit: trail 
 input double          InpSLMinATR       = 0.9;           // Minimum stop distance (ATR)
 input double          InpSLMaxATR       = 2.6;           // Skip setups needing a wider stop (ATR)
 input int             InpHoldMinutes    = 480;           // Time stop for trades that go nowhere
+input double          InpCostPrice      = 0.35;          // Round-trip spread + slippage charged per tested trade (price units; keep equal to the EA)
+input double          InpMinStopCosts   = 20.0;          // Skip setups whose stop is shorter than this many round-trip costs (0 = off; keep equal to the EA)
 input bool            InpUseNews        = true;          // Warn around high-impact USD news
 input int             InpNewsBefore     = 30;            // Minutes before
 input int             InpNewsAfter      = 30;            // Minutes after
@@ -3274,8 +3336,28 @@ string Money(const double v) { return DoubleToString(v, 2) + " " + AccountInfoSt
 string DurText(const int bars)
 {
    const int mins = bars * PeriodSeconds((ENUM_TIMEFRAMES)_Period) / 60;
+   if(mins >= 14 * 1440) return IntegerToString((mins + 5040) / 10080) + " weeks";
+   if(mins >= 2 * 1440) return IntegerToString((mins + 720) / 1440) + " days";
    if(mins >= 120) return IntegerToString(mins / 60) + "h" + ((mins % 60) > 0 ? IntegerToString(mins % 60) + "m" : "");
    return IntegerToString(mins) + "m";
+}
+
+// "close by" time: clock time for intraday holds, a date for holds of a day or more
+string CloseByText(const datetime t, const int hold_bars)
+{
+   if((long)hold_bars * PeriodSeconds((ENUM_TIMEFRAMES)_Period) >= 86400) return TimeToString(t, TIME_DATE);
+   return TimeToString(t, TIME_MINUTES);
+}
+
+// Size of the current signal for this account. fits = the smallest tradable lot stays within 1.5x the chosen
+// risk, the rule the EA applies on a real account (it refuses the trade otherwise).
+bool SignalSize(XLotPlan &lp, bool &fits)
+{
+   const double equity = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_EQUITY);
+   const double freeM = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+   XPlanLots(_Symbol, equity, InpRiskPct, g_sig.risk, g_sig.dir > 0, g_sig.entry, 1000.0, 0.0, freeM, 1.0, lp);
+   fits = lp.ok && lp.risk_pct <= InpRiskPct * 1.5 + 1e-9;
+   return lp.risk_money > 0.0;
 }
 
 //+------------------------------------------------------------------+
@@ -3358,9 +3440,9 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf, const ENUM_TIMEFRAMES htf)
    c.sl_atr_min = InpSLMinATR;
    c.sl_atr_max = XMax(InpSLMaxATR, InpSLMinATR + 0.1);
    c.hold_minutes = InpHoldMinutes;
-   const double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
-   const double sp = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * pt;
-   c.cost_price = XMax(sp * 1.5, 0.10);
+   // a fixed cost (not the spread of the moment) so the indicator and the EA test and choose alike
+   c.cost_price = XMax(InpCostPrice, 0.01);
+   c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
 }
 
 //+------------------------------------------------------------------+
@@ -3701,7 +3783,7 @@ void DrawTradeBox()
       XObjText("XO_BX_T3", tl, g_sig.tp2, "TARGET " + Px(g_sig.tp2), XRGB(90, 230, 160), 9);
    }
    else XObjText("XO_BX_T2", tl, tgt, "TARGET " + Px(tgt), XRGB(90, 230, 160), 9);
-   XObjText("XO_BX_T4", t0, g_sig.sl, "close by " + TimeToString(t0 + (datetime)(hold * period), TIME_MINUTES), XRGB(255, 200, 64), 8);
+   XObjText("XO_BX_T4", t0, g_sig.sl, "close by " + CloseByText(t0 + (datetime)(hold * period), hold), XRGB(255, 200, 64), 8);
 }
 
 //+------------------------------------------------------------------+
@@ -3790,10 +3872,28 @@ void DrawMainPanel()
       if(dist > 0.35 * g_sig.atr) { status = "MISSED - don't chase"; sc = ClrGold(); sub = "price already ran away from the entry"; }
       else
       {
-         status = buy ? "BUY NOW" : "SELL NOW";
-         sc = buy ? ClrGreen() : ClrRed();
-         bg = buy ? XRGB(10, 46, 32) : XRGB(56, 20, 24);
-         sub = g_proven ? "tested strategy, see plan below" : "UNPROVEN strategy: demo / small size only";
+         XLotPlan fp;
+         bool fits = false;
+         SignalSize(fp, fits);
+         if(fits)
+         {
+            status = buy ? "BUY NOW" : "SELL NOW";
+            sc = buy ? ClrGreen() : ClrRed();
+            bg = buy ? XRGB(10, 46, 32) : XRGB(56, 20, 24);
+            sub = g_proven ? "tested strategy, see plan below" : "UNPROVEN strategy: demo / small size only";
+         }
+         else if(StringFind(fp.note, "margin") >= 0)
+         {
+            status = buy ? "BUY SIGNAL - NO FREE MARGIN" : "SELL SIGNAL - NO FREE MARGIN";
+            sc = ClrGold(); bg = XRGB(46, 40, 16);
+            sub = "your open trades use all the margin: close or protect them first";
+         }
+         else
+         {
+            status = buy ? "BUY SIGNAL - TOO BIG, SKIP" : "SELL SIGNAL - TOO BIG, SKIP";
+            sc = ClrGold(); bg = XRGB(46, 40, 16);
+            sub = "even the smallest lot risks " + DoubleToString(fp.risk_pct, 1) + "% of this account here";
+         }
          plan = true;
       }
    }
@@ -3830,25 +3930,29 @@ void DrawMainPanel()
          g_pm.Line((buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Exit on a close past " + Px(tgt), ClrText());
       else
          g_pm.Line((buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Target " + Px(tgt), ClrText());
-      const double equity = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_EQUITY);
-      const double freeM = (InpBalanceOverride > 0.0) ? InpBalanceOverride : AccountInfoDouble(ACCOUNT_MARGIN_FREE);
       XLotPlan lp;
-      XPlanLots(_Symbol, equity, InpRiskPct, g_sig.risk, buy, g_sig.entry, 1000.0, 0.0, freeM, 1.0, lp);
-      if(lp.ok)
+      bool fits = false;
+      if(SignalSize(lp, fits))
       {
          double avg_win_r = 0.0;
          if(g_cell >= 0 && g_lab.lab[g_cell].all.wins > 0) avg_win_r = g_lab.lab[g_cell].all.sum_win / g_lab.lab[g_cell].all.wins;
          string ln = "Trade " + DoubleToString(lp.lots, 2) + " lot: risk " + Money(lp.risk_money);
          if(avg_win_r > 0.0) ln += ", typical win " + Money(lp.risk_money * avg_win_r);
-         const bool over = (lp.risk_pct > InpRiskPct * 1.5);
-         g_pm.Line(ln, over ? ClrGold() : ClrGreen());
-         if(over) g_pm.Line("Small account: that is " + DoubleToString(lp.risk_pct, 1) + "% of it, above your " + DoubleToString(InpRiskPct, 1) + "%", ClrGold());
+         g_pm.Line(ln, fits ? ClrGreen() : ClrGold());
+         if(!fits && lp.ok)
+         {
+            const double need = lp.risk_money * 100.0 / XMax(InpRiskPct, 0.01);
+            g_pm.Line("That is " + DoubleToString(lp.risk_pct, 1) + "% of the account (your limit " + DoubleToString(InpRiskPct, 1)
+                      + "%). This trade needs about " + DoubleToString(need, 0) + " " + AccountInfoString(ACCOUNT_CURRENCY)
+                      + ", or use a lower timeframe.", ClrGold());
+         }
+         else if(!lp.ok) g_pm.Line("Size: " + lp.note, ClrRed());
       }
       else g_pm.Line("Size: " + lp.note, ClrRed());
       const int hold = (g_act_x.max_hold > 0) ? g_act_x.max_hold : g_eng.MaxHold();
       const int typ = g_lab.LabHoldMedian(g_cell);
       const datetime close_by = g_eng.m_t[g_sig_i + 1] + (datetime)(hold * g_eng.cfg.base_sec);
-      string hl = "Stay about " + DurText(XMaxI(typ, 1)) + " (typical); close by " + TimeToString(close_by, TIME_MINUTES) + " at the latest";
+      string hl = "Stay about " + DurText(XMaxI(typ, 1)) + " (typical); close by " + CloseByText(close_by, hold) + " at the latest";
       g_pm.Line(hl, ClrText());
       if(running && g_act_x.tp1_r > 0.0 && g_act_x.part < 0.999)
       {
@@ -3878,7 +3982,9 @@ void DrawMainPanel()
    string tr = "SIDEWAYS";
    if(tb > 0) tr = "UP";
    if(tb < 0) tr = "DOWN";
-   g_pm.Line("Trend " + XTfName(g_htf) + ": " + tr + "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%", ClrText());
+   string trl = "Trend " + XTfName(g_htf) + ": " + tr;
+   if(PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400) trl += "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%";
+   g_pm.Line(trl, ClrText());
    g_pm.Line(AnalogLine(), (g_an_state == 3) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
    if(InpShowTfForecast)
       g_pm.Line("By timeframe:  M15 " + g_tf_txt[0] + "   H1 " + g_tf_txt[1] + "   H4 " + g_tf_txt[2], ClrDim());
@@ -3894,7 +4000,7 @@ void DrawLabPanel()
    g_pl.Begin();
    const int days = (g_lab.n > 0 && g_lab.lab_first < g_lab.n) ? (int)((g_lab.m_t[g_lab.n - 1] - g_lab.m_t[g_lab.lab_first]) / 86400) : 0;
    g_pl.Line("STRATEGY LAB  " + IntegerToString(days) + " days tested here, target " + DoubleToString(InpWinTarget, 0) + "% wins", ClrGold());
-   g_pl.Line(StringFormat("%-2s %-36s %5s %7s %6s", "", "strategy + exit", "won", "avg R", "trades"), ClrDim());
+   g_pl.Line(StringFormat("%-2s%-34s %5s %6s %6s", "", "strategy / exit", "won", "avg R", "trades"), ClrDim());
    for(int k = 0; k < 6; k++)
    {
       const int c = g_lab.LabRanked(k);
@@ -3904,8 +4010,8 @@ void DrawLabPanel()
       if(c == g_cell) mark = "> ";
       string pass = "";
       if(g_lab.lab[c].qualified) pass = " PASS";
-      const string name = XStratName(c / XP_COUNT) + " / " + XExitName(c % XP_COUNT);
-      g_pl.Line(StringFormat("%-2s %-36s %4.0f%% %+7.2f %6d", mark, name, st.WinRate(), st.Expectancy(), st.n) + pass,
+      const string name = XStratName(c / XP_COUNT) + " / " + XExitShort(c % XP_COUNT);   // at most 34 characters
+      g_pl.Line(StringFormat("%-2s%-34s %4.0f%% %+6.2f %6d", mark, name, st.WinRate(), st.Expectancy(), st.n) + pass,
                 g_lab.lab[c].qualified ? ClrGreen() : ClrText());
    }
    if(g_lab.lab_auto.n > 0)
@@ -3925,6 +4031,10 @@ void MaybeAlert()
    const datetime bt = g_eng.m_t[g_n - 1];
    if(g_last_alert == bt) return;
    g_last_alert = bt;
+   XLotPlan fp;
+   bool fits = false;
+   SignalSize(fp, fits);
+   if(!fits) { Print("XAU Oracle: signal not alerted, too big for this account (", fp.note, " ", DoubleToString(fp.risk_pct, 1), "%)"); return; }
    string msg = "XAU Oracle " + _Symbol + " " + XTfName((ENUM_TIMEFRAMES)_Period) + ": ";
    msg += (g_sig.dir > 0) ? "BUY " : "SELL ";
    msg += Px(g_sig.entry) + " stop " + Px(g_sig.sl) + " target " + Px(TargetPrice()) + " [" + XStratName(g_act_s) + "]";

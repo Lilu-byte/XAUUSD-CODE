@@ -24,6 +24,9 @@ g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/harness" research/sim/harness.cpp
 "$BIN/harness" all | tee "$OUT/harness_results.txt" | tail -3
 
 echo "[real] broker data in research/data (if any)"
+# 0.35 = the round-trip cost the EA and the indicator assume by default (InpCostPrice)
+export XAU_COST=0.35
+g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/ideas" research/sim/ideas.cpp
 for f in research/data/XAUUSD_*.csv; do
   [ -e "$f" ] || continue
   tf=$(basename "$f" .csv | sed 's/XAUUSD_//')
@@ -37,6 +40,8 @@ for f in research/data/XAUUSD_*.csv; do
   esac
   case "$tf" in D1|H4) BY=5 ;; H1) BY=2 ;; *) BY=1 ;; esac
   "$BIN/harness" realblocks "$f" $BY >> "$OUT/real_${tf}_results.txt" 2>&1 || true
+  # idea screen: discovery (older 60%) vs holdout (newest 40%); intraday files with a higher-timeframe file only
+  case "$tf" in M5|M15|H1|H4) [ "$H" != auto ] && "$BIN/ideas" "$f" "$H" 2 1 > "$OUT/ideas_${tf}.txt" 2>&1 || true ;; esac
   echo "  $f -> $OUT/real_${tf}_results.txt"
 done
 

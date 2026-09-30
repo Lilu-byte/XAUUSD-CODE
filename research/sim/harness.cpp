@@ -295,13 +295,28 @@ static void test_platform()
    XPlanLots("XAUUSD", 10000.0, 1.0, 10.0, true, 4000.0, 1.5, 0.0, 9000.0, 0.5, p);
    CHECK(p.ok && near(p.lots, 0.10) && near(p.risk_pct, 1.0, 1e-6) && p.src_note.size() > 0,
          "broker tick value 10x too small: sizing still 0.10 lot (broker profit formula), and the mismatch is reported");
-   XPlanLots("XAUUSD", 53.93, 1.0, 14.18, false, 4191.60, 1000.0, 0.0, -29.77, 1.0, p);
+   XPlanLots("XAUUSD", 53.93, 1.0, 14.18, false, 4191.60, 1000.0, 0.0, 100.0, 1.0, p);
    CHECK(p.ok && near(p.lots, 0.01) && near(p.risk_money, 14.18, 1e-6), "screenshot case: 0.01 lot with a $14.18 stop loses $14.18, not $1.42");
+   XPlanLots("XAUUSD", 53.93, 1.0, 14.18, false, 4191.60, 1000.0, 0.0, -29.77, 1.0, p);
+   CHECK(!p.ok && near(p.risk_money, 14.18, 1e-6) && p.note.find("margin") != std::string::npos,
+         "negative free margin (screenshot: open trades use it all): size still reported, but the trade is refused");
    g_mock_calcprofit_ok = false;
    XPlanLots("XAUUSD", 10000.0, 1.0, 10.0, true, 4000.0, 1.5, 0.0, 9000.0, 0.5, p);
    CHECK(p.ok && near(p.lots, 0.10), "profit formula unavailable: falls back to contract size, still 0.10 lot");
    g_mock_calcprofit_ok = true;
    g_mock_tick_value = 1.0;
+
+   // panel lines: MT5 cuts a label after 63 characters, so long lines must wrap
+   {
+      CXPanel pn;
+      pn.Begin();
+      pn.Line("RISK: 2 open trades have NO stop loss; margin level 79% (broker closes trades at 50%) and more words", 0);
+      pn.Line("short line", 0);
+      bool fit = true;
+      for(int k = 0; k < pn.Rows(); k++) if(StringLen(pn.Text(k)) > 63) fit = false;
+      CHECK(pn.Rows() == 3 && fit && pn.Text(1).find("  ") == 0 && pn.Text(2) == "short line",
+            "panel wraps a 100-character line into rows of at most 63 characters (MT5 label limit)");
+   }
 
    CXauNews nw;
    nw.gmt_offset_sec = 0;
@@ -519,6 +534,10 @@ static void run_lab_variants()
 // Signals come from one engine over the whole series (tested: identical to a shorter live window).
 //---------------------------------------------------------------------------
 struct ReplayOut { XStats live, demo; int days, days_traded; int picks[XLAB_CELLS]; };
+static double g_minstop = -1.0;   // cost-guard override for real-data runs (env XAU_MINSTOP; -1 = engine default)
+static double g_target = 60.0;    // Strategy Lab win-rate target for real-data runs (env XAU_TARGET)
+static double g_cost = -1.0;      // round-trip cost for real-data runs (env XAU_COST; -1 = engine default 0.30)
+static double g_dip_lo = -2.0, g_dip_hi = 24.0;   // dip-strategy GMT window for real-data runs (env XAU_DIPWIN="17-21", "off"; -2 = default)
 static double g_rp_se = 1.0, g_rp_buf = 3.0; static int g_rp_win = 0, g_rp_min = 50, g_rp_rec = 1;   // = engine defaults
 
 static void live_replay(const std::vector<MqlRates> &base, const std::vector<MqlRates> &htf, int base_sec, int htf_sec,
@@ -529,6 +548,9 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
    const int N = (int)base.size();
    CXauEngine E;
    E.cfg.Defaults(); E.cfg.base_sec = base_sec; E.cfg.htf_sec = htf_sec; E.cfg.gmt_offset_sec = gmt_off; E.cfg.dst_mode = dst;
+   if(g_minstop >= 0.0) E.cfg.min_stop_cost = g_minstop;
+   if(g_cost > 0.0) E.cfg.cost_price = g_cost;
+   if(g_dip_lo > -2.0) { E.cfg.dip_gmt_lo = g_dip_lo; E.cfg.dip_gmt_hi = g_dip_hi; }
    E.SetBase(base, N);
    E.SetHTF(htf, (int)htf.size());
    if(!E.Compute()) return;
@@ -798,16 +820,20 @@ static int run_real(int argc, char **argv)
    const int dst = argc > 5 ? std::atoi(argv[5]) : 1;
    const int lab_bars = argc > 6 ? std::atoi(argv[6]) : 10000;
    std::printf("\n== REAL DATA: %s (%zu bars of %d s), higher timeframe %d s (%zu bars) ==\n", argv[2], base.size(), bs, hs, htf.size());
-   std::printf("   from %s to %s | cost per trade %.2f (price units) | lab window %d bars\n",
-               TimeToString(base.front().time).c_str(), TimeToString(base.back().time).c_str(), 0.30, lab_bars);
+   std::printf("   from %s to %s | cost per trade %.2f (price units) | cost guard %.0f costs | lab window %d bars\n",
+               TimeToString(base.front().time).c_str(), TimeToString(base.back().time).c_str(), g_cost > 0.0 ? g_cost : 0.30,
+               g_minstop >= 0.0 ? g_minstop : 20.0, lab_bars);
    // 1) the Strategy Lab exactly as the indicator shows it today (newest lab_bars bars)
    const int NL = std::min<int>((int)base.size(), lab_bars);
    std::vector<MqlRates> lb(base.end() - NL, base.end());
    CXauEngine L;
    L.cfg.Defaults(); L.cfg.base_sec = bs; L.cfg.htf_sec = hs; L.cfg.gmt_offset_sec = gmt; L.cfg.dst_mode = dst;
+   if(g_minstop >= 0.0) L.cfg.min_stop_cost = g_minstop;
+   if(g_cost > 0.0) L.cfg.cost_price = g_cost;
+   if(g_dip_lo > -2.0) { L.cfg.dip_gmt_lo = g_dip_lo; L.cfg.dip_gmt_hi = g_dip_hi; }
    L.SetBase(lb, NL); L.SetHTF(htf, (int)htf.size());
    if(!L.Compute()) { std::printf("not enough bars\n"); return 2; }
-   L.RunLab(L.cfg.warmup, NL - 1, 60.0, 50, 5);
+   L.RunLab(L.cfg.warmup, NL - 1, g_target, 50, 5);
    std::printf("  STRATEGY LAB on the newest %d bars (what the indicator shows today), all 32 combinations:\n", NL);
    for(int k = 0; k < XLAB_CELLS; k++)
    {
@@ -843,7 +869,7 @@ static int run_real(int argc, char **argv)
    if((int)base.size() > lab_bars + 200)
    {
       ReplayOut o;
-      live_replay(base, htf, bs, hs, lab_bars, 60.0, 50, gmt, dst, o);
+      live_replay(base, htf, bs, hs, lab_bars, g_target, 50, gmt, dst, o);
       std::printf("  LIVE REPLAY from %s (daily Lab on the previous %d bars, trading its pick, as the EA does):\n",
                   TimeToString(base[lab_bars].time).c_str(), lab_bars);
       print_replay("real", o, 0.0);
@@ -866,6 +892,9 @@ static int run_real_blocks(int argc, char **argv)
    htf.pop_back();
    CXauEngine L;
    L.cfg.Defaults(); L.cfg.base_sec = bs; L.cfg.htf_sec = hs; L.cfg.gmt_offset_sec = 7200; L.cfg.dst_mode = 1;
+   if(g_minstop >= 0.0) L.cfg.min_stop_cost = g_minstop;
+   if(g_cost > 0.0) L.cfg.cost_price = g_cost;
+   if(g_dip_lo > -2.0) { L.cfg.dip_gmt_lo = g_dip_lo; L.cfg.dip_gmt_hi = g_dip_hi; }
    L.SetBase(base, (int)base.size()); L.SetHTF(htf, (int)htf.size());
    if(!L.Compute()) return 2;
    L.RunLab(L.cfg.warmup, (int)base.size() - 1, 60.0, 50, 5);
@@ -1084,6 +1113,37 @@ static void test_exits()
 
 // Replay a trade on the underlying 1-minute bars: the "truth" the bar simulator approximates.
 // Same rules as SimulateTradeEx (trail and exits at M15 closes); only the order of prices inside a bar is exact.
+// cost guard: no setup may carry a stop shorter than min_stop_cost round-trip costs
+static void test_cost_guard()
+{
+   std::printf("\n== unit tests: cost guard (stop must be >= 20 round-trip costs) ==\n");
+   Series S = make_series(W_TREND, 6000, 11);
+   CXauEngine e;
+   load(e, S, (int)S.m15.size());
+   e.cfg.cost_price = 0.30; e.cfg.min_stop_cost = 20.0;
+   int n_ok = 0, n_cost = 0, n_short = 0;
+   for(int st = 0; st < XS_COUNT; st++)
+      for(int i = e.cfg.warmup + 10; i < e.n - 2; i++)
+      {
+         XExit x; XMakeExit(XP_CLASSIC, e.cfg, x);
+         XSignal sg;
+         if(e.StrategySignal(st, i, x, sg)) { n_ok++; if(sg.risk < 20.0 * 0.30 - 1e-9) n_short++; }
+         else if(sg.reason == XR_COST) n_cost++;
+      }
+   CHECK(n_ok > 0 && n_short == 0, "every accepted setup has a stop of at least 20 x 0.30 = 6.00");
+   CHECK(n_cost > 0, "setups with shorter stops are refused with the reason 'stop too short for the spread'");
+   e.cfg.min_stop_cost = 0.0;
+   int n_off = 0;
+   for(int st = 0; st < XS_COUNT; st++)
+      for(int i = e.cfg.warmup + 10; i < e.n - 2; i++)
+      {
+         XExit x; XMakeExit(XP_CLASSIC, e.cfg, x);
+         XSignal sg;
+         if(e.StrategySignal(st, i, x, sg)) n_off++;
+      }
+   CHECK(n_off == n_ok + n_cost, "with the guard off exactly those setups come back");
+}
+
 static bool truth_trade(const Series &S, const CXauEngine &e, int i, int dir, double sl_price, const XExit &x, double &r_net)
 {
    const int eidx = i + 1;
@@ -1464,8 +1524,17 @@ static void run_gating(World w, const char *label, int seeds, int nbars, int seg
 int main(int argc, char **argv)
 {
    const char *mode = (argc > 1) ? argv[1] : "all";
+   if(std::getenv("XAU_MINSTOP")) g_minstop = std::atof(std::getenv("XAU_MINSTOP"));
+   if(std::getenv("XAU_TARGET")) g_target = std::atof(std::getenv("XAU_TARGET"));
+   if(std::getenv("XAU_COST")) g_cost = std::atof(std::getenv("XAU_COST"));
+   if(std::getenv("XAU_DIPWIN"))
+   {
+      const char *w = std::getenv("XAU_DIPWIN");
+      if(!std::strcmp(w, "off")) { g_dip_lo = -1.0; g_dip_hi = 24.0; }
+      else if(std::sscanf(w, "%lf-%lf", &g_dip_lo, &g_dip_hi) != 2) { g_dip_lo = -2.0; }
+   }
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); }
    if(all || !std::strcmp(mode, "calib"))   run_calibration();
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); test_strategy_windows(); test_resolve(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);

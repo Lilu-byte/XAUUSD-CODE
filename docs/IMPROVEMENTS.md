@@ -61,3 +61,18 @@ protect-profit move to break-even before red-folder news, an XAGUSD correlation 
 | 43 | **Multi-timeframe next-candle line** | DONE | |
 | 44 | **Data export script** and real-data mode in the harness | DONE | So real XAUUSD can be tested next |
 | 45 | **Presets generated from the EA's own inputs** | DONE | They can no longer drift out of date |
+
+## Round 7 (demo screenshot of 30 Sep 2026: "make the demo profitable")
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 46 | **Cost guard** in the engine (`min_stop_cost`, EA/indicator input *InpMinStopCosts* = 20) with its own reason "stop too short for the spread" | DONE | Real data: the spread took 5-15% of every short-stop trade; the guard lifted the EA replay on every timeframe |
+| 47 | **Fixed tested cost** (*InpCostPrice* = 0.35) instead of 1.5x the spread of the moment | DONE | The Lab ran at server midnight, when the spread is widest, and the indicator and EA could test different costs and choose differently |
+| 48 | **Account-fit status** in the indicator (TOO BIG, SKIP / NO FREE MARGIN) and no alert for trades the account cannot carry | DONE | Weekly chart: BUY NOW at 514% risk |
+| 49 | **Demo rehearsal mode** (*InpDemoMode*), free run capped at *InpDemoMaxRiskPct* | DONE | The demo must behave like the real account it is meant to preview |
+| 50 | **Margin level and spread checks** before every entry, in every mode | DONE | Margin level 79% on the screenshot |
+| 51 | **Lot planning refuses a trade when free margin is <= 0** (it used to skip the margin check) | DONE | Bug: a negative free margin bypassed the margin cap |
+| 52 | **"ACCOUNT TOO SMALL HERE"** status in the EA with the balance the trade needs | DONE | |
+| 53 | **Optional stop for positions without one** (*InpProtectManual*) | DONE (off) | |
+| 54 | **Panel text wraps** at MT5's 63-character label limit | DONE | Lines were cut off on the screenshot |
+| 55 | **D1/W1 display**: hold time in days/weeks, "close by" as a date, no "day range used" | DONE | |
+| 56 | **Idea screen** `research/sim/ideas.cpp` (discovery/holdout split, filters, new rules, session drift) wired into `run_checks.sh` | DONE | |

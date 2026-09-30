@@ -38,7 +38,9 @@ Probability of **doubling** (P2x), of a month ending **20% or more down** (P-20)
    The tools therefore report expectancy and profit factor next to win-rate.
 5. Small accounts have an additional floor: XAUUSD is 100 oz per lot, so 0.01 lot loses $1 per $1 move.
    With a $10 stop, one minimum lot risks $10; on a $100 account that is 10% per trade.
-   On a live account the EA **refuses** such a trade rather than silently over-risking; the indicator shows the minimum lot with a warning of the real percentage. Use a cent/micro account, or a larger balance.
+   On a live account (and on a demo in the default *Rehearsal* mode) the EA **refuses** such a trade rather than silently over-risking,
+   and the indicator shows **TOO BIG, SKIP** with the balance the trade needs. Use a cent/micro account, or a larger balance.
+   Rough minimums for 1% risk at 0.01 lot with Sep 2026 volatility: M5 550 USD, M15 1,100, H1 2,400, H4 5,300, D1 17,000.
 
 ## Win-rate is set by the exits
 In a market with no edge the chance of reaching a target T before a stop S is about S / (S + T):
