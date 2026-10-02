@@ -1,6 +1,10 @@
 ; XAU_Sniper_HighWin
 ; Highest share of winners: the lab must see 65% wins and every trade uses the High-hit exit (70% closed at 0.5R). Smaller average win; judge it by profit, not win-rate alone.
 ; Load via the EA inputs dialog: Load. Symbol XAUUSD (M15 or H1).
+InpMode=-1
+InpTrendWinTarget=50.0
+InpTrendMaxPositions=3
+InpMaxOpenRiskPct=3.0
 InpStrategy=-1
 InpExit=1
 InpWinTarget=65.0

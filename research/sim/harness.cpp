@@ -533,19 +533,28 @@ static void run_lab_variants()
 // indicator), the pick is taken, and that day's signals of the pick are traded one at a time.
 // Signals come from one engine over the whole series (tested: identical to a shorter live window).
 //---------------------------------------------------------------------------
-struct ReplayOut { XStats live, demo; int days, days_traded; int picks[XLAB_CELLS]; };
+struct ReplayOut { XStats live, demo, multi, rnd; XStats multi_y[40], live_y[40]; int days, days_traded; int picks[XLAB_CELLS]; };
+static int g_rand_ctrl = 0;   // env XAU_RANDCTRL=1: control - random long entries (same exits) at the MULTI trade rate
+static int g_multi_cap = 3;   // MULTI: every combination that passes today trades, at most this many positions at once
 static double g_minstop = -1.0;   // cost-guard override for real-data runs (env XAU_MINSTOP; -1 = engine default)
 static double g_target = 60.0;    // Strategy Lab win-rate target for real-data runs (env XAU_TARGET)
 static double g_cost = -1.0;      // round-trip cost for real-data runs (env XAU_COST; -1 = engine default 0.30)
 static double g_dip_lo = -2.0, g_dip_hi = 24.0;
 static std::vector<MqlRates> g_d1;   // daily bars for the daily trend filter (env XAU_D1 = path to the D1 csv)
-static int g_d1mode = -1;            // env XAU_D1MODE (0 off, 1 with the trend, 2 buys only in an up trend; -1 = engine default)   // dip-strategy GMT window for real-data runs (env XAU_DIPWIN="17-21", "off"; -2 = default)
+static int g_d1mode = -1;
+static double g_swapl = 0.0, g_swaps = 0.0;  // env XAU_SWAPL / XAU_SWAPS: swap cost per oz per night            // env XAU_D1MODE (0 off, 1 with the trend, 2 buys only in an up trend; -1 = engine default)   // dip-strategy GMT window for real-data runs (env XAU_DIPWIN="17-21", "off"; -2 = default)
 static double g_rp_se = 1.0, g_rp_buf = 3.0; static int g_rp_win = 0, g_rp_min = 50, g_rp_rec = 1;   // = engine defaults
 
 static void live_replay(const std::vector<MqlRates> &base, const std::vector<MqlRates> &htf, int base_sec, int htf_sec,
                         int lab_bars, double target, int min_trades, int gmt_off, int dst, ReplayOut &o)
 {
-   o.live.Reset(); o.demo.Reset(); o.days = 0; o.days_traded = 0;
+   o.live.Reset(); o.demo.Reset(); o.multi.Reset(); o.rnd.Reset(); o.days = 0; o.days_traded = 0;
+   for(int y = 0; y < 40; y++) { o.multi_y[y].Reset(); o.live_y[y].Reset(); }
+   unsigned rng = 12345u;
+   int busy_rnd = -1;
+   bool pass_today[XLAB_CELLS];
+   int busy_cell[XLAB_CELLS];
+   for(int c = 0; c < XLAB_CELLS; c++) { pass_today[c] = false; busy_cell[c] = -1; }
    for(int c = 0; c < XLAB_CELLS; c++) o.picks[c] = 0;
    const int N = (int)base.size();
    CXauEngine E;
@@ -554,6 +563,7 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
    if(g_cost > 0.0) E.cfg.cost_price = g_cost;
    if(g_dip_lo > -2.0) { E.cfg.dip_gmt_lo = g_dip_lo; E.cfg.dip_gmt_hi = g_dip_hi; }
    if(g_d1mode >= 0) E.cfg.d1_mode = g_d1mode;
+   E.cfg.swap_long = g_swapl; E.cfg.swap_short = g_swaps;
    if(!g_d1.empty()) E.SetDaily(g_d1, (int)g_d1.size());
    E.SetBase(base, N);
    E.SetHTF(htf, (int)htf.size());
@@ -580,9 +590,11 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
          L.SetHTF(lh, (int)lh.size());
          if(!g_d1.empty()) L.SetDaily(g_d1, (int)g_d1.size());
          pick_live = -1; pick_demo = -1;
+         for(int c = 0; c < XLAB_CELLS; c++) pass_today[c] = false;
          if(L.Compute())
          {
             L.RunLab(L.cfg.warmup, L.n - 1, target, (g_rp_min > 0) ? g_rp_min : min_trades, 5);
+            for(int c = 0; c < XLAB_CELLS; c++) pass_today[c] = L.lab[c].qualified;
             bool proven;
             const int c = L.LabActiveCell(min_trades, proven);
             pick_demo = c;
@@ -595,7 +607,34 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
       {
          XExit x; XMakeExit(pick_live % XP_COUNT, E.cfg, x);
          if(E.StrategySignal(pick_live / XP_COUNT, i, x, sg) && E.SimulateTradeEx(i, sg.dir, sg.sl, N - 2, x, r))
-         { busy_live = r.exit_idx; if(r.closed) o.live.Add(r); }
+         { busy_live = r.exit_idx; if(r.closed) { o.live.Add(r); o.live_y[XClampI(XYearOfDays(base[i].time / 86400) - 2000, 0, 39)].Add(r); } }
+      }
+      // MULTI: every passing combination, own position each, at most g_multi_cap open at once
+      {
+         int open_now = 0;
+         for(int c = 0; c < XLAB_CELLS; c++) if(busy_cell[c] >= i) open_now++;
+         for(int c = 0; c < XLAB_CELLS && open_now < g_multi_cap; c++)
+         {
+            if(!pass_today[c] || i <= busy_cell[c]) continue;
+            XExit x; XMakeExit(c % XP_COUNT, E.cfg, x);
+            XSignal s2; XTradeResult r2;
+            if(E.StrategySignal(c / XP_COUNT, i, x, s2) && E.SimulateTradeEx(i, s2.dir, s2.sl, N - 2, x, r2))
+            { busy_cell[c] = r2.exit_idx; open_now++; if(r2.closed) { o.multi.Add(r2); o.multi_y[XClampI(XYearOfDays(base[i].time / 86400) - 2000, 0, 39)].Add(r2); } }
+         }
+      }
+      // CONTROL: random long entries (daily trend filter applied the same way), the rider exit, ~1 per 2 days
+      if(g_rand_ctrl && i > busy_rnd && E.FilterReason(i) == XR_OK && (E.cfg.d1_mode == 0 || E.m_dreg[i] > 0))
+      {
+         rng = rng * 1103515245u + 12345u;
+         const double per_bar = 0.5 / std::max(1.0, 86400.0 / base_sec);
+         if((rng >> 8) % 100000 < (unsigned)(per_bar * 100000))
+         {
+            XExit x; XMakeExit(XP_RIDER, E.cfg, x);
+            XSignal s3; s3.Reset();
+            XTradeResult r3;
+            if(E.BuildPlanEx(i, 1, s3, x.sl_min_atr, x.sl_max_atr, x.tp1_r, 0.0) && E.SimulateTradeEx(i, 1, s3.sl, N - 2, x, r3))
+            { busy_rnd = r3.exit_idx; if(r3.closed) o.rnd.Add(r3); }
+         }
       }
       if(pick_demo >= 0 && i > busy_demo)
       {
@@ -614,6 +653,18 @@ static void print_replay(const char *label, const ReplayOut &o, double days_per_
    print_stats("", o.live);
    std::printf("  %-10s DEMO (closest pick always) %.2f trades/day", "", o.days ? (double)o.demo.n / o.days : 0.0);
    print_stats("", o.demo);
+   std::printf("  %-10s MULTI (all passing, <=%d)  %.2f trades/day", "", g_multi_cap, o.days ? (double)o.multi.n / o.days : 0.0);
+   print_stats("", o.multi);
+   if(g_rand_ctrl)
+   {
+      std::printf("  %-10s CONTROL random longs, rider %.2f trades/day", "", o.days ? (double)o.rnd.n / o.days : 0.0);
+      print_stats("", o.rnd);
+   }
+   std::printf("  %-10s by year, MULTI / LIVE avg R (trades):", "");
+   for(int y = 0; y < 40; y++)
+      if(o.multi_y[y].n + o.live_y[y].n > 0)
+         std::printf(" %d %+.2f(%d)/%+.2f(%d)", 2000 + y, o.multi_y[y].Expectancy(), o.multi_y[y].n, o.live_y[y].Expectancy(), o.live_y[y].n);
+   std::printf("\n");
    std::printf("  %-10s most used picks:", "");
    for(int k = 0; k < 3; k++)
    {
@@ -928,6 +979,7 @@ static int run_real(int argc, char **argv)
    if(g_cost > 0.0) L.cfg.cost_price = g_cost;
    if(g_dip_lo > -2.0) { L.cfg.dip_gmt_lo = g_dip_lo; L.cfg.dip_gmt_hi = g_dip_hi; }
    if(g_d1mode >= 0) L.cfg.d1_mode = g_d1mode;
+   L.cfg.swap_long = g_swapl; L.cfg.swap_short = g_swaps;
    L.SetBase(lb, NL); L.SetHTF(htf, (int)htf.size());
    if(!g_d1.empty()) L.SetDaily(g_d1, (int)g_d1.size());
    if(!L.Compute()) { std::printf("not enough bars\n"); return 2; }
@@ -994,6 +1046,7 @@ static int run_real_blocks(int argc, char **argv)
    if(g_cost > 0.0) L.cfg.cost_price = g_cost;
    if(g_dip_lo > -2.0) { L.cfg.dip_gmt_lo = g_dip_lo; L.cfg.dip_gmt_hi = g_dip_hi; }
    if(g_d1mode >= 0) L.cfg.d1_mode = g_d1mode;
+   L.cfg.swap_long = g_swapl; L.cfg.swap_short = g_swaps;
    L.SetBase(base, (int)base.size()); L.SetHTF(htf, (int)htf.size());
    if(!g_d1.empty()) L.SetDaily(g_d1, (int)g_d1.size());
    if(!L.Compute()) return 2;
@@ -1681,6 +1734,10 @@ int main(int argc, char **argv)
    if(std::getenv("XAU_TARGET")) g_target = std::atof(std::getenv("XAU_TARGET"));
    if(std::getenv("XAU_COST")) g_cost = std::atof(std::getenv("XAU_COST"));
    if(std::getenv("XAU_D1MODE")) g_d1mode = std::atoi(std::getenv("XAU_D1MODE"));
+   if(std::getenv("XAU_RANDCTRL")) g_rand_ctrl = std::atoi(std::getenv("XAU_RANDCTRL"));
+   if(std::getenv("XAU_MULTICAP")) g_multi_cap = std::atoi(std::getenv("XAU_MULTICAP"));
+   if(std::getenv("XAU_SWAPL")) g_swapl = std::atof(std::getenv("XAU_SWAPL"));
+   if(std::getenv("XAU_SWAPS")) g_swaps = std::atof(std::getenv("XAU_SWAPS"));
    if(std::getenv("XAU_D1") && load_csv(std::getenv("XAU_D1"), g_d1)) g_d1.pop_back();
    if(std::getenv("XAU_DIPWIN"))
    {

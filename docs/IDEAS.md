@@ -381,3 +381,59 @@ Numbers: [REAL_DATA.md section 9](REAL_DATA.md#9-round-9-more-precise-trades-on-
 | 250 | Exchange (COMEX) volume instead of tick volume | REJECTED | Not in a retail MT5 feed |
 | 251 | Engine entry at a chosen bar and price (`SimulateTradeAt`) | BUILT | Used by the research; tested against the old simulator |
 | 252 | MetaEditor "hides member" warning check in the offline checker (-Wshadow) | BUILT | The last build's single warning came from this |
+
+## Round 10: fifty ideas for different mechanisms (not new settings on the same breakout)
+Audit of everything so far: [AUDIT.md](AUDIT.md). Numbers: [REAL_DATA.md section 10](REAL_DATA.md#10-round-10-different-mechanisms-not-new-settings).
+Includes the earlier ideas that were proposed but never built.
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 253 | **Clock**: buy after the daily reopen, sell 2 hours later (no pattern) | TESTED - rejected | H1: lost in every year 2016-2024 |
+| 254 | Clock: buy after the reopen, hold to London (01:30-08:30) | TESTED - rejected | |
+| 255 | Clock: buy through Asia only while the daily trend is up | TESTED - rejected | Worse than without the filter |
+| 256 | Clock: hold long through the daily break (pays swap) | TESTED - rejected | Positive only in 2025-2026 |
+| 257 | Clock: short the US cash session ("gold falls in the West") | TESTED - rejected | Lost 2017-2025 every year |
+| 258 | Clock: long or short London 10:00-15:00 | TESTED - rejected | |
+| 259 | London AM fix: 30 minutes before / after | TESTED - rejected | M5 positive in both halves, M15 (4 years) negative |
+| 260 | London PM fix: 30 minutes before / after | TESTED - rejected | |
+| 261 | Fade weekend gaps back to Friday's close | TESTED - rejected | Gaps filled only 15-48% of the time |
+| 262 | Day after a 2-sigma day: fade it | TESTED - rejected | Big down days were not followed by rebounds |
+| 263 | Day after a 2-sigma up day: follow it | TESTED - not adopted | Slightly positive in both halves, within noise |
+| 264 | Month-of-year seasonality | TESTED - rejected | Chosen months did not beat the rest out of sample |
+| 265 | Weekday effect (Friday) | TESTED - not adopted | Strongest in both halves; needs weekend holds |
+| 266 | **Trade the size forecast**: fade a close outside the cone | TESTED - rejected | Loses about the spread on every chart |
+| 267 | Follow a close outside the cone | TESTED - promising (H4 only) | H4 positive in both halves, but only in trending years: the same edge as TREND |
+| 268 | Squeeze straddle (two-way stops around a quiet box) | TESTED - rejected | |
+| 269 | Squeeze, upside only, daily trend up | TESTED - rejected | |
+| 270 | **Rider exit**: a third at 1R, stop to entry, 3-ATR trail, up to 5 days | BUILT | Positive skew: few big winners |
+| 271 | **Swing exit**: the classic exit held up to 3 days | BUILT | |
+| 272 | **TREND mode**: every passing combination trades at once (portfolio) | BUILT | H1 +0.11R per trade over 676 trades |
+| 273 | 50% Lab target for trend exits (60% is the wrong bar for positive skew) | BUILT | |
+| 274 | Total open-risk cap across positions (3%) | BUILT | |
+| 275 | Overnight swap in the simulator and the Lab, broker's own rates, triple Wednesday | BUILT | |
+| 276 | Multi-day positions kept over Friday; time stop counted in chart bars | BUILT | |
+| 277 | AUTO mode: TREND on H1/H4, STEADY on M1-M30 and D1+ | BUILT | Trend exits lost on M15 (-0.04R) |
+| 278 | Random-entry control in the replay (same exits, same filter) | BUILT | Separates skill from "being long gold" |
+| 279 | Per-year results in the replay | BUILT | Showed the profit is concentrated in trending years |
+| 280 | TREND mode on M5/M15 | TESTED - rejected | |
+| 281 | TREND mode without the daily filter | TESTED - rejected | H1 +0.03R instead of +0.11R |
+| 282 | TREND mode trading with the daily trend both ways | TESTED - not adopted | +0.08R, a bit worse than buys only |
+| 283 | Positions at once: 1 to 5 | TESTED | H1: 1 = +0.05R (298 trades), 3 = +0.11R (676), 5 = +0.11R (866); 3 is the default |
+| 284 | Lab window on H4 (6,000 vs 10,000 bars) | TESTED - warning | +0.14R vs +0.01R: H4 results are fragile; H1 is not |
+| 285 | Indicator: session clock line (current session and the next event) | BUILT | "London open in 1h20" |
+| 286 | Indicator: in TREND mode show any passing strategy's signal | BUILT | |
+| 287 | EA panel: every open position with its exit style and P/L | BUILT | |
+| 288 | Export: broker swap mode and rates | BUILT | |
+| 289 | Dollar index / EURUSD moving before gold (M1-M5) | NEEDS DATA | Run the export script (round 9 version) and send the files |
+| 290 | Silver moving before gold; gold/silver ratio extremes | NEEDS DATA | `InpExtraSymbols` includes XAGUSD |
+| 291 | US 10-year real yield as a regime switch | NEEDS DATA | Not in most MT5 feeds; a bond CFD can stand in |
+| 292 | Size of US data surprises (actual vs forecast) and gold's next hour | NEEDS DATA | The export saves the calendar |
+| 293 | Speculator positioning extremes (weekly COT report) | PROPOSED | External weekly data, slow signal for TREND mode |
+| 294 | Gold ETF holdings change as a trend filter | PROPOSED | External data |
+| 295 | Volatility-targeted size (same dollar risk per day, not per trade) | PROPOSED | Smoother equity; adds no edge |
+| 296 | Pause after a drawdown on the EA's own equity curve | PROPOSED | Usually cuts recoveries as much as losses; test before building |
+| 297 | Add to a winning Rider position (pyramiding) | PROPOSED | Raises the payoff skew; needs margin |
+| 298 | Weekly trend filter on top of the daily | PROPOSED | Fewer trades; may avoid 2021-2024 chop |
+| 299 | One-line "today's plan" on the indicator (buy only / stand aside, expected range) | PROPOSED | Next simplification step |
+| 300 | Cent account or FX pairs with finer lots for $50-100 | NEEDS BROKER | The only way a small account can use these rules |
+| 301 | Export the EA's own trades to compare demo with the replay | PROPOSED | Detects broker differences early |
+| 302 | Options-implied gold volatility (GVZ) for the range forecast | REJECTED for now | Not in an MT5 feed |

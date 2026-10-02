@@ -69,6 +69,8 @@
 
 //--- inputs -----------------------------------------------------------
 input group "=== What to trade ==="
+input ENUM_XAU_MODE   InpMode           = XAU_MODE_AUTO; // Mode (AUTO: TREND on H1/H4, STEADY elsewhere; keep equal to the EA)
+input double          InpTrendWinTarget = 50.0;          // TREND mode: Lab target (% winners; keep equal to the EA)
 input ENUM_XAU_STRAT  InpStrategy       = XAU_ST_AUTO;   // Strategy (AUTO = the one that passed the Strategy Lab here)
 input ENUM_XAU_EXIT   InpExit           = XAU_EX_AUTO;   // Exit style (AUTO = chosen together with the strategy)
 input double          InpWinTarget      = 60.0;          // Strategy Lab: minimum % of winning trades
@@ -153,6 +155,10 @@ XRATESARR(g_irates);
 XRATESARR(g_drates);
 int        g_gh = 0, g_gi = 0;
 int        g_hist = 10000;          // Strategy Lab window (resolved from InpHistoryBars)
+int        g_mode = XAU_MODE_STEADY;
+int        g_pass[XLAB_CELLS];      // TREND mode: passing combinations, best first
+int        g_npass = 0;
+int        g_best_s = -1, g_best_p = XP_CLASSIC;
 string     g_inter_sym    = "";
 bool       g_inter_invert = false;
 datetime   g_last_bar     = 0;
@@ -261,6 +267,8 @@ int OnInit()
    IndicatorSetInteger(INDICATOR_DIGITS, _Digits);
 
    g_hist = XResolveHistoryBars(InpHistoryBars, (ENUM_TIMEFRAMES)_Period);
+   g_mode = XResolveMode((int)InpMode, (ENUM_TIMEFRAMES)_Period);
+   g_npass = 0; g_best_s = -1;
    g_htf = (InpHTF == PERIOD_CURRENT) ? XAutoHTF((ENUM_TIMEFRAMES)_Period) : InpHTF;
    if(PeriodSeconds(g_htf) <= PeriodSeconds((ENUM_TIMEFRAMES)_Period)) g_htf = XAutoHTF((ENUM_TIMEFRAMES)_Period);
    g_inter_sym = XResolveInterSymbol(InpInterSymbol, g_inter_invert);
@@ -323,12 +331,16 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf, const ENUM_TIMEFRAMES htf)
    c.cost_price = XMax(InpCostPrice, 0.01);
    c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
    c.d1_mode = XResolveD1Mode((int)InpDailyTrend, tf);
+   // the broker's real overnight swap, so multi-day exits are tested with what holding really costs
+   c.swap_long = XSwapCostPerUnit(_Symbol, true);
+   c.swap_short = XSwapCostPerUnit(_Symbol, false);
 }
 
 //+------------------------------------------------------------------+
 //| Strategy Lab: once a day on a fixed window, then choose           |
 //+------------------------------------------------------------------+
 void SelectStrategy();
+double LabTarget();
 
 void RunLabIfNeeded(const datetime now_bar)
 {
@@ -337,7 +349,7 @@ void RunLabIfNeeded(const datetime now_bar)
    FillConfig(g_lab.cfg, (ENUM_TIMEFRAMES)_Period, g_htf);
    // the fixed window (same bars as the EA): retried on every new bar until the history is there
    if(XRunDailyLab(g_lab, _Symbol, (ENUM_TIMEFRAMES)_Period, g_htf, g_hist, g_inter_sym, g_inter_invert,
-                   InpWinTarget, InpLabMinTrades, InpLabFolds, ds))
+                   LabTarget(), InpLabMinTrades, InpLabFolds, ds))
    {
       g_lab_ok = true;
       g_lab_day = ds;
@@ -351,15 +363,28 @@ void RunLabIfNeeded(const datetime now_bar)
    g_lab.SetDaily(g_drates, ArraySize(g_drates));
    if(g_gi > 100) g_lab.SetInter(g_irates, g_gi, g_inter_invert);
    g_lab_ok = g_lab.Compute();
-   if(g_lab_ok) g_lab.RunLab(g_lab.cfg.warmup, g_n - 2, InpWinTarget, InpLabMinTrades, InpLabFolds);
+   if(g_lab_ok) g_lab.RunLab(g_lab.cfg.warmup, g_n - 2, LabTarget(), InpLabMinTrades, InpLabFolds);
    SelectStrategy();
+}
+
+double LabTarget()
+{
+   return (g_mode == XAU_MODE_TREND) ? InpTrendWinTarget : InpWinTarget;
 }
 
 void SelectStrategy()
 {
    g_cell = -1;
    g_proven = false;
+   g_npass = 0;
+   g_best_s = -1;
    if(!g_lab_ok) return;
+   for(int k = 0; k < XLAB_CELLS; k++)
+   {
+      const int c = g_lab.LabRanked(k);
+      if(c < 0) break;
+      if(g_lab.lab[c].qualified) g_pass[g_npass++] = c;
+   }
    int us = (int)InpStrategy;
    const int up = (int)InpExit;
    if(InpOrbSolo) us = XS_ORB;
@@ -367,7 +392,31 @@ void SelectStrategy()
    if(g_cell < 0) { g_act_s = -1; return; }
    g_act_s = g_cell / XP_COUNT;
    g_act_p = g_cell % XP_COUNT;
+   g_best_s = g_act_s; g_best_p = g_act_p;
    XMakeExit(g_act_p, g_eng.cfg, g_act_x);
+}
+
+// TREND mode: if another passing combination has a fresh signal on the last closed bar (and the best one has not),
+// show that one (plan, box, alert). The history arrows stay those of the best combination.
+void TrendOverlay()
+{
+   if(g_mode != XAU_MODE_TREND || g_npass < 2 || !g_ready) return;
+   const int i = g_n - 2;
+   if(g_sig_i == i) return;
+   for(int k = 0; k < g_npass; k++)
+   {
+      const int c = g_pass[k];
+      const int st = c / XP_COUNT, pr = c % XP_COUNT;
+      if(st == g_best_s && pr == g_best_p) continue;
+      XExit x;
+      XMakeExit(pr, g_eng.cfg, x);
+      XSignal s;
+      if(!g_eng.StrategySignal(st, i, x, s)) continue;
+      g_act_s = st; g_act_p = pr; g_act_x = x;
+      g_cell = c; g_proven = true;
+      g_sig = s; g_sig_i = i;
+      return;
+   }
 }
 
 //+------------------------------------------------------------------+
@@ -418,8 +467,14 @@ bool Rebuild(const int rates_total, const datetime &time[], const double &open[]
    if(!g_eng.Compute()) return false;
    g_ready = true;
    RunLabIfNeeded(time[rates_total - 1]);
+   if(g_best_s >= 0)
+   {
+      // back to the Lab's best combination (TrendOverlay may have shown another one on the previous bar)
+      g_act_s = g_best_s; g_act_p = g_best_p; g_cell = g_best_s * XP_COUNT + g_best_p; g_proven = g_lab.lab[g_cell].qualified;
+   }
    XMakeExit(g_act_p, g_eng.cfg, g_act_x);
    FillBuffers(rates_total);
+   TrendOverlay();
    AnalogRefresh();
    return true;
 }
@@ -908,6 +963,14 @@ void DrawMainPanel()
       }
    }
 
+   if(g_mode == XAU_MODE_TREND)
+   {
+      string mline = "TREND mode: ";
+      if(g_npass > 0) mline += IntegerToString(g_npass) + " strateg" + (g_npass > 1 ? "ies" : "y") + " passed today; any of them can signal";
+      else mline += "nothing passed today";
+      if(g_eng.cfg.d1_mode == 2 && g_eng.d1n > 0 && g_eng.m_dreg[n - 1] <= 0) mline += " - daily trend not up: no buys";
+      g_pm.Line(mline, (g_npass > 0) ? ClrGreen() : ClrGold());
+   }
    if(g_act_s >= 0)
    {
       string badge = "  [PROVEN]";
@@ -940,6 +1003,7 @@ void DrawMainPanel()
    }
    if(PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400) trl += "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%";
    g_pm.Line(trl, ClrText());
+   g_pm.Line(XSessionLine(g_eng.cfg, TimeTradeServer()), ClrDim());
    g_pm.Line(AnalogLine(), (g_an_state == 3) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
    const string rl = RangeLine();
    if(StringLen(rl) > 0) g_pm.Line(rl, ClrText());

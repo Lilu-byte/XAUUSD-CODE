@@ -1,6 +1,10 @@
 ; XAU_Sniper_Multi_H4
-; Run together with Multi_M15 and Multi_H1: XAUUSD H4 chart. Buys only while the daily trend is up (AUTO).
+; Run together with Multi_M15 and Multi_H1: XAUUSD H4 chart. AUTO = TREND mode here: buys only while the daily trend is up, multi-day exits.
 ; Load via the EA inputs dialog: Load. Symbol XAUUSD (M15 or H1).
+InpMode=-1
+InpTrendWinTarget=50.0
+InpTrendMaxPositions=3
+InpMaxOpenRiskPct=3.0
 InpStrategy=-1
 InpExit=-1
 InpWinTarget=60.0

@@ -109,6 +109,10 @@
   Quick 0.6R         trend       +0.074    +0.074    +0.068 |     69.0%     69.0%     68.6% | 0.000 / 0.006  (n=3795)
   Mean-revert exit   null        -0.003    -0.003    -0.003 |     51.9%     51.9%     51.9% | 0.000 / 0.000  (n=6036)
   Mean-revert exit   trend       +0.009    +0.009    +0.009 |     52.9%     52.9%     52.9% | 0.000 / 0.000  (n=6230)
+  Trend rider (days) null        +0.037    +0.040    -0.070 |     51.2%     51.2%     51.0% | 0.003 / 0.107  (n=3454)
+  Trend rider (days) trend       +0.805    +0.807    +0.651 |     59.5%     59.5%     59.5% | 0.001 / 0.154  (n=3795)
+  Swing 3 days       null        +0.007    +0.009    -0.069 |     51.2%     51.2%     51.0% | 0.002 / 0.076  (n=3454)
+  Swing 3 days       trend       +0.286    +0.286    +0.207 |     59.5%     59.5%     59.5% | 0.001 / 0.078  (n=3795)
   ok:   candle-path fills are within 0.05R of minute-level truth on average for every exit profile
 
 == causality: signals on truncated data must equal signals on full data ==
@@ -125,7 +129,7 @@
   ok:   3000-bar window (EA) gives identical signals over the newest 1500 bars (15 trading days)
 
 == strategy signals: 3,000-bar (EA) vs 10,000-bar (indicator) window, every strategy x exit ==
-  191872 comparisons, 3466 signals, 0 differences
+  287808 comparisons, 4950 signals, 0 differences
   ok:   EA (3,000 bars) and indicator (10,000 bars) produce identical signals for every strategy and exit
 
 == choosing the strategy in use ==
@@ -196,7 +200,7 @@
 == analog (pattern-matching) forecaster ==
   causality: 16 queries compared on truncated vs full history, 0 differ
   ok:   analog forecast identical on truncated vs full history (no look-ahead)
-  audit + live query on 6000 bars: 30 ms
+  audit + live query on 6000 bars: 40 ms
   NULL (no edge: must be ~50%)     next bar: all 49.8% (n=19995) confident 50.5% (n=4477) | +4 bars: all 50.1% confident 51.4% (n=6655, z=+2.2) | old drift model: next 49.8%, +4 49.9%
   ok:   no-edge world: analog hit-rate is a coin flip (no leakage)
   ok:   no-edge world: even the 'confident' calls do not beat a coin flip
@@ -205,133 +209,143 @@
   MIXED                            next bar: all 51.2% (n=19995) confident 53.7% (n=5504) | +4 bars: all 53.5% confident 56.5% (n=8258, z=+11.8) | old drift model: next 50.6%, +4 51.2%
 
 == Strategy Lab on world NULL (no edge) (4 seeds x 30000 M15 bars, target 60% wins, min 50 trades, 5 folds) ==
-  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit      
-  Confluence (9 modules)   |    50% +0.006R n=408   |    64% -0.053R n=422   |    60% -0.069R n=426   |    45% -0.036R n=655  
-  Opening-range breakout   |    51% +0.007R n=434   | *  67% +0.006R n=435   | *  64% +0.008R n=435   |    44% +0.007R n=670  
-  RSI-2 dip in trend       |    51% +0.011R n=1415  |    66% -0.024R n=1495  |    62% -0.046R n=1492  |    55% -0.013R n=2379 
-  Double-7 dip in trend    |    50% -0.013R n=2389  |    65% -0.036R n=2627  |    61% -0.065R n=2722  |    57% -0.004R n=4222 
-  Weak-close dip in trend  |    50% -0.015R n=3422  |    66% -0.022R n=3969  |    62% -0.037R n=4321  |    57% -0.012R n=6698 
-  Stop-hunt reversal       |    50% -0.002R n=1158  |    64% -0.048R n=1249  |    61% -0.051R n=1256  |    48% -0.040R n=1728 
-  EMA pullback             |    52% +0.024R n=252   |    67% -0.004R n=272   |    63% -0.019R n=279   |    50% +0.008R n=389  
-  Squeeze breakout         |    51% +0.035R n=840   |    65% -0.030R n=883   |    62% -0.029R n=904   |    41% -0.037R n=1635 
+  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit       | Trend rider (days)     | Swing 3 days          
+  Confluence (9 modules)   |    50% +0.006R n=408   |    64% -0.053R n=422   |    60% -0.069R n=426   |    45% -0.036R n=655   |    51% +0.051R n=402   |    51% +0.013R n=407  
+  Opening-range breakout   |    51% +0.007R n=434   | *  67% +0.006R n=435   | *  64% +0.008R n=435   |    44% +0.007R n=670   |    51% +0.021R n=430   |    51% +0.004R n=431  
+  RSI-2 dip in trend       |    51% +0.011R n=1415  |    66% -0.024R n=1495  |    62% -0.046R n=1492  |    55% -0.013R n=2379  |    51% +0.081R n=1279  |    51% +0.012R n=1414 
+  Double-7 dip in trend    |    50% -0.013R n=2389  |    65% -0.036R n=2627  |    61% -0.065R n=2722  |    57% -0.004R n=4222  |    50% +0.058R n=2032  |    50% -0.015R n=2387 
+  Weak-close dip in trend  |    50% -0.015R n=3422  |    66% -0.022R n=3969  |    62% -0.037R n=4321  |    57% -0.012R n=6698  |    50% +0.015R n=2707  |    50% -0.014R n=3392 
+  Stop-hunt reversal       |    50% -0.002R n=1158  |    64% -0.048R n=1249  |    61% -0.051R n=1256  |    48% -0.040R n=1728  |    50% +0.021R n=1112  |    50% -0.005R n=1154 
+  EMA pullback             |    52% +0.024R n=252   |    67% -0.004R n=272   |    63% -0.019R n=279   |    50% +0.008R n=389   |    51% +0.078R n=246   |    51% +0.016R n=252  
+  Squeeze breakout         |    51% +0.035R n=840   |    65% -0.030R n=883   |    62% -0.029R n=904   |    41% -0.037R n=1635  |    51% +0.064R n=814   |    51% +0.045R n=838  
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 0.0 of 32 | final pick counts:
+  qualified cells per seed: 0.0 of 48 | final pick counts:
   AUTO-PICK walk-forward (out-of-sample, honest): traded in 1 of 16 folds;                     n= 165  win%= 64.8  TP1%=  0.0  expR=-0.027 (se 0.060)  PF= 0.92  holdMed=  3 bars
   ok:   no-edge world: the auto-pick's out-of-sample record is not significantly profitable (selection bias contained)
 
 == Strategy Lab on world BULL (steady uptrend, gold 2024-26 style) (4 seeds x 30000 M15 bars, target 60% wins, min 50 trades, 5 folds) ==
-  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit      
-  Confluence (9 modules)   |    55% +0.145R n=482   | *  69% +0.039R n=502   | *  67% +0.044R n=505   |    50% +0.015R n=737  
-  Opening-range breakout   |    55% +0.101R n=454   | *  69% +0.022R n=454   | *  66% +0.034R n=454   |    45% -0.011R n=683  
-  RSI-2 dip in trend       |    50% +0.010R n=2439  |    66% -0.014R n=2579  |    62% -0.033R n=2579  |    56% +0.009R n=2779 
-  Double-7 dip in trend    |    50% +0.009R n=4023  |    65% -0.019R n=4473  |    61% -0.054R n=4610  |    58% +0.013R n=4828 
-  Weak-close dip in trend  |    50% -0.001R n=5174  |    65% -0.023R n=6036  |    61% -0.042R n=6524  |    58% +0.007R n=7500 
-  Stop-hunt reversal       |    51% +0.031R n=1390  |    65% -0.021R n=1496  |    62% -0.030R n=1500  |    52% +0.004R n=1888 
-  EMA pullback             |    57% +0.174R n=333   | *  67% +0.012R n=370   | *  65% +0.022R n=385   |    51% -0.005R n=507  
-  Squeeze breakout         |    52% +0.065R n=901   | *  68% +0.014R n=952   | *  65% +0.023R n=965   |    44% -0.015R n=1700 
+  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit       | Trend rider (days)     | Swing 3 days          
+  Confluence (9 modules)   |    55% +0.145R n=482   | *  69% +0.039R n=502   | *  67% +0.044R n=505   |    50% +0.015R n=737   |    55% +0.278R n=469   |    55% +0.144R n=481  
+  Opening-range breakout   |    55% +0.101R n=454   | *  69% +0.022R n=454   | *  66% +0.034R n=454   |    45% -0.011R n=683   |    56% +0.216R n=443   |    56% +0.136R n=449  
+  RSI-2 dip in trend       |    50% +0.010R n=2439  |    66% -0.014R n=2579  |    62% -0.033R n=2579  |    56% +0.009R n=2779  |    50% +0.093R n=2154  |    50% +0.013R n=2433 
+  Double-7 dip in trend    |    50% +0.009R n=4023  |    65% -0.019R n=4473  |    61% -0.054R n=4610  |    58% +0.013R n=4828  |    50% +0.092R n=3251  |    50% +0.010R n=4010 
+  Weak-close dip in trend  |    50% -0.001R n=5174  |    65% -0.023R n=6036  |    61% -0.042R n=6524  |    58% +0.007R n=7500  |    49% +0.072R n=3802  |    50% -0.001R n=5106 
+  Stop-hunt reversal       |    51% +0.031R n=1390  |    65% -0.021R n=1496  |    62% -0.030R n=1500  |    52% +0.004R n=1888  |    52% +0.118R n=1323  |    51% +0.036R n=1380 
+  EMA pullback             |    57% +0.174R n=333   | *  67% +0.012R n=370   | *  65% +0.022R n=385   |    51% -0.005R n=507   |    56% +0.316R n=313   |    57% +0.177R n=332  
+  Squeeze breakout         |    52% +0.065R n=901   | *  68% +0.014R n=952   | *  65% +0.023R n=965   |    44% -0.015R n=1700  |    52% +0.163R n=857   |    53% +0.074R n=886  
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 1.5 of 32 | final pick counts: [Confluence (9 modules) + Quick 0.6R] x1 [EMA pullback + Classic 1R+runner] x1
-  AUTO-PICK walk-forward (out-of-sample, honest): traded in 9 of 16 folds;                     n= 363  win%= 60.9  TP1%=  0.0  expR=-0.026 (se 0.043)  PF= 0.93  holdMed=  4 bars
+  qualified cells per seed: 2.0 of 48 | final pick counts: [Confluence (9 modules) + Quick 0.6R] x1 [EMA pullback + Trend rider (days)] x1
+  AUTO-PICK walk-forward (out-of-sample, honest): traded in 9 of 16 folds;                     n= 363  win%= 61.4  TP1%=  0.0  expR=-0.022 (se 0.045)  PF= 0.94  holdMed=  4 bars
 
 == Strategy Lab on world TREND (drift regimes) (4 seeds x 30000 M15 bars, target 60% wins, min 50 trades, 5 folds) ==
-  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit      
-  Confluence (9 modules)   |    59% +0.228R n=414   | *  72% +0.110R n=436   | *  68% +0.065R n=442   |    51% +0.040R n=680  
-  Opening-range breakout   |    57% +0.243R n=369   | *  71% +0.091R n=369   | *  67% +0.060R n=369   |    44% +0.011R n=556  
-  RSI-2 dip in trend       |    49% +0.001R n=1338  |    66% -0.018R n=1429  |    62% -0.052R n=1431  |    55% +0.011R n=2359 
-  Double-7 dip in trend    |    50% +0.023R n=2198  |    67% -0.007R n=2444  |    63% -0.030R n=2545  |    58% +0.013R n=3971 
-  Weak-close dip in trend  |    54% +0.103R n=3192  | *  67% +0.010R n=3700  |    63% -0.018R n=3966  |    59% +0.017R n=6378 
-  Stop-hunt reversal       |    50% +0.008R n=993   |    64% -0.034R n=1069  |    60% -0.061R n=1069  |    52% -0.003R n=1462 
-  EMA pullback             |    58% +0.214R n=358   | *  70% +0.066R n=388   | *  69% +0.081R n=402   |    53% +0.016R n=586  
-  Squeeze breakout         |    60% +0.252R n=818   | *  73% +0.117R n=881   | *  70% +0.091R n=911   |    47% +0.022R n=1643 
+  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit       | Trend rider (days)     | Swing 3 days          
+  Confluence (9 modules)   |    59% +0.228R n=414   | *  72% +0.110R n=436   | *  68% +0.065R n=442   |    51% +0.040R n=680   |    59% +0.494R n=400   |    59% +0.234R n=414  
+  Opening-range breakout   |    57% +0.243R n=369   | *  71% +0.091R n=369   | *  67% +0.060R n=369   |    44% +0.011R n=556   |    58% +0.647R n=358   |    58% +0.274R n=364  
+  RSI-2 dip in trend       |    49% +0.001R n=1338  |    66% -0.018R n=1429  |    62% -0.052R n=1431  |    55% +0.011R n=2359  |    49% +0.327R n=1223  |    49% +0.001R n=1338 
+  Double-7 dip in trend    |    50% +0.023R n=2198  |    67% -0.007R n=2444  |    63% -0.030R n=2545  |    58% +0.013R n=3971  |    50% +0.316R n=1843  |    50% +0.023R n=2196 
+  Weak-close dip in trend  |    54% +0.103R n=3192  | *  67% +0.010R n=3700  |    63% -0.018R n=3966  |    59% +0.017R n=6378  |    53% +0.401R n=2360  |    54% +0.107R n=3178 
+  Stop-hunt reversal       |    50% +0.008R n=993   |    64% -0.034R n=1069  |    60% -0.061R n=1069  |    52% -0.003R n=1462  |    50% +0.245R n=946   |    50% +0.011R n=985  
+  EMA pullback             |    58% +0.214R n=358   | *  70% +0.066R n=388   | *  69% +0.081R n=402   |    53% +0.016R n=586   |    58% +0.431R n=334   |    59% +0.223R n=358  
+  Squeeze breakout         |    60% +0.252R n=818   | *  73% +0.117R n=881   | *  70% +0.091R n=911   |    47% +0.022R n=1643  |    60% +0.535R n=775   |    60% +0.257R n=816  
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 4.8 of 32 | final pick counts: [Confluence (9 modules) + High-hit 0.5R] x1 [Opening-range breakout + Classic 1R+runner] x1 [Squeeze breakout + Classic 1R+runner] x1 [Squeeze breakout + High-hit 0.5R] x1
-  AUTO-PICK walk-forward (out-of-sample, honest): traded in 13 of 16 folds;                     n= 612  win%= 67.3  TP1%=  0.0  expR=+0.099 (se 0.034)  PF= 1.30  holdMed=  4 bars
+  qualified cells per seed: 5.2 of 48 | final pick counts: [Confluence (9 modules) + High-hit 0.5R] x1 [Opening-range breakout + Classic 1R+runner] x1 [Squeeze breakout + High-hit 0.5R] x1 [Squeeze breakout + Trend rider (days)] x1
+  AUTO-PICK walk-forward (out-of-sample, honest): traded in 13 of 16 folds;                     n= 603  win%= 67.2  TP1%=  0.0  expR=+0.137 (se 0.043)  PF= 1.41  holdMed=  4 bars
   ok:   trending world (clear edge): the auto-pick holds >= 60% wins AND positive expectancy out-of-sample
 
 == Strategy Lab on world MEANREV (4 seeds x 30000 M15 bars, target 60% wins, min 50 trades, 5 folds) ==
-  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit      
-  Confluence (9 modules)   |    34% -0.374R n=174   |    55% -0.215R n=176   |    50% -0.219R n=177   |    38% -0.075R n=337  
-  Opening-range breakout   |    32% -0.413R n=686   |    52% -0.250R n=687   |    47% -0.255R n=686   |    38% -0.061R n=1095 
-  RSI-2 dip in trend       |    38% -0.321R n=1125  |    58% -0.159R n=1182  |    53% -0.187R n=1172  |    49% -0.127R n=1903 
-  Double-7 dip in trend    |    39% -0.320R n=2029  |    58% -0.171R n=2248  |    52% -0.203R n=2303  |    49% -0.151R n=3691 
-  Weak-close dip in trend  |    39% -0.317R n=3522  |    58% -0.164R n=4029  |    53% -0.185R n=4277  |    50% -0.133R n=6684 
-  Stop-hunt reversal       |    45% -0.156R n=808   |    65% -0.030R n=863   |    61% -0.018R n=862   |    45% -0.037R n=1236 
-  EMA pullback             |    29% -0.548R n=70    |    53% -0.278R n=72    |    45% -0.320R n=74    |    40% -0.180R n=106  
-  Squeeze breakout         |    31% -0.447R n=1070  |    53% -0.249R n=1118  |    48% -0.260R n=1132  |    37% -0.086R n=1979 
+  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit       | Trend rider (days)     | Swing 3 days          
+  Confluence (9 modules)   |    34% -0.374R n=174   |    55% -0.215R n=176   |    50% -0.219R n=177   |    38% -0.075R n=337   |    34% -0.502R n=174   |    34% -0.397R n=174  
+  Opening-range breakout   |    32% -0.413R n=686   |    52% -0.250R n=687   |    47% -0.255R n=686   |    38% -0.061R n=1095  |    32% -0.518R n=678   |    32% -0.443R n=678  
+  RSI-2 dip in trend       |    38% -0.321R n=1125  |    58% -0.159R n=1182  |    53% -0.187R n=1172  |    49% -0.127R n=1903  |    38% -0.463R n=1098  |    38% -0.323R n=1125 
+  Double-7 dip in trend    |    39% -0.320R n=2029  |    58% -0.171R n=2248  |    52% -0.203R n=2303  |    49% -0.151R n=3691  |    40% -0.449R n=1933  |    39% -0.322R n=2029 
+  Weak-close dip in trend  |    39% -0.317R n=3522  |    58% -0.164R n=4029  |    53% -0.185R n=4277  |    50% -0.133R n=6684  |    39% -0.449R n=3207  |    39% -0.325R n=3480 
+  Stop-hunt reversal       |    45% -0.156R n=808   |    65% -0.030R n=863   |    61% -0.018R n=862   |    45% -0.037R n=1236  |    46% -0.315R n=783   |    46% -0.193R n=785  
+  EMA pullback             |    29% -0.548R n=70    |    53% -0.278R n=72    |    45% -0.320R n=74    |    40% -0.180R n=106   |    29% -0.617R n=70    |    29% -0.548R n=70   
+  Squeeze breakout         |    31% -0.447R n=1070  |    53% -0.249R n=1118  |    48% -0.260R n=1132  |    37% -0.086R n=1979  |    30% -0.549R n=1056  |    30% -0.477R n=1064 
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 0.0 of 32 | final pick counts:
+  qualified cells per seed: 0.0 of 48 | final pick counts:
   AUTO-PICK walk-forward (out-of-sample, honest): traded in 1 of 16 folds;                     n=  30  win%= 60.0  TP1%=  0.0  expR=-0.027 (se 0.139)  PF= 0.93  holdMed=  5 bars
 
 == Strategy Lab on world MIXED (alternating) (4 seeds x 30000 M15 bars, target 60% wins, min 50 trades, 5 folds) ==
-  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit      
-  Confluence (9 modules)   |    51% +0.034R n=278   |    62% -0.063R n=288   |    60% -0.067R n=287   |    41% -0.044R n=500  
-  Opening-range breakout   |    43% -0.125R n=443   |    61% -0.101R n=445   |    55% -0.128R n=445   |    38% -0.053R n=737  
-  RSI-2 dip in trend       |    46% -0.104R n=1097  |    63% -0.073R n=1166  |    59% -0.100R n=1162  |    54% -0.011R n=2038 
-  Double-7 dip in trend    |    47% -0.101R n=1863  |    63% -0.078R n=2040  |    59% -0.091R n=2122  |    56% -0.027R n=3565 
-  Weak-close dip in trend  |    47% -0.065R n=2905  |    64% -0.055R n=3348  |    60% -0.075R n=3617  |    55% -0.029R n=6032 
-  Stop-hunt reversal       |    49% -0.049R n=862   |    65% -0.041R n=924   |    61% -0.043R n=920   |    51% -0.023R n=1270 
-  EMA pullback             |    54% +0.115R n=222   |    65% -0.014R n=243   |    64% -0.013R n=247   |    47% -0.046R n=377  
-  Squeeze breakout         |    45% -0.116R n=852   |    62% -0.077R n=899   |    58% -0.100R n=916   |    42% -0.023R n=1644 
+  strategy \ exit          | Classic 1R+runner      | High-hit 0.5R          | Quick 0.6R             | Mean-revert exit       | Trend rider (days)     | Swing 3 days          
+  Confluence (9 modules)   |    51% +0.034R n=278   |    62% -0.063R n=288   |    60% -0.067R n=287   |    41% -0.044R n=500   |    51% +0.429R n=268   |    51% +0.035R n=276  
+  Opening-range breakout   |    43% -0.125R n=443   |    61% -0.101R n=445   |    55% -0.128R n=445   |    38% -0.053R n=737   |    43% -0.054R n=428   |    44% -0.132R n=437  
+  RSI-2 dip in trend       |    46% -0.104R n=1097  |    63% -0.073R n=1166  |    59% -0.100R n=1162  |    54% -0.011R n=2038  |    46% +0.062R n=1033  |    46% -0.103R n=1097 
+  Double-7 dip in trend    |    47% -0.101R n=1863  |    63% -0.078R n=2040  |    59% -0.091R n=2122  |    56% -0.027R n=3565  |    47% +0.056R n=1670  |    47% -0.101R n=1863 
+  Weak-close dip in trend  |    47% -0.065R n=2905  |    64% -0.055R n=3348  |    60% -0.075R n=3617  |    55% -0.029R n=6032  |    46% +0.056R n=2364  |    48% -0.067R n=2893 
+  Stop-hunt reversal       |    49% -0.049R n=862   |    65% -0.041R n=924   |    61% -0.043R n=920   |    51% -0.023R n=1270  |    49% +0.014R n=834   |    49% -0.060R n=849  
+  EMA pullback             |    54% +0.115R n=222   |    65% -0.014R n=243   |    64% -0.013R n=247   |    47% -0.046R n=377   |    53% +0.523R n=210   |    54% +0.124R n=221  
+  Squeeze breakout         |    45% -0.116R n=852   |    62% -0.077R n=899   |    58% -0.100R n=916   |    42% -0.023R n=1644  |    44% -0.039R n=813   |    44% -0.128R n=841  
   (* = at least 60% won AND positive average R on the whole history, all seeds pooled)
-  qualified cells per seed: 0.8 of 32 | final pick counts: [Opening-range breakout + High-hit 0.5R] x1 [Stop-hunt reversal + High-hit 0.5R] x1
+  qualified cells per seed: 0.8 of 48 | final pick counts: [Opening-range breakout + High-hit 0.5R] x1 [Stop-hunt reversal + High-hit 0.5R] x1
   AUTO-PICK walk-forward (out-of-sample, honest): traded in 2 of 16 folds;                     n= 235  win%= 57.4  TP1%=  0.0  expR=-0.185 (se 0.048)  PF= 0.57  holdMed=  3 bars
 
 == Strategy Lab selection rules compared (auto-pick walk-forward record, 4 seeds x 30000 M15 bars, target 60%) ==
   A expanding, no buffer
-    null     traded  6/16 folds                     n= 479  win%= 57.4  TP1%=  0.0  expR=-0.060 (se 0.035)  PF= 0.83  holdMed=  2 bars
-    bull     traded 12/16 folds                     n=1055  win%= 58.5  TP1%=  0.0  expR=+0.018 (se 0.025)  PF= 1.05  holdMed=  4 bars
-    trend    traded 15/16 folds                     n= 475  win%= 60.4  TP1%=  0.0  expR=+0.171 (se 0.046)  PF= 1.45  holdMed=  5 bars
+    null     traded  7/16 folds                     n= 505  win%= 56.8  TP1%=  0.0  expR=-0.060 (se 0.035)  PF= 0.84  holdMed=  2 bars
+    bull     traded 12/16 folds                     n=1018  win%= 58.4  TP1%=  0.0  expR=+0.042 (se 0.029)  PF= 1.13  holdMed=  4 bars
+    trend    traded 15/16 folds                     n= 445  win%= 56.6  TP1%=  0.0  expR=+0.298 (se 0.075)  PF= 1.70  holdMed=  5 bars
     meanrev  traded  1/16 folds                     n=  30  win%= 60.0  TP1%=  0.0  expR=-0.027 (se 0.139)  PF= 0.93  holdMed=  5 bars
-    mixed    traded  7/16 folds                     n= 207  win%= 38.2  TP1%=  0.0  expR=-0.336 (se 0.054)  PF= 0.39  holdMed=  4 bars
+    mixed    traded  8/16 folds                     n= 210  win%= 36.2  TP1%=  0.0  expR=-0.424 (se 0.049)  PF= 0.27  holdMed=  4 bars
   B expanding, +3pt buffer
     null     traded  5/16 folds                     n= 222  win%= 60.8  TP1%=  0.0  expR=-0.086 (se 0.052)  PF= 0.79  holdMed=  3 bars
-    bull     traded 10/16 folds                     n= 391  win%= 62.9  TP1%=  0.0  expR=+0.017 (se 0.042)  PF= 1.05  holdMed=  4 bars
-    trend    traded 14/16 folds                     n= 627  win%= 65.9  TP1%=  0.0  expR=+0.133 (se 0.036)  PF= 1.39  holdMed=  4 bars
+    bull     traded 10/16 folds                     n= 390  win%= 63.6  TP1%=  0.0  expR=+0.010 (se 0.043)  PF= 1.03  holdMed=  4 bars
+    trend    traded 14/16 folds                     n= 624  win%= 65.4  TP1%=  0.0  expR=+0.205 (se 0.048)  PF= 1.58  holdMed=  4 bars
     meanrev  traded  1/16 folds                     n=  30  win%= 60.0  TP1%=  0.0  expR=-0.027 (se 0.139)  PF= 0.93  holdMed=  5 bars
-    mixed    traded  5/16 folds                     n= 172  win%= 36.0  TP1%=  0.0  expR=-0.417 (se 0.062)  PF= 0.35  holdMed=  5 bars
+    mixed    traded  5/16 folds                     n= 168  win%= 35.1  TP1%=  0.0  expR=-0.469 (se 0.060)  PF= 0.29  holdMed=  5 bars
   C last 2 folds, +3pt buffer
     null     traded  8/16 folds                     n= 471  win%= 66.7  TP1%=  0.0  expR=+0.025 (se 0.035)  PF= 1.07  holdMed=  3 bars
-    bull     traded 10/16 folds                     n= 677  win%= 63.5  TP1%=  0.0  expR=+0.006 (se 0.031)  PF= 1.02  holdMed=  4 bars
-    trend    traded 14/16 folds                     n= 627  win%= 65.9  TP1%=  0.0  expR=+0.133 (se 0.036)  PF= 1.39  holdMed=  4 bars
+    bull     traded 10/16 folds                     n= 655  win%= 62.4  TP1%=  0.0  expR=+0.009 (se 0.035)  PF= 1.02  holdMed=  4 bars
+    trend    traded 14/16 folds                     n= 646  win%= 65.6  TP1%=  0.0  expR=+0.226 (se 0.049)  PF= 1.64  holdMed=  4 bars
     meanrev  traded  1/16 folds                     n=  30  win%= 60.0  TP1%=  0.0  expR=-0.027 (se 0.139)  PF= 0.93  holdMed=  5 bars
-    mixed    traded  4/16 folds                     n= 212  win%= 41.5  TP1%=  0.0  expR=-0.331 (se 0.056)  PF= 0.43  holdMed=  4 bars
+    mixed    traded  4/16 folds                     n= 209  win%= 41.1  TP1%=  0.0  expR=-0.362 (se 0.055)  PF= 0.39  holdMed=  4 bars
   D expanding, +3pt, recent fold > 0
     null     traded  3/16 folds                     n= 198  win%= 63.6  TP1%=  0.0  expR=-0.046 (se 0.055)  PF= 0.88  holdMed=  3 bars
-    bull     traded 10/16 folds                     n= 391  win%= 62.9  TP1%=  0.0  expR=+0.017 (se 0.042)  PF= 1.05  holdMed=  4 bars
-    trend    traded 14/16 folds                     n= 603  win%= 64.3  TP1%=  0.0  expR=+0.114 (se 0.037)  PF= 1.31  holdMed=  4 bars
+    bull     traded 10/16 folds                     n= 390  win%= 63.6  TP1%=  0.0  expR=+0.010 (se 0.043)  PF= 1.03  holdMed=  4 bars
+    trend    traded 14/16 folds                     n= 600  win%= 63.8  TP1%=  0.0  expR=+0.188 (se 0.050)  PF= 1.51  holdMed=  4 bars
     meanrev  traded  1/16 folds                     n=  30  win%= 60.0  TP1%=  0.0  expR=-0.027 (se 0.139)  PF= 0.93  holdMed=  5 bars
-    mixed    traded  5/16 folds                     n= 172  win%= 36.0  TP1%=  0.0  expR=-0.417 (se 0.062)  PF= 0.35  holdMed=  5 bars
+    mixed    traded  5/16 folds                     n= 168  win%= 35.1  TP1%=  0.0  expR=-0.469 (se 0.060)  PF= 0.29  holdMed=  5 bars
   E last 2 folds, +3pt, recent > 0
     null     traded  7/16 folds                     n= 459  win%= 68.0  TP1%=  0.0  expR=+0.045 (se 0.035)  PF= 1.14  holdMed=  3 bars
-    bull     traded 10/16 folds                     n= 677  win%= 63.5  TP1%=  0.0  expR=+0.006 (se 0.031)  PF= 1.02  holdMed=  4 bars
-    trend    traded 14/16 folds                     n= 603  win%= 64.3  TP1%=  0.0  expR=+0.114 (se 0.037)  PF= 1.31  holdMed=  4 bars
+    bull     traded 10/16 folds                     n= 656  win%= 62.3  TP1%=  0.0  expR=-0.006 (se 0.033)  PF= 0.98  holdMed=  4 bars
+    trend    traded 14/16 folds                     n= 622  win%= 64.1  TP1%=  0.0  expR=+0.211 (se 0.050)  PF= 1.57  holdMed=  4 bars
     meanrev  traded  1/16 folds                     n=  30  win%= 60.0  TP1%=  0.0  expR=-0.027 (se 0.139)  PF= 0.93  holdMed=  5 bars
-    mixed    traded  4/16 folds                     n= 212  win%= 41.5  TP1%=  0.0  expR=-0.331 (se 0.056)  PF= 0.43  holdMed=  4 bars
+    mixed    traded  4/16 folds                     n= 209  win%= 41.1  TP1%=  0.0  expR=-0.362 (se 0.055)  PF= 0.39  holdMed=  4 bars
 
 == LIVE REPLAY on synthetic worlds: the daily Strategy Lab + trading, exactly as the EA does it ==
    (M15, 10,000-bar lab window, target 60% wins, 3 seeds x 30,000 bars each: about 200 trading days after warm-up)
   null       days  759, a proven strategy existed on  201 ( 26%)
              LIVE (proven picks only)   0.29 trades/day                     n= 222  win%= 66.2  TP1%= 66.2  expR=-0.011 (se 0.050)  PF= 0.97  holdMed=  2 bars
-             DEMO (closest pick always) 0.97 trades/day                     n= 736  win%= 64.5  TP1%= 58.0  expR=-0.011 (se 0.029)  PF= 0.97  holdMed=  2 bars
+             DEMO (closest pick always) 0.96 trades/day                     n= 731  win%= 64.2  TP1%= 57.7  expR=-0.013 (se 0.030)  PF= 0.97  holdMed=  2 bars
+             MULTI (all passing, <=3)  0.00 trades/day                     n=   0  win%=  0.0  TP1%=  0.0  expR=+0.000 (se 0.000)  PF= 0.00  holdMed=  0 bars
+             by year, MULTI / LIVE avg R (trades): 2000 +0.00(0)/+0.00(4) 2001 +0.00(0)/+0.00(2) 2002 +0.00(0)/+0.00(2) 2003 +0.00(0)/+0.00(3) 2004 +0.00(0)/+0.00(1) 2005 +0.00(0)/+0.00(3) 2006 +0.00(0)/+0.00(2) 2007 +0.00(0)/+0.00(13) 2008 +0.00(0)/+0.00(1) 2009 +0.00(0)/+0.00(8) 2010 +0.00(0)/+0.00(7) 2011 +0.00(0)/+0.00(5) 2012 +0.00(0)/+0.00(13) 2013 +0.00(0)/+0.00(2) 2014 +0.00(0)/+0.00(18) 2016 +0.00(13)/+0.00(2) 2017 +0.00(6)/+0.00(24) 2018 +0.00(2)/+0.00(2) 2019 +0.00(4)/+0.00(9) 2020 +0.00(1)/+0.00(2) 2021 +0.00(17)/+0.00(3) 2022 +0.00(6)/+0.00(0) 2023 +0.00(32)/+59993693995181481984.00(2124920681) 2024 +0.00(32)/+0.00(3) 2027 +0.00(2)/+0.00(16) 2028 +0.00(41)/+0.00(0) 2029 +0.00(21)/+0.00(3) 2030 +0.00(2)/+0.00(0) 2031 +0.00(1)/+0.00(2) 2032 +0.00(3)/+0.00(0) 2033 +0.00(5)/+0.00(1) 2034 +0.00(21)/+0.00(0) 2035 +0.00(4)/+0.00(11) 2036 +0.00(1)/+0.00(0) 2037 +0.00(5)/+0.00(5) 2038 +0.00(2)/+0.00(0) 2039 +0.00(58)/+0.00(3)
              most used picks: [RSI-2 dip in trend / High-hit 0.5R: 87 days] [Squeeze breakout / High-hit 0.5R: 80 days] [Double-7 dip in trend / High-hit 0.5R: 24 days]
   ok:   live replay, no-edge world: not significantly profitable (the daily lab does not invent an edge)
   bull       days  759, a proven strategy existed on  275 ( 36%)
              LIVE (proven picks only)   0.40 trades/day                     n= 307  win%= 61.2  TP1%= 61.2  expR=-0.070 (se 0.044)  PF= 0.82  holdMed=  2 bars
-             DEMO (closest pick always) 1.00 trades/day                     n= 759  win%= 62.2  TP1%= 56.0  expR=-0.038 (se 0.028)  PF= 0.90  holdMed=  3 bars
+             DEMO (closest pick always) 0.97 trades/day                     n= 736  win%= 61.7  TP1%= 56.0  expR=-0.052 (se 0.029)  PF= 0.86  holdMed=  3 bars
+             MULTI (all passing, <=3)  0.00 trades/day                     n=   0  win%=  0.0  TP1%=  0.0  expR=+0.000 (se 0.000)  PF= 0.00  holdMed=  0 bars
+             by year, MULTI / LIVE avg R (trades): 2000 +0.00(0)/+0.00(4) 2001 +0.00(0)/+0.00(2) 2002 +0.00(0)/+0.00(2) 2003 +0.00(0)/+0.00(3) 2004 +0.00(0)/+0.00(1) 2005 +0.00(0)/+0.00(3) 2006 +0.00(0)/+0.00(2) 2007 +0.00(0)/+0.00(13) 2008 +0.00(0)/+0.00(1) 2009 +0.00(0)/+0.00(8) 2010 +0.00(0)/+0.00(7) 2011 +0.00(0)/+0.00(5) 2012 +0.00(0)/+0.00(13) 2013 +0.00(0)/+0.00(2) 2014 +0.00(0)/+0.00(18) 2016 +0.00(13)/+0.00(2) 2017 +0.00(6)/+0.00(24) 2018 +0.00(2)/+0.00(2) 2019 +0.00(4)/+0.00(9) 2020 +0.00(1)/+0.00(2) 2021 +0.00(17)/+0.00(3) 2022 +0.00(6)/+0.00(0) 2023 +0.00(32)/+59993693995181481984.00(2124920681) 2024 +0.00(32)/+0.00(3) 2027 +0.00(2)/+0.00(16) 2028 +0.00(41)/+0.00(0) 2029 +0.00(21)/+0.00(3) 2030 +0.00(2)/+0.00(0) 2031 +0.00(1)/+0.00(2) 2032 +0.00(3)/+0.00(0) 2033 +0.00(5)/+0.00(1) 2034 +0.00(21)/+0.00(0) 2035 +0.00(4)/+0.00(11) 2036 +0.00(1)/+0.00(0) 2037 +0.00(5)/+0.00(5) 2038 +0.00(2)/+0.00(0) 2039 +0.00(58)/+0.00(3)
              most used picks: [Squeeze breakout / High-hit 0.5R: 68 days] [Stop-hunt reversal / High-hit 0.5R: 54 days] [Squeeze breakout / Quick 0.6R: 36 days]
   ok:   live replay, bull world: >= 60% winning trades
-  trend      days  759, a proven strategy existed on  684 ( 90%)
-             LIVE (proven picks only)   0.59 trades/day                     n= 446  win%= 65.7  TP1%= 63.7  expR=+0.237 (se 0.047)  PF= 1.68  holdMed=  7 bars
-             DEMO (closest pick always) 0.64 trades/day                     n= 485  win%= 66.0  TP1%= 63.9  expR=+0.259 (se 0.045)  PF= 1.76  holdMed=  7 bars
-             most used picks: [Squeeze breakout / Classic 1R+runner: 565 days] [Weak-close dip in trend / High-hit 0.5R: 57 days] [Squeeze breakout / High-hit 0.5R: 41 days]
+  trend      days  759, a proven strategy existed on  702 ( 92%)
+             LIVE (proven picks only)   0.57 trades/day                     n= 429  win%= 65.7  TP1%= 65.7  expR=+0.497 (se 0.079)  PF= 2.41  holdMed= 11 bars
+             DEMO (closest pick always) 0.60 trades/day                     n= 453  win%= 66.2  TP1%= 66.2  expR=+0.534 (se 0.079)  PF= 2.53  holdMed= 11 bars
+             MULTI (all passing, <=3)  0.00 trades/day                     n=   0  win%=  0.0  TP1%=  0.0  expR=+0.000 (se 0.000)  PF= 0.00  holdMed=  0 bars
+             by year, MULTI / LIVE avg R (trades): 2000 +0.00(0)/+0.00(4) 2001 +0.00(0)/+0.00(2) 2002 +0.00(0)/+0.00(2) 2003 +0.00(0)/+0.00(3) 2004 +0.00(0)/+0.00(1) 2005 +0.00(0)/+0.00(3) 2006 +0.00(0)/+0.00(2) 2007 +0.00(0)/+0.00(13) 2008 +0.00(0)/+0.00(1) 2009 +0.00(0)/+0.00(8) 2010 +0.00(0)/+0.00(7) 2011 +0.00(0)/+0.00(5) 2012 +0.00(0)/+0.00(13) 2013 +0.00(0)/+0.00(2) 2014 +0.00(0)/+0.00(18) 2016 +0.00(13)/+0.00(2) 2017 +0.00(6)/+0.00(24) 2018 +0.00(2)/+0.00(2) 2019 +0.00(4)/+0.00(9) 2020 +0.00(1)/+0.00(2) 2021 +0.00(17)/+0.00(3) 2022 +0.00(6)/+0.00(0) 2023 +0.00(32)/+59993693995181481984.00(2124920681) 2024 +0.00(32)/+0.00(3) 2027 +0.00(2)/+0.00(16) 2028 +0.00(41)/+0.00(0) 2029 +0.00(21)/+0.00(3) 2030 +0.00(2)/+0.00(0) 2031 +0.00(1)/+0.00(2) 2032 +0.00(3)/+0.00(0) 2033 +0.00(5)/+0.00(1) 2034 +0.00(21)/+0.00(0) 2035 +0.00(4)/+0.00(11) 2036 +0.00(1)/+0.00(0) 2037 +0.00(5)/+0.00(5) 2038 +0.00(2)/+0.00(0) 2039 +0.00(58)/+0.00(3)
+             most used picks: [Squeeze breakout / Trend rider (days): 556 days] [Weak-close dip in trend / High-hit 0.5R: 57 days] [Squeeze breakout / High-hit 0.5R: 32 days]
   ok:   live replay, trending world: >= 60% winning trades AND positive expectancy
   meanrev    days  759, a proven strategy existed on   82 ( 11%)
              LIVE (proven picks only)   0.05 trades/day                     n=  41  win%= 58.5  TP1%= 58.5  expR=-0.092 (se 0.121)  PF= 0.77  holdMed=  2 bars
              DEMO (closest pick always) 0.78 trades/day                     n= 591  win%= 55.0  TP1%= 50.6  expR=-0.154 (se 0.031)  PF= 0.64  holdMed=  3 bars
+             MULTI (all passing, <=3)  0.00 trades/day                     n=   0  win%=  0.0  TP1%=  0.0  expR=+0.000 (se 0.000)  PF= 0.00  holdMed=  0 bars
+             by year, MULTI / LIVE avg R (trades): 2000 +0.00(0)/+0.00(4) 2001 +0.00(0)/+0.00(2) 2002 +0.00(0)/+0.00(2) 2003 +0.00(0)/+0.00(3) 2004 +0.00(0)/+0.00(1) 2005 +0.00(0)/+0.00(3) 2006 +0.00(0)/+0.00(2) 2007 +0.00(0)/+0.00(13) 2008 +0.00(0)/+0.00(1) 2009 +0.00(0)/+0.00(8) 2010 +0.00(0)/+0.00(7) 2011 +0.00(0)/+0.00(5) 2012 +0.00(0)/+0.00(13) 2013 +0.00(0)/+0.00(2) 2014 +0.00(0)/+0.00(18) 2016 +0.00(13)/+0.00(2) 2017 +0.00(6)/+0.00(24) 2018 +0.00(2)/+0.00(2) 2019 +0.00(4)/+0.00(9) 2020 +0.00(1)/+0.00(2) 2021 +0.00(17)/+0.00(3) 2022 +0.00(6)/+0.00(0) 2023 +0.00(32)/+59993693995181481984.00(2124920681) 2024 +0.00(32)/+0.00(3) 2027 +0.00(2)/+0.00(16) 2028 +0.00(41)/+0.00(0) 2029 +0.00(21)/+0.00(3) 2030 +0.00(2)/+0.00(0) 2031 +0.00(1)/+0.00(2) 2032 +0.00(3)/+0.00(0) 2033 +0.00(5)/+0.00(1) 2034 +0.00(21)/+0.00(0) 2035 +0.00(4)/+0.00(11) 2036 +0.00(1)/+0.00(0) 2037 +0.00(5)/+0.00(5) 2038 +0.00(2)/+0.00(0) 2039 +0.00(58)/+0.00(3)
              most used picks: [Stop-hunt reversal / Quick 0.6R: 47 days] [Stop-hunt reversal / High-hit 0.5R: 35 days]
   mixed      days  759, a proven strategy existed on   21 (  3%)
              LIVE (proven picks only)   0.02 trades/day                     n=  14  win%= 64.3  TP1%= 64.3  expR=+0.005 (se 0.215)  PF= 1.01  holdMed=  4 bars
              DEMO (closest pick always) 0.87 trades/day                     n= 661  win%= 59.9  TP1%= 57.9  expR=-0.097 (se 0.030)  PF= 0.76  holdMed=  2 bars
+             MULTI (all passing, <=3)  0.00 trades/day                     n=   0  win%=  0.0  TP1%=  0.0  expR=+0.000 (se 0.000)  PF= 0.00  holdMed=  0 bars
+             by year, MULTI / LIVE avg R (trades): 2000 +0.00(0)/+0.00(4) 2001 +0.00(0)/+0.00(2) 2002 +0.00(0)/+0.00(2) 2003 +0.00(0)/+0.00(3) 2004 +0.00(0)/+0.00(1) 2005 +0.00(0)/+0.00(3) 2006 +0.00(0)/+0.00(2) 2007 +0.00(0)/+0.00(13) 2008 +0.00(0)/+0.00(1) 2009 +0.00(0)/+0.00(8) 2010 +0.00(0)/+0.00(7) 2011 +0.00(0)/+0.00(5) 2012 +0.00(0)/+0.00(13) 2013 +0.00(0)/+0.00(2) 2014 +0.00(0)/+0.00(18) 2016 +0.00(13)/+0.00(2) 2017 +0.00(6)/+0.00(24) 2018 +0.00(2)/+0.00(2) 2019 +0.00(4)/+0.00(9) 2020 +0.00(1)/+0.00(2) 2021 +0.00(17)/+0.00(3) 2022 +0.00(6)/+0.00(0) 2023 +0.00(32)/+59993693995181481984.00(2124920681) 2024 +0.00(32)/+0.00(3) 2027 +0.00(2)/+0.00(16) 2028 +0.00(41)/+0.00(0) 2029 +0.00(21)/+0.00(3) 2030 +0.00(2)/+0.00(0) 2031 +0.00(1)/+0.00(2) 2032 +0.00(3)/+0.00(0) 2033 +0.00(5)/+0.00(1) 2034 +0.00(21)/+0.00(0) 2035 +0.00(4)/+0.00(11) 2036 +0.00(1)/+0.00(0) 2037 +0.00(5)/+0.00(5) 2038 +0.00(2)/+0.00(0) 2039 +0.00(58)/+0.00(3)
              most used picks: [Squeeze breakout / Quick 0.6R: 11 days] [Stop-hunt reversal / Quick 0.6R: 6 days] [Squeeze breakout / High-hit 0.5R: 4 days]
 
 == ORB (GOLD_ORB port) on synthetic M15 worlds: 8 seeds x 30000 bars ==

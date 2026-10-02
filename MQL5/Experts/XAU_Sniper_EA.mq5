@@ -91,11 +91,13 @@
 #define XE_MR         6       // mean-reversion exit: price closed back across the fast mean
 
 //--- exit profiles (how a trade is managed after entry)
-#define XP_COUNT      4
+#define XP_COUNT      6
 #define XP_CLASSIC    0       // half at 1R, break-even, runner to 2.5R with ATR trail
 #define XP_HIGHHIT    1       // 70% at 0.5R, break-even, runner to 1.5R: built for a high share of winners
 #define XP_QUICK      2       // everything out at 0.6R: highest hit-rate, smallest wins
 #define XP_MEANREV    3       // wide stop, exit when price closes back over the 5-bar mean (Connors style)
+#define XP_RIDER      4       // a third at 1R, stop to entry, the rest rides a 3-ATR trail for up to 5 days (trend capture)
+#define XP_SWING      5       // the classic exit held up to 3 days instead of 8 hours
 
 //--- complete strategies (entry rule; the exit comes from a profile). Each is put on trial in the Strategy Lab.
 #define XS_COUNT      8
@@ -107,7 +109,7 @@
 #define XS_SWEEP      5       // liquidity sweep of a known level, with the trend
 #define XS_PULLBACK   6       // pullback to the 21 EMA with a rejection candle, with the trend
 #define XS_SQUEEZE    7       // volatility squeeze or Asian-range breakout, with the trend
-#define XLAB_CELLS    32      // XS_COUNT * XP_COUNT
+#define XLAB_CELLS    48      // XS_COUNT * XP_COUNT
 #define XLAB_MAXTR    6000    // trades kept per lab cell
 
 #define XR_OK         0
@@ -304,6 +306,8 @@ struct XConfig
    double cost_price;        // round-turn spread+slippage in price units (simulation, and the cost guard below)
    double min_stop_cost;     // cost guard: skip setups whose stop is shorter than this many round-trip costs (0 = off)
    double dip_gmt_lo, dip_gmt_hi;   // dip strategies enter only in this GMT window on charts up to H1 (lo < 0 = all day)
+   double swap_long, swap_short;   // overnight cost per unit (oz) per server night in price units (positive = you pay)
+   int    swap_triple_dow;   // server weekday whose night is charged three times (3 = Wednesday, -1 = none)
    int    d1_mode;           // daily trend filter: 0 off, 1 trade only in the daily trend's direction, 2 buys only while the daily trend is up
    int    d1_sma;            // daily trend = last completed daily close above / below its d1_sma-day mean
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
@@ -341,6 +345,7 @@ struct XConfig
       cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
       dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
       d1_mode = 0;  d1_sma = 200;
+      swap_long = 0.0;  swap_short = 0.0;  swap_triple_dow = 3;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
    }
@@ -373,6 +378,8 @@ string XExitName(const int p)
       case XP_HIGHHIT: return "High-hit 0.5R";
       case XP_QUICK:   return "Quick 0.6R";
       case XP_MEANREV: return "Mean-revert exit";
+      case XP_RIDER:   return "Trend rider (days)";
+      case XP_SWING:   return "Swing 3 days";
    }
    return "?";
 }
@@ -386,6 +393,8 @@ string XExitShort(const int p)
       case XP_HIGHHIT: return "High-hit";
       case XP_QUICK:   return "Quick";
       case XP_MEANREV: return "Mean-rev";
+      case XP_RIDER:   return "Rider";
+      case XP_SWING:   return "Swing";
    }
    return "?";
 }
@@ -401,6 +410,13 @@ void XMakeExit(const int p, const XConfig &c, XExit &x)
    {
       x.tp1_r = 0.0; x.part = 0.0; x.tp2_r = 0.0; x.trail_atr = 0.0; x.mr_exit = 1;
       x.max_hold = 12; x.sl_min_atr = 1.5; x.sl_max_atr = 3.2;
+   }
+   else if(p == XP_RIDER || p == XP_SWING)
+   {
+      // multi-day holds (round 10): the time stop is counted in days, whatever the chart
+      const int bs = (c.base_sec > 0) ? c.base_sec : 900;
+      if(p == XP_RIDER) { x.tp1_r = 1.0; x.part = 0.33; x.tp2_r = 0.0; x.trail_atr = 3.0; x.max_hold = XMaxI(8, 5 * 86400 / bs); }
+      else               x.max_hold = XMaxI(8, 3 * 86400 / bs);
    }
 }
 
@@ -1193,7 +1209,7 @@ public:
       if(closed)
       {
          r.closed = true;
-         r.r_net = real - cfg.cost_price / risk;
+         r.r_net = real - cfg.cost_price / risk - SwapNights(e, exit_idx) * ((dir > 0) ? cfg.swap_long : cfg.swap_short) / risk;
          r.float_r = r.r_net;
       }
       else
@@ -1202,6 +1218,22 @@ public:
          r.float_r = real + rem * (lastfcl / risk);
       }
       return true;
+   }
+
+   // Server nights a position opened at bar e and closed at bar x is held over (the night after the triple-swap
+   // weekday counts three times). Server time: a night = a change of the server date.
+   int SwapNights(const int e, const int x) const
+   {
+      if(e < 0 || x <= e || x >= n) return 0;
+      const long d0 = (long)m_t[e] / 86400, d1 = (long)m_t[x] / 86400;
+      int nights = 0;
+      for(long d = d0; d < d1; d++)
+      {
+         const int dow = (int)((d + 4) % 7);                 // weekday of the server date being left (0 Sunday)
+         if(dow == 6 || dow == 0) continue;                  // weekend dates have no bars and no swap of their own
+         nights += (cfg.swap_triple_dow >= 0 && dow == cfg.swap_triple_dow) ? 3 : 1;
+      }
+      return nights;
    }
 
    //--- historical trial ----------------------------------------------
@@ -2710,7 +2742,9 @@ enum ENUM_XAU_EXIT
    XAU_EX_CLASSIC = 0,      // Classic: half at 1R, runner to 2.5R
    XAU_EX_HIGHHIT = 1,      // High-hit: 70% at 0.5R, runner to 1.5R
    XAU_EX_QUICK   = 2,      // Quick: all out at 0.6R
-   XAU_EX_MEANREV = 3       // Mean-revert: exit on the close back over the 5-bar mean
+   XAU_EX_MEANREV = 3,      // Mean-revert: exit on the close back over the 5-bar mean
+   XAU_EX_RIDER   = 4,      // Trend rider: a third at 1R, the rest trails 3 ATR for up to 5 days
+   XAU_EX_SWING   = 5       // Swing: the classic exit held up to 3 days
 };
 
 // Resolve the user's choice against the lab. Returns the cell (strategy * XP_COUNT + exit) or -1.
@@ -2731,6 +2765,71 @@ int XResolveCell(const CXauEngine &le, const int user_s, const int user_p, const
    if(best < 0) best = XMaxI(user_s, 0) * XP_COUNT + XMaxI(user_p, 0);
    proven = le.lab[best].qualified;
    return best;
+}
+
+// Overnight swap of this symbol as a COST per unit (1 oz for gold) per night, in price units (positive = you pay).
+// MT5 reports swap in several modes; the common ones are converted, the rest fall back to 0 with a log line.
+double XSwapCostPerUnit(const string sym, const bool is_buy)
+{
+   const double sw = SymbolInfoDouble(sym, is_buy ? SYMBOL_SWAP_LONG : SYMBOL_SWAP_SHORT);   // MT5: negative = charged
+   const long mode = SymbolInfoInteger(sym, SYMBOL_SWAP_MODE);
+   const double contract = SymbolInfoDouble(sym, SYMBOL_TRADE_CONTRACT_SIZE);
+   const double price = SymbolInfoDouble(sym, SYMBOL_BID);
+   double per_unit = 0.0;
+   if(mode == SYMBOL_SWAP_MODE_POINTS) per_unit = sw * SymbolInfoDouble(sym, SYMBOL_POINT);
+   else if(mode == SYMBOL_SWAP_MODE_CURRENCY_SYMBOL || mode == SYMBOL_SWAP_MODE_CURRENCY_DEPOSIT ||
+           mode == SYMBOL_SWAP_MODE_CURRENCY_MARGIN || mode == SYMBOL_SWAP_MODE_CURRENCY_PROFIT)
+      per_unit = (contract > 0.0) ? sw / contract : 0.0;                      // money per lot -> per unit (USD accounts)
+   else if(mode == SYMBOL_SWAP_MODE_INTEREST_CURRENT || mode == SYMBOL_SWAP_MODE_INTEREST_OPEN)
+      per_unit = price * sw / 100.0 / 360.0;                                  // annual percent of the price
+   return -per_unit;
+}
+
+// How the tools choose and trade (round 10, docs/REAL_DATA.md section 10).
+//   STEADY: one strategy, the Lab's best with at least 60% winners (high win-rate, about break-even on real gold)
+//   TREND : every strategy that passes a 50% Lab target trades, each its own position (up to a cap), multi-day
+//           exits allowed, H1 and above buy only in a daily uptrend. On real H1/H4 history: about +0.1R per trade.
+enum ENUM_XAU_MODE
+{
+   XAU_MODE_AUTO   = -1,   // AUTO: TREND on H1 and H4, STEADY elsewhere
+   XAU_MODE_STEADY = 0,    // STEADY: one strategy, 60%+ winners
+   XAU_MODE_TREND  = 1     // TREND: all passing strategies, trend-riding exits
+};
+
+int XResolveMode(const int input_mode, const ENUM_TIMEFRAMES tf)
+{
+   if(input_mode >= 0) return input_mode;
+   const int ps = PeriodSeconds(tf);
+   return (ps == 3600 || ps == 14400) ? XAU_MODE_TREND : XAU_MODE_STEADY;
+}
+
+// Session clock for the panel: where the day is and what comes next (London local time; server midnight = daily break).
+string XSessionLine(const XConfig &c, const datetime server_now)
+{
+   const int off = XOffsetAt(c, server_now);
+   const long gmt = (long)server_now - off;
+   const int lon_off = XEuDst(gmt) ? 3600 : 0;
+   const long lon = gmt + lon_off;
+   const int m = (int)((lon % 86400) / 60);                       // London minutes after midnight
+   const int dow = (int)(((lon / 86400) + 4) % 7);
+   if(dow == 6 || (dow == 0 && m < 23 * 60) || (dow == 5 && m >= 22 * 60)) return "Market closed for the weekend";
+   string now_s = "Asia";
+   if(m >= 8 * 60 && m < 13 * 60 + 30) now_s = "London";
+   else if(m >= 13 * 60 + 30 && m < 16 * 60 + 30) now_s = "London + New York (busiest)";
+   else if(m >= 16 * 60 + 30 && m < 22 * 60) now_s = "New York";
+   else if(m >= 22 * 60 && m < 23 * 60) now_s = "daily break / thin";
+   const int ev_min[4] = {8 * 60, 13 * 60 + 30, 14 * 60 + 30, 22 * 60};
+   const string ev_nm[4] = {"London opens", "US data time", "New York opens", "daily break"};
+   int best = -1, best_d = 100000;
+   for(int k = 0; k < 4; k++)
+   {
+      int d = ev_min[k] - m;
+      if(d <= 0) d += 1440;
+      if(d < best_d) { best_d = d; best = k; }
+   }
+   string nxt = "";
+   if(best >= 0) nxt = ev_nm[best] + " in " + IntegerToString(best_d / 60) + "h" + StringFormat("%02d", best_d % 60);
+   return "Session: " + now_s + "   next: " + nxt;
 }
 
 // Daily trend filter (research/sim/drift.cpp, docs/REAL_DATA.md section 8). The daily trend is the last completed
@@ -3362,6 +3461,10 @@ enum ENUM_XAU_DEMO
 
 //--- inputs -----------------------------------------------------------
 input group "=== What to trade ==="
+input ENUM_XAU_MODE  InpMode         = XAU_MODE_AUTO; // Mode (AUTO: TREND on H1/H4, STEADY elsewhere)
+input double InpTrendWinTarget       = 50.0;   // TREND mode: Lab target (% winners); multi-day exits win less often but more
+input int    InpTrendMaxPositions    = 3;      // TREND mode: open positions at once (one per passing strategy)
+input double InpMaxOpenRiskPct       = 3.0;    // TREND mode: total risk of all open positions (% of equity)
 input ENUM_XAU_STRAT InpStrategy     = XAU_ST_AUTO;  // Strategy (AUTO = the one that passed the Strategy Lab here)
 input ENUM_XAU_EXIT  InpExit         = XAU_EX_AUTO;  // Exit style (AUTO = chosen together with the strategy)
 input double InpWinTarget            = 60.0;   // Strategy Lab: minimum % of winning trades
@@ -3473,6 +3576,9 @@ XRATESARR(g_hrates);
 XRATESARR(g_irates);
 XRATESARR(g_drates);
 int      g_hist = 10000;          // Strategy Lab window (resolved from InpHistoryBars)
+int      g_mode = XAU_MODE_STEADY;  // resolved InpMode
+int      g_pass[XLAB_CELLS];      // TREND mode: passing cells, best first
+int      g_npass = 0;
 ENUM_TIMEFRAMES g_htf = PERIOD_H1;
 string   g_inter_sym = "";
 bool     g_inter_invert = false;
@@ -3534,6 +3640,59 @@ bool DemoFree()
    return InpDemoMode == XAU_DEMO_FREE && IsDemo();
 }
 
+double LabTarget()
+{
+   return (g_mode == XAU_MODE_TREND) ? InpTrendWinTarget : InpWinTarget;
+}
+
+int MaxPositions()
+{
+   if(DemoFree()) return XMaxI(1, InpDemoMaxPositions);
+   return (g_mode == XAU_MODE_TREND) ? XMaxI(1, InpTrendMaxPositions) : XMaxI(1, InpMaxPositions);
+}
+
+// exit profiles that hold for days: not closed by the Friday flatten (they were tested holding over weekends)
+bool MultiDayProfile(const int p)
+{
+   return (p == XP_RIDER || p == XP_SWING);
+}
+
+// Risk still open in all EA positions, % of equity (distance from the open price to the current stop).
+double OpenRiskPct()
+{
+   const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(eq <= 0.0) return 0.0;
+   double money = 0.0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      const ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+      const double sl = PositionGetDouble(POSITION_SL);
+      const double op = PositionGetDouble(POSITION_PRICE_OPEN);
+      const bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      const double dist = buy ? (op - sl) : (sl - op);
+      if(sl <= 0.0 || dist <= 0.0) continue;                  // stop at or past entry: nothing left at risk
+      string note = "";
+      money += PositionGetDouble(POSITION_VOLUME) * XLossPerLot(_Symbol, buy, op, dist, note);
+   }
+   return 100.0 * money / eq;
+}
+
+// Is a position from this Lab combination already open?
+bool CellOpen(const int cell)
+{
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      const ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+      const string gv = GvPos(t, "C");
+      if(GlobalVariableCheck(gv) && (int)GlobalVariableGet(gv) == cell) return true;
+   }
+   return false;
+}
+
 double RiskCapped()
 {
    return XClamp(InpRiskPct, 0.05, XS_MAX_RISK_PCT);
@@ -3585,6 +3744,9 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf)
    c.cost_price = XMax(InpCostPrice, 0.01);
    c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
    c.d1_mode = XResolveD1Mode((int)InpDailyTrend, tf);
+   // the broker's real overnight swap, so multi-day exits are tested with what holding really costs
+   c.swap_long = XSwapCostPerUnit(_Symbol, true);
+   c.swap_short = XSwapCostPerUnit(_Symbol, false);
 }
 
 //+------------------------------------------------------------------+
@@ -3595,7 +3757,7 @@ void ResetState()
 {
    g_lab_ok = false; g_lab_day = 0; g_cell = -1; g_proven = false; g_act_s = -1; g_act_p = XP_CLASSIC;
    g_last_bar = 0; g_engine_ok = false; g_last_reason = XR_WARMUP; g_skip_note = "";
-   g_small = false; g_small_note = ""; g_stats_dirty = true;
+   g_small = false; g_small_note = ""; g_stats_dirty = true; g_npass = 0;
    g_last_sig.Reset();
    g_paper.Reset();
 }
@@ -3604,6 +3766,8 @@ int OnInit()
 {
    ResetState();
    g_hist = XResolveHistoryBars(InpHistoryBars, (ENUM_TIMEFRAMES)_Period);
+   g_mode = XResolveMode((int)InpMode, (ENUM_TIMEFRAMES)_Period);
+   Print("XAU Sniper: mode ", (g_mode == XAU_MODE_TREND) ? "TREND (all passing strategies, trend-riding exits)" : "STEADY (one strategy, 60%+ winners)");
    g_htf = (InpHTF == PERIOD_CURRENT) ? XAutoHTF((ENUM_TIMEFRAMES)_Period) : InpHTF;
    if(PeriodSeconds(g_htf) <= PeriodSeconds((ENUM_TIMEFRAMES)_Period)) g_htf = XAutoHTF((ENUM_TIMEFRAMES)_Period);
 
@@ -3846,13 +4010,15 @@ void ManagePositions()
       // --- time stop and Friday flatten
       const int maxh = (x.max_hold > 0) ? x.max_hold : g_eng.MaxHold();
       const datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
-      if(now - opened >= (datetime)(maxh * period_sec))
+      // count bars (as the tests do), not calendar time, so weekends do not shorten multi-day holds
+      const int held = iBarShift(_Symbol, (ENUM_TIMEFRAMES)_Period, opened, false);
+      if((held >= 0 && held >= maxh) || (held < 0 && now - opened >= (datetime)(maxh * period_sec)))
       {
          Print("XAU Sniper: time stop on ", (long)ticket);
          ClosePart(ticket, 0.0);
          continue;
       }
-      if(InpFridayFlatten && XWeekdayGmt(now, gmt_off) == 5 && XHourGmt(now, gmt_off) + ((InpLondonSessions && XEuDst((long)now - gmt_off)) ? 1.0 : 0.0) >= InpFlattenGMT)
+      if(InpFridayFlatten && !MultiDayProfile(g_st_prof[k]) && XWeekdayGmt(now, gmt_off) == 5 && XHourGmt(now, gmt_off) + ((InpLondonSessions && XEuDst((long)now - gmt_off)) ? 1.0 : 0.0) >= InpFlattenGMT)
       {
          Print("XAU Sniper: Friday flatten on ", (long)ticket);
          ClosePart(ticket, 0.0);
@@ -4102,7 +4268,7 @@ string EntryBlocked(const XSignal &s)
    if(DemoFree())
    {
       // demo: only hard technical limits apply; every risk rule is a warning
-      if(CountPositions() >= XMaxI(1, InpDemoMaxPositions)) return "demo position limit (" + IntegerToString(InpDemoMaxPositions) + ") reached";
+      if(CountPositions() >= MaxPositions()) return "demo position limit (" + IntegerToString(MaxPositions()) + ") reached";
       if(!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) || !MQLInfoInteger(MQL_TRADE_ALLOWED)) return "auto-trading disabled";
       if(SymbolInfoInteger(_Symbol, SYMBOL_TRADE_MODE) != SYMBOL_TRADE_MODE_FULL) return "symbol not fully tradable now";
       const double dpt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
@@ -4118,7 +4284,9 @@ string EntryBlocked(const XSignal &s)
       return "paused after " + IntegerToString(g_consec_losses) + " losses in a row" +
              (InpPaperResume ? " (paper trades so far: " + IntegerToString(g_paper.rn) + ", resumes when they recover)" : " (until tomorrow)");
    if(InpMaxTradesPerDay > 0 && g_trades_today >= InpMaxTradesPerDay) return "max trades today";
-   if(CountPositions() >= XMaxI(1, InpMaxPositions)) return "position already open";
+   if(CountPositions() >= MaxPositions()) return (MaxPositions() > 1) ? "position limit reached" : "position already open";
+   if(g_mode == XAU_MODE_TREND && InpMaxOpenRiskPct > 0.0 && OpenRiskPct() + RiskCapped() > InpMaxOpenRiskPct + 1e-9)
+      return "open risk would exceed " + DoubleToString(InpMaxOpenRiskPct, 1) + "%";
    if(InpOneTradePerSymbol && AnyPositionOnSymbol()) return "another position already open on this symbol";
    if(AnyPositionOnSymbol() && AccountInfoInteger(ACCOUNT_MARGIN_MODE) != ACCOUNT_MARGIN_MODE_RETAIL_HEDGING) return "netting account: symbol already in use";
    if(InpCooldownBars > 0 && g_last_loss_bar > 0 &&
@@ -4213,10 +4381,18 @@ void RunLabIfNeeded()
    if(g_lab_ok && ds == g_lab_day) return;
    FillConfig(g_lab.cfg, (ENUM_TIMEFRAMES)_Period);
    const bool ok = XRunDailyLab(g_lab, _Symbol, (ENUM_TIMEFRAMES)_Period, g_htf, g_hist, g_inter_sym, g_inter_invert,
-                                InpWinTarget, InpLabMinTrades, InpLabFolds, ds);
+                                LabTarget(), InpLabMinTrades, InpLabFolds, ds);
    if(!ok) return;                       // try again on the next bar
    g_lab_ok = true;
    g_lab_day = ds;
+   // TREND mode: every passing combination may trade, best first
+   g_npass = 0;
+   for(int k = 0; k < XLAB_CELLS; k++)
+   {
+      const int c = g_lab.LabRanked(k);
+      if(c < 0) break;
+      if(g_lab.lab[c].qualified) g_pass[g_npass++] = c;
+   }
    int us = (int)InpStrategy;
    if(InpOrbSolo) us = XS_ORB;
    g_cell = XResolveCell(g_lab, us, (int)InpExit, InpLabMinTrades, g_proven);
@@ -4224,49 +4400,77 @@ void RunLabIfNeeded()
    g_act_s = g_cell / XP_COUNT;
    g_act_p = g_cell % XP_COUNT;
    XMakeExit(g_act_p, g_eng.cfg, g_act_x);
+   if(g_mode == XAU_MODE_TREND) Print("XAU Sniper: TREND mode - ", g_npass, " combinations passed the Lab (target ", DoubleToString(LabTarget(), 0), "% winners)");
    Print("XAU Sniper: Strategy Lab -> ", XStratName(g_act_s), " + ", XExitName(g_act_p), (g_proven ? " [PROVEN]" : " [UNPROVEN]"),
          ": ", DoubleToString(g_lab.lab[g_cell].all.WinRate(), 1), "% won, avg ", DoubleToString(g_lab.lab[g_cell].all.Expectancy(), 3),
          "R over ", g_lab.lab[g_cell].all.n, " trades; auto-pick walk-forward ", DoubleToString(g_lab.lab_auto.WinRate(), 1), "% / ",
          DoubleToString(g_lab.lab_auto.Expectancy(), 3), "R (", g_lab.lab_auto.n, " trades)");
 }
 
+bool TryEnterCell(const int st, const int pr, const bool proven);
+
 void TryEnter()
 {
    g_skip_note = "";
    if(g_act_s < 0) { g_last_reason = XR_WARMUP; return; }
+   if(g_mode != XAU_MODE_TREND || g_npass == 0)
+   {
+      TryEnterCell(g_act_s, g_act_p, g_proven);
+      return;
+   }
+   // TREND mode: every passing combination may trade, each with its own position, best first
+   int last_reason = XR_NOSETUP;
+   string note = "";
+   for(int k = 0; k < g_npass; k++)
+   {
+      const int c = g_pass[k];
+      if(CellOpen(c)) continue;
+      g_skip_note = "";
+      TryEnterCell(c / XP_COUNT, c % XP_COUNT, true);
+      if(k == 0 || g_last_reason == XR_OK) last_reason = g_last_reason;
+      if(StringLen(g_skip_note) > 0) note = g_skip_note;
+   }
+   g_last_reason = last_reason;
+   g_skip_note = note;
+}
+
+// One Lab combination: signal on the last closed bar, checks, size, order. Returns true when an order was sent.
+bool TryEnterCell(const int st, const int pr, const bool proven)
+{
    const int i = g_eng.n - 2;                       // last CLOSED bar
-   XMakeExit(g_act_p, g_eng.cfg, g_act_x);
+   XExit xx;
+   XMakeExit(pr, g_eng.cfg, xx);
    XSignal s;
-   const bool has = g_eng.StrategySignal(g_act_s, i, g_act_x, s);
+   const bool has = g_eng.StrategySignal(st, i, xx, s);
    g_last_reason = s.reason;
-   if(!has) return;
+   if(!has) return false;
    g_last_sig = s;
 
-   if(!g_proven && !(DemoFree() && InpDemoUnproven))
+   if(!proven && !(DemoFree() && InpDemoUnproven))
    {
       g_skip_note = "signal skipped: no strategy has passed the Strategy Lab on this chart";
       Print("XAU Sniper: ", g_skip_note);
-      return;
+      return false;
    }
    // while a loss-streak pause is active, follow the signals on paper so we know when to resume
    if(!DemoFree() && InpPaperResume && StreakPauseActive()) g_paper.Add(g_eng.m_t[i], s.dir, s.sl);
 
    const string blocked = EntryBlocked(s);
-   if(StringLen(blocked) > 0) { g_skip_note = "signal skipped: " + blocked; Print("XAU Sniper: ", g_skip_note); return; }
+   if(StringLen(blocked) > 0) { g_skip_note = "signal skipped: " + blocked; Print("XAU Sniper: ", g_skip_note); return false; }
 
    MqlTick tk;
-   if(!SymbolInfoTick(_Symbol, tk)) return;
+   if(!SymbolInfoTick(_Symbol, tk)) return false;
    const bool buy = (s.dir > 0);
    const double entry = buy ? tk.ask : tk.bid;
    const double dist = buy ? (entry - s.sl) : (s.sl - entry);
-   if(dist < 0.4 * s.atr || dist > g_act_x.sl_max_atr * s.atr * 1.3)
+   if(dist < 0.4 * s.atr || dist > xx.sl_max_atr * s.atr * 1.3)
    {
       g_skip_note = "signal skipped: price moved, stop distance no longer valid";
       Print("XAU Sniper: ", g_skip_note);
-      return;
+      return false;
    }
    const double stops = (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * SymbolInfoDouble(_Symbol, SYMBOL_POINT);
-   if(dist <= stops) { g_skip_note = "signal skipped: stop inside broker minimum distance"; return; }
+   if(dist <= stops) { g_skip_note = "signal skipped: stop inside broker minimum distance"; return false; }
 
    double risk = RiskCapped();
    if(g_consec_losses >= 2) risk *= XClamp(InpStreakScale, 0.1, 1.0);
@@ -4300,29 +4504,31 @@ void TryEnter()
          g_small_note = g_skip_note;
       }
       Print("XAU Sniper: ", g_skip_note);
-      return;
+      return false;
    }
    if(StringLen(lp.src_note) > 0) Print("XAU Sniper: sizing note - ", lp.src_note);
    // targets in price from the ACTUAL entry, using the profile's multiples
    const double sl = NormalizeDouble(s.sl, _Digits);
    double tp = 0.0;
-   if(g_act_x.tp2_r > 0.0)                                  tp = entry + s.dir * g_act_x.tp2_r * dist;
-   else if(g_act_x.tp1_r > 0.0 && g_act_x.part >= 0.999)   tp = entry + s.dir * g_act_x.tp1_r * dist;
+   if(xx.tp2_r > 0.0)                                  tp = entry + s.dir * xx.tp2_r * dist;
+   else if(xx.tp1_r > 0.0 && xx.part >= 0.999)   tp = entry + s.dir * xx.tp1_r * dist;
    tp = (tp > 0.0) ? NormalizeDouble(tp, _Digits) : 0.0;
-   const string cmt = InpComment + " " + StratCode(g_act_s) + "/" + IntegerToString(g_act_p);
+   const string cmt = InpComment + " " + StratCode(st) + "/" + IntegerToString(pr);
    g_small = false;
    if(SendOrder(buy, lp.lots, sl, tp, cmt))
    {
       const ulong ord = g_trade.ResultOrder();
-      if(ord > 0) GlobalVariableSet(GvPos(ord, "X"), (double)g_act_p);
+      if(ord > 0) { GlobalVariableSet(GvPos(ord, "X"), (double)pr); GlobalVariableSet(GvPos(ord, "C"), (double)(st * XP_COUNT + pr)); }
       if(demo && lp.risk_pct > risk * 1.5)
          Print("XAU Sniper: DEMO note - minimum lot risks ", DoubleToString(lp.risk_pct, 1), "% (target ", DoubleToString(risk, 2), "%). A live account would have refused this trade.");
-      Print("XAU Sniper: ", (buy ? "BUY " : "SELL "), DoubleToString(lp.lots, 2), " ", _Symbol, " [", XStratName(g_act_s), " + ", XExitName(g_act_p), "]",
+      Print("XAU Sniper: ", (buy ? "BUY " : "SELL "), DoubleToString(lp.lots, 2), " ", _Symbol, " [", XStratName(st), " + ", XExitName(pr), "]",
             " entry ", DoubleToString(entry, _Digits), " SL ", DoubleToString(sl, _Digits), " TP ", DoubleToString(tp, _Digits),
             " risk ", DoubleToString(lp.risk_pct, 2), "% (", DoubleToString(lp.risk_money, 2), ")");
       g_stats_dirty = true;
       g_paper.Reset();
+      return true;
    }
+   return false;
 }
 
 //+------------------------------------------------------------------+
@@ -4438,9 +4644,10 @@ void DrawPanel()
    const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
    const int np = CountPositions();
 
-   string mode = "   [LIVE rules]";
-   if(DemoFree()) mode = "   [DEMO - free run]";
-   else if(IsDemo()) mode = "   [DEMO rehearsal: real-account rules]";
+   string mode = (g_mode == XAU_MODE_TREND) ? "  TREND" : "  STEADY";
+   mode += "   [LIVE rules]";
+   if(DemoFree()) mode = ((g_mode == XAU_MODE_TREND) ? "  TREND" : "  STEADY") + string("   [DEMO free run]");
+   else if(IsDemo()) mode = ((g_mode == XAU_MODE_TREND) ? "  TREND" : "  STEADY") + string("   [DEMO rehearsal]");
    string status = "LOOKING FOR A SETUP";
    color sc = cCyan;
    string sub = StringLen(g_skip_note) > 0 ? g_skip_note : XReasonText(g_last_reason);
@@ -4450,21 +4657,49 @@ void DrawPanel()
    else if(g_news_blocked)              { status = "PAUSED - NEWS"; sc = cGold; sub = g_news_note; }
    else if(!g_lab_ok)                   { status = "LEARNING"; sub = "Strategy Lab is testing this chart's history"; }
    else if(g_act_s < 0)                 { status = "NO STRATEGY YET"; sc = cGold; sub = "not enough trades in the history to judge"; }
-   else if(!g_proven && !(DemoFree() && InpDemoUnproven)) { status = "STANDING ASIDE"; sc = cGold; sub = "nothing passed the Strategy Lab here"; }
+   else if(!g_proven && !(DemoFree() && InpDemoUnproven) && !(g_mode == XAU_MODE_TREND && g_npass > 0)) { status = "STANDING ASIDE"; sc = cGold; sub = "nothing passed the Strategy Lab here"; }
    else if(g_small)                     { status = "ACCOUNT TOO SMALL HERE"; sc = cGold; sub = g_small_note; }
 
    g_panel.Begin();
    g_panel.Line("XAU SNIPER  " + XTfName((ENUM_TIMEFRAMES)_Period) + mode, cGold);
    g_panel.Line(status, sc, 3);
    g_panel.Line(sub, cDim);
-   if(g_act_s >= 0)
+   if(g_mode == XAU_MODE_TREND && g_npass > 0)
+   {
+      g_panel.Line("TREND mode: " + IntegerToString(g_npass) + " strateg" + (g_npass > 1 ? "ies" : "y") + " passed today, each may trade (max "
+                   + IntegerToString(MaxPositions()) + " at once)", cGreen);
+      for(int k = 0; k < g_npass && k < 3; k++)
+      {
+         const int c = g_pass[k];
+         const XStats st = g_lab.lab[c].all;
+         g_panel.Line("  " + XStratName(c / XP_COUNT) + " / " + XExitShort(c % XP_COUNT) + ": " + DoubleToString(st.WinRate(), 0) + "% won, "
+                      + StringFormat("%+.2f", st.Expectancy()) + "R, " + IntegerToString(st.n) + " trades", cDim);
+      }
+   }
+   else if(g_act_s >= 0)
    {
       string badge = "  [PROVEN]";
       if(!g_proven) badge = "  [UNPROVEN]";
-      g_panel.Line("Trading: " + XStratName(g_act_s) + " + " + XExitName(g_act_p) + badge, g_proven ? cGreen : cGold);
+      string mtag = "";
+      if(g_mode == XAU_MODE_TREND) mtag = "TREND mode, nothing passed: ";
+      g_panel.Line(mtag + "Trading: " + XStratName(g_act_s) + " + " + XExitName(g_act_p) + badge, g_proven ? cGreen : cGold);
       const XStats st = g_lab.lab[g_cell].all;
       g_panel.Line("Lab here: " + DoubleToString(st.WinRate(), 0) + "% won, avg " + StringFormat("%+.2f", st.Expectancy()) + "R, "
                    + IntegerToString(st.n) + " trades", cDim);
+   }
+   // open positions in plain words
+   for(int pi = PositionsTotal() - 1; pi >= 0; pi--)
+   {
+      const ulong t = PositionGetTicket(pi);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+      const bool b = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      const int kk = StIndex(t, false);
+      string plan = "";
+      if(kk >= 0) plan = "  [" + XExitShort(g_st_prof[kk]) + "]";
+      g_panel.Line((b ? "  BUY " : "  SELL ") + DoubleToString(PositionGetDouble(POSITION_VOLUME), 2) + " @" + DoubleToString(PositionGetDouble(POSITION_PRICE_OPEN), _Digits)
+                   + "  stop " + DoubleToString(PositionGetDouble(POSITION_SL), _Digits) + "  P/L " + DoubleToString(PositionGetDouble(POSITION_PROFIT), 2) + plan,
+                   PositionGetDouble(POSITION_PROFIT) >= 0.0 ? cGreen : cRed);
    }
    const double dpl = (g_day_start_eq > 0.0) ? 100.0 * (eq - g_day_start_eq) / g_day_start_eq : 0.0;
    g_panel.Line("Equity " + DoubleToString(eq, 2) + "   today " + StringFormat("%+.2f%%", dpl) + "   trades today " + IntegerToString(g_trades_today), cText);

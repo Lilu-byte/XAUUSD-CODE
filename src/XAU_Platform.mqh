@@ -63,7 +63,9 @@ enum ENUM_XAU_EXIT
    XAU_EX_CLASSIC = 0,      // Classic: half at 1R, runner to 2.5R
    XAU_EX_HIGHHIT = 1,      // High-hit: 70% at 0.5R, runner to 1.5R
    XAU_EX_QUICK   = 2,      // Quick: all out at 0.6R
-   XAU_EX_MEANREV = 3       // Mean-revert: exit on the close back over the 5-bar mean
+   XAU_EX_MEANREV = 3,      // Mean-revert: exit on the close back over the 5-bar mean
+   XAU_EX_RIDER   = 4,      // Trend rider: a third at 1R, the rest trails 3 ATR for up to 5 days
+   XAU_EX_SWING   = 5       // Swing: the classic exit held up to 3 days
 };
 
 // Resolve the user's choice against the lab. Returns the cell (strategy * XP_COUNT + exit) or -1.
@@ -84,6 +86,71 @@ int XResolveCell(const CXauEngine &le, const int user_s, const int user_p, const
    if(best < 0) best = XMaxI(user_s, 0) * XP_COUNT + XMaxI(user_p, 0);
    proven = le.lab[best].qualified;
    return best;
+}
+
+// Overnight swap of this symbol as a COST per unit (1 oz for gold) per night, in price units (positive = you pay).
+// MT5 reports swap in several modes; the common ones are converted, the rest fall back to 0 with a log line.
+double XSwapCostPerUnit(const string sym, const bool is_buy)
+{
+   const double sw = SymbolInfoDouble(sym, is_buy ? SYMBOL_SWAP_LONG : SYMBOL_SWAP_SHORT);   // MT5: negative = charged
+   const long mode = SymbolInfoInteger(sym, SYMBOL_SWAP_MODE);
+   const double contract = SymbolInfoDouble(sym, SYMBOL_TRADE_CONTRACT_SIZE);
+   const double price = SymbolInfoDouble(sym, SYMBOL_BID);
+   double per_unit = 0.0;
+   if(mode == SYMBOL_SWAP_MODE_POINTS) per_unit = sw * SymbolInfoDouble(sym, SYMBOL_POINT);
+   else if(mode == SYMBOL_SWAP_MODE_CURRENCY_SYMBOL || mode == SYMBOL_SWAP_MODE_CURRENCY_DEPOSIT ||
+           mode == SYMBOL_SWAP_MODE_CURRENCY_MARGIN || mode == SYMBOL_SWAP_MODE_CURRENCY_PROFIT)
+      per_unit = (contract > 0.0) ? sw / contract : 0.0;                      // money per lot -> per unit (USD accounts)
+   else if(mode == SYMBOL_SWAP_MODE_INTEREST_CURRENT || mode == SYMBOL_SWAP_MODE_INTEREST_OPEN)
+      per_unit = price * sw / 100.0 / 360.0;                                  // annual percent of the price
+   return -per_unit;
+}
+
+// How the tools choose and trade (round 10, docs/REAL_DATA.md section 10).
+//   STEADY: one strategy, the Lab's best with at least 60% winners (high win-rate, about break-even on real gold)
+//   TREND : every strategy that passes a 50% Lab target trades, each its own position (up to a cap), multi-day
+//           exits allowed, H1 and above buy only in a daily uptrend. On real H1/H4 history: about +0.1R per trade.
+enum ENUM_XAU_MODE
+{
+   XAU_MODE_AUTO   = -1,   // AUTO: TREND on H1 and H4, STEADY elsewhere
+   XAU_MODE_STEADY = 0,    // STEADY: one strategy, 60%+ winners
+   XAU_MODE_TREND  = 1     // TREND: all passing strategies, trend-riding exits
+};
+
+int XResolveMode(const int input_mode, const ENUM_TIMEFRAMES tf)
+{
+   if(input_mode >= 0) return input_mode;
+   const int ps = PeriodSeconds(tf);
+   return (ps == 3600 || ps == 14400) ? XAU_MODE_TREND : XAU_MODE_STEADY;
+}
+
+// Session clock for the panel: where the day is and what comes next (London local time; server midnight = daily break).
+string XSessionLine(const XConfig &c, const datetime server_now)
+{
+   const int off = XOffsetAt(c, server_now);
+   const long gmt = (long)server_now - off;
+   const int lon_off = XEuDst(gmt) ? 3600 : 0;
+   const long lon = gmt + lon_off;
+   const int m = (int)((lon % 86400) / 60);                       // London minutes after midnight
+   const int dow = (int)(((lon / 86400) + 4) % 7);
+   if(dow == 6 || (dow == 0 && m < 23 * 60) || (dow == 5 && m >= 22 * 60)) return "Market closed for the weekend";
+   string now_s = "Asia";
+   if(m >= 8 * 60 && m < 13 * 60 + 30) now_s = "London";
+   else if(m >= 13 * 60 + 30 && m < 16 * 60 + 30) now_s = "London + New York (busiest)";
+   else if(m >= 16 * 60 + 30 && m < 22 * 60) now_s = "New York";
+   else if(m >= 22 * 60 && m < 23 * 60) now_s = "daily break / thin";
+   const int ev_min[4] = {8 * 60, 13 * 60 + 30, 14 * 60 + 30, 22 * 60};
+   const string ev_nm[4] = {"London opens", "US data time", "New York opens", "daily break"};
+   int best = -1, best_d = 100000;
+   for(int k = 0; k < 4; k++)
+   {
+      int d = ev_min[k] - m;
+      if(d <= 0) d += 1440;
+      if(d < best_d) { best_d = d; best = k; }
+   }
+   string nxt = "";
+   if(best >= 0) nxt = ev_nm[best] + " in " + IntegerToString(best_d / 60) + "h" + StringFormat("%02d", best_d % 60);
+   return "Session: " + now_s + "   next: " + nxt;
 }
 
 // Daily trend filter (research/sim/drift.cpp, docs/REAL_DATA.md section 8). The daily trend is the last completed

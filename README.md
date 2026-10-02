@@ -4,16 +4,31 @@ An indicator (**XAU Oracle**), an Expert Advisor (**XAU Sniper**) and a data-exp
 
 ## Read this first
 **Nothing here can guarantee profit, a fixed win-rate, or a doubled account.** What v2 does is make the tools *earn* the right to trade:
-every day a **Strategy Lab** tests 8 strategies x 4 exit styles on your chart's own history and uses only a combination that won
-**at least 60% of its trades with a positive average result**, measured walk-forward. When nothing qualifies, the EA stands aside on a live account.
+every day a **Strategy Lab** tests 8 strategies x 6 exit styles on your chart's own history and uses only combinations that won
+**at least 60% of their trades (50% for the multi-day exits of TREND mode) with a positive average result**, measured walk-forward. When nothing qualifies, the EA stands aside on a live account.
 
 * **Win-rate alone means little.** A target half as far as the stop wins ~67% of trades even in a random market, and still loses money after costs. The tools therefore always show win-rate **and** the average result per trade (R). See [docs/STRATEGY_LAB.md](docs/STRATEGY_LAB.md).
-* **Tested on your real XAUUSD history (M5 to D1, up to 22 years).** Replayed day by day exactly as the EA trades, it wins **58-65% of trades
-  at about break-even** (within +-0.05R per trade) on every timeframe, at this broker's cost. The 60% win-rate goal is met; a reliable profit
-  is not, and no filter tested so far supplies one. Details: [docs/REAL_DATA.md](docs/REAL_DATA.md).
+* **Tested on your real XAUUSD history (M5 to D1, up to 22 years).** Replayed day by day exactly as the EA trades, the high win-rate
+  STEADY mode wins **58-65% of trades at about break-even** (within +-0.05R per trade) on every timeframe, at this broker's cost.
+  The round 10 **TREND mode** on H1 wins fewer (57%) but made **+0.11R per trade** over 676 trades, mostly in the 2025 bull run.
+  Nothing tested predicts the direction of the next few candles. Details: [docs/REAL_DATA.md](docs/REAL_DATA.md).
 * **A demo account cannot guarantee a real one.** Treat the demo as a rehearsal: same balance you would really deposit, same rules
   (the EA's default *Demo mode = Rehearsal*), and judge it after 100+ trades, not after 3.
 * **"Double every month" needs about 10% risk per trade** and fails most months even with a strong edge ([docs/RISK_MATH.md](docs/RISK_MATH.md)). The EA caps risk at 5% per trade.
+
+## What changed in round 10 (a different kind of strategy)
+* **An honest audit** of nine rounds ([docs/AUDIT.md](docs/AUDIT.md)): almost everything so far was a new way to guess gold's direction from
+  its own candles, and none of those beat the spread. Round 10 changed the *structure* instead: what is held, for how long, and how it exits.
+* **Tested and rejected** on your data: trading by the clock (Asian hours, New York, London), the London fixes, weekend gaps, the day after
+  a big move, seasonality, fading or following moves outside the forecast cone, and squeeze straddles ([docs/REAL_DATA.md](docs/REAL_DATA.md), section 10).
+* **Built: TREND mode** (the new AUTO default on **H1** and H4). Every strategy that passes the Lab trades at once (up to 3 positions,
+  3% total risk), with two new multi-day exits that let winners run (**Rider**, **Swing**), buying only while the daily trend is up, and
+  paying the broker's real swap. Real-data replay on H1, Oct 2020 - Sep 2026: **676 trades, 57% winners, +0.11R per trade** (profit
+  factor 1.25), the best result of the project. It is a trend follower: most of the profit came in 2025; quiet years lost a little.
+* **STEADY mode** (AUTO on M5-M30) is the previous behaviour: one strategy, 60%+ winners, about break-even.
+* The indicator shows the current session and the next market event, and in TREND mode the signal of any passing strategy.
+  The EA panel lists every open position with its exit style and profit.
+* **Account size has not changed**: TREND mode needs about 2,000-6,000 USD per position at 1% risk. It cannot run on 50-100 USD.
 
 ## What changed in round 9 (short timeframes)
 * The single MetaEditor warning in each program ("declaration of 'dn' hides member") is fixed.

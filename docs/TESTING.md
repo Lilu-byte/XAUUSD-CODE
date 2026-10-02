@@ -32,6 +32,9 @@ truth its average error is under 0.01R per trade (v1 was about 0.1R too harsh). 
 * Inputs: `XAU_Sniper_Balanced.set`. The EA re-runs the Strategy Lab every simulated day, so the tester reproduces the live behaviour. Set the broker clock **manually** (*InpManualGmt* on, winter offset, and the daylight-saving mode that matches your broker).
 * The calendar is unavailable in the tester, so the static 12:30/13:30 GMT window is used instead.
 * Split the period: **first 70% in-sample, last 30% out-of-sample.** Look at the out-of-sample part last, once.
+* **TREND mode** (round 10): test on **H1** with `XAU_Sniper_Trend.set`, at least 4 years (it needs a 25,000-bar Lab window and
+  200 daily bars), and judge it over whole years: it earns in trending years and gives a little back in quiet ones. Its positions
+  stay open for days and pay swap: the tester charges it from the symbol's specification, as your broker does.
 
 ## Step 2: pass criteria (suggested minimums, on out-of-sample real ticks)
 | Metric | Minimum | Why |

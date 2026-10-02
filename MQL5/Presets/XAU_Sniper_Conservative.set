@@ -1,6 +1,10 @@
 ; XAU_Sniper_Conservative
 ; Capital preservation: 0.5% risk, tighter limits, and the lab must see 65% winning trades.
 ; Load via the EA inputs dialog: Load. Symbol XAUUSD (M15 or H1).
+InpMode=-1
+InpTrendWinTarget=50.0
+InpTrendMaxPositions=3
+InpMaxOpenRiskPct=3.0
 InpStrategy=-1
 InpExit=-1
 InpWinTarget=65.0

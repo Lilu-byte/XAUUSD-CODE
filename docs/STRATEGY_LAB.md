@@ -23,7 +23,7 @@ One fixed rule set does not suit every timeframe or every year of gold. So inste
 
 2. **So a 60% win-rate is easy; a 60% win-rate that also makes money is not.** It needs a real edge in the entries. The Lab therefore demands both, every time: at least the target share of winners (default 60%) **and** a positive average result that survives a statistical margin.
 
-## What is on trial (8 strategies x 4 exits = 32 combinations)
+## What is on trial (8 strategies x 6 exits = 48 combinations)
 | Strategy | Entry rule (closed bar, never repaints) | Source |
 |---|---|---|
 | Confluence | Nine-module score (pullback, sweep, Asian breakout, squeeze, VWAP fade, divergence, FVG, round level, opening range) | Rounds 1-4 |
@@ -35,15 +35,20 @@ One fixed rule set does not suit every timeframe or every year of gold. So inste
 | EMA pullback | Trend pullback to the 21 EMA with an RSI reset and a rejection candle | Classic trend following |
 | Squeeze breakout | Bollinger squeeze or Asian-range breakout, not against the trend | Volatility breakout |
 
-Each is combined with each exit style above. Every combination is traded through the history one trade at a time, with spread and slippage charged.
+Each is combined with each exit style above, plus two multi-day exits added in round 10: **Rider** (a third off at 1R, stop to entry,
+the rest follows a 3-ATR trailing stop for up to 5 days) and **Swing** (the classic exit held up to 3 days). Every combination is traded
+through the history one trade at a time, with spread, slippage and (for positions held past server midnight) the broker's swap charged.
 
 ## How the Lab chooses (and why you can trust its record)
-* **Every day** (server midnight) the Lab re-tests all 32 combinations on the last 10,000 closed bars before today (25,000 on H1, about
+* **Every day** (server midnight) the Lab re-tests all 48 combinations on the last 10,000 closed bars before today (25,000 on H1, about
   4 years; *InpHistoryBars* = 0 AUTO). The indicator and the EA use exactly the same bars, so they always choose the same strategy.
 * On H1 and above (*InpDailyTrend* = AUTO) every combination may only **buy, and only while the daily close is above its 200-day mean**
   (real-data evidence: docs/REAL_DATA.md section 8).
 * A combination **qualifies** when, over the whole window, it has at least 50 trades, won at least 63% (the 60% target plus a 3-point allowance for the drop-off that always happens out of sample), keeps a positive average even after subtracting one standard error, **and** was still profitable in the most recent fifth of the window.
-* The best qualifying combination is used. If none qualifies, the EA **stands aside** on a live account (on a demo account it can trade the closest one, clearly labelled UNPROVEN).
+* **STEADY mode** (AUTO on M5-M30): the best qualifying combination is used. **TREND mode** (AUTO on H1 and H4): the target is 50%
+  (*InpTrendWinTarget*), because trend exits win less often but bigger, and **every** qualifying combination may trade, one position each,
+  up to 3 at a time and 3% total risk (real-data results: docs/REAL_DATA.md section 10).
+* If none qualifies, the EA **stands aside** on a live account (on a demo account it can trade the closest one, clearly labelled UNPROVEN).
 * The record the panel quotes in AUTO mode is **walk-forward**: for each later fifth of the history, the choice is made using only the data before it, and only the trades after it are counted. That is the honest estimate of "let the Lab choose", not the flattering record of the best combination.
 
 The selection rule itself was chosen by experiment (research/results/harness_results.txt), comparing five rules by a **live replay** that re-runs the Lab every simulated day exactly as the EA does:
@@ -77,5 +82,5 @@ Reading it:
 ## Limits (read before trusting any of it)
 * The Lab measures the past. A strategy that passed can stop working; the daily re-test, the "still profitable recently" rule and the EA's loss limits exist for that day.
 * The window is 10,000 bars: about 104 trading days on M15, 1.4 years on H1. Short windows mean fewer trades and wider uncertainty; the 50-trade minimum is the floor.
-* Choosing the best of 32 combinations flatters in-sample numbers. That is why the walk-forward record, not the best cell's record, is what the panel quotes.
+* Choosing the best of 48 combinations flatters in-sample numbers. That is why the walk-forward record, not the best cell's record, is what the panel quotes.
 * Only real data can say whether real gold, on your broker and timeframe, contains an edge these strategies catch. See TESTING.md, and use `MQL5/Scripts/XAU_DataExport.mq5` to export your data so every test here can be re-run on it.

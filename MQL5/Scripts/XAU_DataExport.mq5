@@ -125,6 +125,9 @@ void OnStart()
       FileWrite(h, "volume_min=" + DoubleToString(SymbolInfoDouble(sym, SYMBOL_VOLUME_MIN), 2));
       FileWrite(h, "volume_step=" + DoubleToString(SymbolInfoDouble(sym, SYMBOL_VOLUME_STEP), 2));
       FileWrite(h, "spread_points_now=" + IntegerToString(SymbolInfoInteger(sym, SYMBOL_SPREAD)));
+      FileWrite(h, "swap_mode=" + IntegerToString(SymbolInfoInteger(sym, SYMBOL_SWAP_MODE)));
+      FileWrite(h, "swap_long=" + DoubleToString(SymbolInfoDouble(sym, SYMBOL_SWAP_LONG), 4));
+      FileWrite(h, "swap_short=" + DoubleToString(SymbolInfoDouble(sym, SYMBOL_SWAP_SHORT), 4));
       FileWrite(h, "server_minus_gmt_seconds_now=" + IntegerToString((long)(TimeTradeServer() - TimeGMT())));
       FileWrite(h, "account_currency=" + AccountInfoString(ACCOUNT_CURRENCY));
       FileClose(h);

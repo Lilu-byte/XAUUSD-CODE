@@ -51,6 +51,8 @@ Open MetaEditor (F4), open each `.mq5`, press **F7**. Expect 0 errors.
    | `XAU_Sniper_Growth.set` / `XAU_Sniper_Aggressive.set` | 2% / 4% risk |
    | `XAU_Sniper_DemoTurbo.set` | Demo only: all day, several positions, trades the closest strategy even when none passed |
    | `XAU_Sniper_GoldORB.set` | The GOLD_ORB opening-range strategy alone (H1 chart) |
+   | `XAU_Sniper_Trend.set` | TREND mode on any chart (best on **H1**): every strategy that passes trades, multi-day exits |
+   | `XAU_Sniper_Steady.set` | STEADY mode on any chart: one strategy, 60%+ winners, exits within hours |
 4. **Start on a demo account.** See [TESTING.md](TESTING.md).
 5. Optional: add a DXY-like symbol (`USDX`, `DXY`, ...) to Market Watch. Without it the EA uses EURUSD as a proxy.
 
@@ -92,6 +94,15 @@ mean; on M5-M30 no filter. OFF, WITH (only in the daily trend's direction) and L
 **Lab window** (*InpHistoryBars*): 0 = AUTO, 25,000 bars on H1 (about 4 years), 10,000 elsewhere. Keep both settings equal in the EA and
 the indicator so they choose the same strategy. The H1 window needs *Tools > Options > Charts > Max bars in chart* of at least 30,000.
 
+**Mode** (*InpMode*, both programs, round 10). AUTO = **TREND** on H1 and H4, **STEADY** on every other chart.
+* **STEADY**: one strategy at a time, chosen by the Lab with at least 60% winners; trades close within hours, Fridays flat.
+* **TREND**: every strategy that passes a **50%** Lab target (*InpTrendWinTarget*) may trade, one position each, up to
+  *InpTrendMaxPositions* (3) and *InpMaxOpenRiskPct* (3% of equity in total). The Lab can now also pick two multi-day exits:
+  **Rider** (a third off at 1R, stop to entry, the rest follows a 3-ATR trailing stop for up to 5 days) and **Swing** (held up to 3 days).
+  These positions stay open overnight and over the weekend and **pay the broker's swap**, which the Lab charges using your broker's
+  real swap rates. Fewer trades win (about 57%), but the winners are bigger: the best real-data result of the project (REAL_DATA section 10).
+Keep *InpMode* and *InpTrendWinTarget* equal in the EA and the indicator so both show the same strategies.
+
 **Account size.** The indicator shows "TOO BIG, SKIP" when even 0.01 lot risks more than 1.5x your *Risk per trade*, and the balance the
 trade would need. Rough minimums for 1% risk at 0.01 lot (Sep 2026): M5 550 USD, M15 1,100, H1 2,400, H4 5,300.
 
@@ -110,6 +121,8 @@ trade would need. Rough minimums for 1% risk at 0.01 lot (Sep 2026): M5 550 USD,
 | EA status line mentions margin | Open trades (manual ones too) use the margin; close or protect them first |
 | EA panel still says "[DEMO - free run]" after an update | Remove the EA from the chart and attach it again |
 | EA shows another timeframe's strategy after you switched the chart (old version) | Update: the EA now resets itself on a timeframe change |
+| EA status "open risk would exceed 3.0%" | TREND mode: the open positions already use the total risk budget (*InpMaxOpenRiskPct*) |
+| EA kept a position over the weekend | TREND mode's Rider/Swing exits hold for days by design; STEADY mode closes on Friday |
 | "setup skipped: against the daily trend" | H1 and above buy only in a daily uptrend (AUTO); set *InpDailyTrend* = OFF to trade both ways |
 | EA logs "sizing note - broker tick value is off" | Expected on some brokers; the EA already uses the correct figure |
 | EA logs "another instance is already running" | A second chart with the same magic (or a crashed run; wait 15 seconds and reattach) |

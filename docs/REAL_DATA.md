@@ -275,3 +275,71 @@ model) calls its direction well enough to pay the spread. What *is* predictable 
 (the calibrated range and candle size of section 8); that is what the indicator shows. The remaining untested idea with a real chance,
 markets that move before gold (dollar index, EURUSD, silver, US yields) and surprise in US data, needs data the export did not include:
 the export script now saves them (1-minute gold, related markets, the US economic calendar).
+
+## 10. Round 10: different mechanisms, not new settings
+The question this round: every strategy so far predicted a direction from a price pattern and bracketed it with a stop and a target.
+Are there **structurally different** ways to trade gold that do better? Audit of all rounds: [AUDIT.md](AUDIT.md).
+Programs: `research/sim/mechanisms.cpp` (clock, fixes, gaps, cone, squeeze, overreaction, seasonality) and the EA replay (TREND mode).
+Every rule and window was fixed before the run. Older 60% / newer 40% of each file; dollars per 0.01 lot after 0.35 cost and
+0.50 / 0.20 swap per night (long / short). Outputs: `research/results/mechanisms_*.txt`, `real_H1_results.txt`, `real_H4_results.txt`.
+
+### A. Mechanisms that hold gold by the clock, by an event or by the calendar
+| Mechanism | What it does | Result |
+|---|---|---|
+| **Clock: long after the daily reopen / through Asia** | Buy at 01:30-02:00 server, sell 2-8 hours later; no pattern | H1 2016-2026: lost money in **9 of 11 years** (-0.2 to -0.4 $/trade); only 2025-2026 positive. Rejected |
+| Clock: short New York 16:30-22:00 | "Gold falls in the West" | Lost 2017-2025 every year, won only 2026. Rejected |
+| Clock: long or short London 10:00-15:00, long late evening | | Negative in the older half everywhere. Rejected |
+| **London fixes** (30 min before/after 10:30 and 15:00 London) | Direction picked on the older half, tested on the newer | M5 (15 months): "short 30 min before the AM fix" positive in both halves (+$0.53 / +$1.18). M15 (4 years): the same window **lost** (-$0.32 / -$1.19). Rejected |
+| **Weekend gap fade** | Fade Monday's gap back to Friday's close | Gaps filled within 8 hours only 15-48% of the time; lost in every file. Rejected |
+| **Overreaction** (daily, 2004-2026) | Day after a 2-sigma day | After a big up day the next day rose slightly in both halves (+$0.54 / +$2.52, se 1.0 / 3.4): momentum, not reversal, and within noise. After a big down day buying lost. Not adopted |
+| **Seasonality** | Months chosen 2004-2015, traded 2015-2026 | "Good" months +5.1 bps/day vs other months +3.5 (se 2.4 / 3.0): no difference. Friday the strongest weekday in both halves (+16.6 / +8.1 bps), but holding only Fridays pays the weekend. Not adopted |
+
+### B. Trading the size forecast (the one prediction that works, section 8)
+| Mechanism | What it does | Result |
+|---|---|---|
+| **Cone fade** | A close outside the 3-bar 20-80% cone: fade back to its median | Lost about the spread in both halves on M5, M15, H1 and H4 (e.g. M15 -$0.38 / -$0.58 per trade, 34,000 trades). Rejected |
+| **Cone follow** | Same signal, trade the escape | M5-H1: lost about the spread. **H4, escape over 1 half-width: positive in both halves and both directions** (+$0.55 / +$4.14). In R: about -0.03R per trade in 2016-2019, +0.08R from 2020. The same trending years as TREND mode below: the same edge, not a new one. Promising, not adopted as a separate strategy |
+| **Squeeze straddle** | Stop orders on both sides of a quiet 6-bar box, one cancels the other | M5 lost in both halves; M15 and H1 lost in the older half. H4 positive but within noise (+$0.32 / +$1.46, se 0.6 / 1.9). Rejected |
+
+**On M5-H1, fading and following the same signal both lose about the spread.** That is what a fair coin with a spread looks like,
+and it confirms section 9: the size of the next move is predictable, its direction is not.
+
+### C. A different payoff shape: TREND mode (built)
+Until now every exit took small profits often (60%+ winners) and accepted full-size losses. Round 10 adds two exits that do the
+opposite: **Rider** (a third off at 1R, stop to entry, the rest follows a 3-ATR trailing stop for up to 5 days) and **Swing** (held
+up to 3 days). Such exits win less often, so the Lab target for them is **50%**. In **TREND mode** every combination that passes trades,
+one position each (up to 3, total open risk at most 3%), and on H1/H4 only buys while the daily trend is up. Overnight swap is charged.
+
+EA replay, real data, daily walk-forward Lab exactly as the EA runs it (MULTI = TREND mode):
+| Chart, Lab window | Mode | Trades | Won | Avg R (se) | Profit factor | Random-entry control (same exits and filter) |
+|---|---|---|---|---|---|---|
+| H1, 25,000 bars (EA AUTO), Oct 2020 - Sep 2026 | STEADY (60%, one pick) | 114 | 64% | -0.029 (0.066) | 0.91 | |
+| H1, 25,000 bars | **TREND** | **676** | **57%** | **+0.107 (0.049)** | **1.25** | +0.064 (0.154), 114 trades |
+| H1, 25,000 bars, at most 1 position | TREND | 298 | 54% | +0.054 (0.077) | 1.12 | |
+| H1, 25,000 bars, at most 5 positions | TREND | 866 | 57% | +0.107 (0.042) | 1.25 | |
+| H1, 10,000 bars | TREND | 654 | 58% | +0.118 (0.045) | 1.32 | -0.014 (0.120), 139 trades |
+| H1, 25,000 bars, both directions with the daily trend | TREND | 872 | 57% | +0.082 (0.040) | 1.20 | |
+| H1, 10,000 bars, no daily filter | TREND | 1,339 | 54% | +0.026 (0.031) | 1.06 | +0.024 (0.108) |
+| H4, 6,000 bars | **TREND** | **529** | **57%** | **+0.140 (0.053)** | **1.34** | -0.060 (0.069), 369 trades |
+| H4, 10,000 bars (EA AUTO) | TREND | 459 | 50% | +0.013 (0.053) | 1.03 | |
+| H4, 10,000 bars | STEADY | 21 | 48% | -0.302 (0.173) | 0.44 | |
+| M15, 10,000 bars | TREND | 1,837 | 57% | -0.040 (0.022) | 0.89 | |
+| M5, 10,000 bars | TREND | 947 | 59% | +0.006 (0.028) | 1.02 | |
+
+TREND mode, average R per trade by year (trades):
+| Chart | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|
+| H1, 25,000 bars | | | -0.09 (22) | -0.23 (31) | +0.08 (66) | **+0.20 (321)** | +0.04 (236) |
+| H4, 6,000 bars | **+0.45 (55)** | -0.65 (12) | +0.04 (43) | -0.30 (11) | -0.29 (29) | **+0.13 (294)** | **+0.35 (85)** |
+
+### Plain reading
+* **TREND mode is the strongest result of the project**: about +0.1R per trade over 500-900 trades, t-statistic 2.2-2.6,
+  on H1 robust to the Lab window (10,000 or 25,000 bars) and better with the daily filter than without.
+* **It is a trend follower and earns in trending years.** H1's profit came from 2025; H4's from 2020 and 2025-2026. In quiet or falling
+  years it trades little and loses a little. Expect long flat or slightly losing stretches.
+* **On H4 it depends on the Lab window** (+0.14R with 6,000 bars, +0.01R with the EA's 10,000), so H4 is the less reliable of the two;
+  H1 is the recommended chart. On M5 and M15 trend exits do not help: AUTO keeps those charts in STEADY mode.
+* **Part of it is simply being long gold in a bull market.** The random-entry control with the same exits made -0.06 to +0.06R,
+  so the Lab's choices add something, but the control samples are small and, on H1 with 25,000 bars, the gap is within noise.
+* **Account size.** Trend exits use H1/H4 stops of about $20-60 per 0.01 lot. At 1% risk that needs about $2,000-6,000 per position,
+  and TREND mode may hold three. On a $50-100 account each position would risk 20-100% of the account; the EA refuses such trades.

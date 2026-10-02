@@ -1,6 +1,10 @@
 ; XAU_Sniper_Aggressive
 ; HIGH RISK: 4% per trade, the closest to a 'double it' attempt. Expect large drawdowns; read docs/RISK_MATH.md first. Demo only until proven.
 ; Load via the EA inputs dialog: Load. Symbol XAUUSD (M15 or H1).
+InpMode=-1
+InpTrendWinTarget=50.0
+InpTrendMaxPositions=3
+InpMaxOpenRiskPct=3.0
 InpStrategy=-1
 InpExit=-1
 InpWinTarget=60.0

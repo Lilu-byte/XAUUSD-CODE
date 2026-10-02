@@ -203,13 +203,17 @@ inline datetime TimeTradeServer() { return g_mock_now; }
 inline datetime TimeLocal() { return g_mock_now; }
 inline datetime TimeGMT() { return g_mock_now - 7200; }
 inline datetime iTime(const string &, int, int) { return g_mock_now; }
+inline int iBarShift(const string &, int, datetime, bool = false) { return 0; }
 inline double NormalizeDouble(double v, int d) { double m = std::pow(10.0, d); return std::round(v * m) / m; }
 
 // ---- symbol / account ------------------------------------------------------------
 enum { SYMBOL_TRADE_TICK_VALUE = 1, SYMBOL_TRADE_TICK_VALUE_LOSS, SYMBOL_TRADE_TICK_SIZE, SYMBOL_VOLUME_MIN,
        SYMBOL_VOLUME_MAX, SYMBOL_VOLUME_STEP, SYMBOL_POINT, SYMBOL_BID, SYMBOL_ASK,
        SYMBOL_SPREAD, SYMBOL_TRADE_STOPS_LEVEL, SYMBOL_TRADE_MODE, SYMBOL_DIGITS, SYMBOL_TRADE_CONTRACT_SIZE,
-       SYMBOL_CURRENCY_PROFIT };
+       SYMBOL_CURRENCY_PROFIT, SYMBOL_SWAP_LONG, SYMBOL_SWAP_SHORT, SYMBOL_SWAP_MODE };
+enum { SYMBOL_SWAP_MODE_DISABLED = 0, SYMBOL_SWAP_MODE_POINTS, SYMBOL_SWAP_MODE_CURRENCY_SYMBOL, SYMBOL_SWAP_MODE_CURRENCY_MARGIN,
+       SYMBOL_SWAP_MODE_CURRENCY_DEPOSIT, SYMBOL_SWAP_MODE_INTEREST_CURRENT, SYMBOL_SWAP_MODE_INTEREST_OPEN,
+       SYMBOL_SWAP_MODE_REOPEN_CURRENT, SYMBOL_SWAP_MODE_REOPEN_BID, SYMBOL_SWAP_MODE_CURRENCY_PROFIT };
 // mock broker settings that tests can change (e.g. a broker reporting a tick value 10x too small)
 static double g_mock_tick_value = 1.0;
 static bool   g_mock_calcprofit_ok = true;
@@ -227,10 +231,11 @@ inline double SymbolInfoDouble(const string &, int p)
 {
    switch(p) { case SYMBOL_TRADE_TICK_VALUE: case SYMBOL_TRADE_TICK_VALUE_LOSS: return g_mock_tick_value; case SYMBOL_TRADE_CONTRACT_SIZE: return 100.0; case SYMBOL_TRADE_TICK_SIZE: return 0.01;
       case SYMBOL_VOLUME_MIN: return 0.01; case SYMBOL_VOLUME_MAX: return 100.0; case SYMBOL_VOLUME_STEP: return 0.01;
-      case SYMBOL_POINT: return 0.01; case SYMBOL_BID: return 4000.0; case SYMBOL_ASK: return 4000.3; }
+      case SYMBOL_POINT: return 0.01; case SYMBOL_BID: return 4000.0; case SYMBOL_ASK: return 4000.3;
+      case SYMBOL_SWAP_LONG: return -50.0; case SYMBOL_SWAP_SHORT: return -20.0; }
    return 0.0;
 }
-inline long SymbolInfoInteger(const string &, int p) { return p == SYMBOL_SPREAD ? 30 : (p == SYMBOL_TRADE_MODE ? 4 : (p == SYMBOL_DIGITS ? 2 : 0)); }
+inline long SymbolInfoInteger(const string &, int p) { return p == SYMBOL_SPREAD ? 30 : (p == SYMBOL_TRADE_MODE ? 4 : (p == SYMBOL_DIGITS ? 2 : (p == SYMBOL_SWAP_MODE ? SYMBOL_SWAP_MODE_POINTS : 0))); }
 inline bool SymbolSelect(const string &, bool) { return true; }
 inline double AccountInfoDouble(int p) { return p == ACCOUNT_MARGIN_FREE ? 9000.0 : (p == ACCOUNT_MARGIN_SO_SO ? 50.0 : (p == ACCOUNT_MARGIN_LEVEL ? 1200.0 : 10000.0)); }
 inline string AccountInfoString(int) { return "USD"; }
@@ -334,7 +339,7 @@ public:
 };
 enum { POSITION_TYPE_BUY = 0, POSITION_TYPE_SELL = 1 };
 enum { POSITION_SYMBOL = 1, POSITION_MAGIC, POSITION_TYPE, POSITION_PRICE_OPEN, POSITION_SL, POSITION_TP, POSITION_VOLUME,
-       POSITION_TIME, POSITION_IDENTIFIER };
+       POSITION_TIME, POSITION_IDENTIFIER, POSITION_PROFIT };
 inline int PositionsTotal() { return 0; }
 inline ulong PositionGetTicket(int) { return 0; }
 inline string PositionGetString(int) { return ""; }

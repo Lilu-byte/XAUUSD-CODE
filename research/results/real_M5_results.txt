@@ -6,8 +6,10 @@
    PASS RSI-2 dip in trend       Mean-revert exit   won  63.9%  avg +0.065R  PF  1.25  n= 122 | last 40%: won  64.0% avg +0.092R n=50
         RSI-2 dip in trend       High-hit 0.5R      won  76.0%  avg +0.109R  PF  1.43  n=  25 | last 40%: won  66.7% avg -0.066R n=6
         RSI-2 dip in trend       Quick 0.6R         won  72.0%  avg +0.109R  PF  1.37  n=  25 | last 40%: won  66.7% avg +0.025R n=6
+        Double-7 dip in trend    Trend rider (days) won  60.0%  avg +0.203R  PF  1.49  n=  40 | last 40%: won  63.6% avg -0.196R n=11
         Double-7 dip in trend    Mean-revert exit   won  59.1%  avg -0.003R  PF  0.99  n= 208 | last 40%: won  60.0% avg -0.026R n=90
         Double-7 dip in trend    Classic 1R+runner  won  57.8%  avg +0.104R  PF  1.24  n=  45 | last 40%: won  53.8% avg -0.043R n=13
+        Double-7 dip in trend    Swing 3 days       won  57.8%  avg +0.104R  PF  1.24  n=  45 | last 40%: won  53.8% avg -0.043R n=13
         Weak-close dip in trend  Quick 0.6R         won  65.7%  avg +0.013R  PF  1.04  n= 102 | last 40%: won  66.7% avg +0.029R n=39
         Squeeze breakout         Quick 0.6R         won  66.7%  avg +0.031R  PF  1.09  n=  54 | last 40%: won  71.4% avg +0.105R n=21
         Weak-close dip in trend  High-hit 0.5R      won  68.5%  avg +0.001R  PF  1.00  n=  92 | last 40%: won  67.6% avg -0.002R n=37
@@ -17,23 +19,37 @@
         Confluence (9 modules)   Mean-revert exit   won  50.0%  avg +0.070R  PF  1.44  n=  12 | last 40%: won  28.6% avg -0.054R n=7
         Squeeze breakout         Mean-revert exit   won  39.8%  avg -0.062R  PF  0.66  n=  93 | last 40%: won  34.3% avg -0.105R n=35
         Double-7 dip in trend    Quick 0.6R         won  64.7%  avg -0.007R  PF  0.98  n=  51 | last 40%: won  73.3% avg +0.131R n=15
-        Squeeze breakout         Classic 1R+runner  won  52.1%  avg +0.042R  PF  1.08  n=  48 | last 40%: won  61.1% avg +0.186R n=18
+        Squeeze breakout         Classic 1R+runner  won  52.1%  avg +0.039R  PF  1.07  n=  48 | last 40%: won  61.1% avg +0.183R n=18
+        Squeeze breakout         Swing 3 days       won  52.1%  avg +0.039R  PF  1.07  n=  48 | last 40%: won  61.1% avg +0.183R n=18
         EMA pullback             Mean-revert exit   won  33.3%  avg -0.084R  PF  0.49  n=  27 | last 40%: won  28.6% avg -0.157R n=14
         Stop-hunt reversal       Classic 1R+runner  won  58.8%  avg +0.104R  PF  1.24  n=  17 | last 40%: won  50.0% avg +0.071R n=8
+        Stop-hunt reversal       Swing 3 days       won  58.8%  avg +0.104R  PF  1.24  n=  17 | last 40%: won  50.0% avg +0.071R n=8
         Stop-hunt reversal       Quick 0.6R         won  64.7%  avg -0.003R  PF  0.99  n=  17 | last 40%: won  62.5% avg -0.038R n=8
         RSI-2 dip in trend       Classic 1R+runner  won  56.5%  avg +0.022R  PF  1.05  n=  23 | last 40%: won  50.0% avg -0.291R n=6
+        RSI-2 dip in trend       Swing 3 days       won  56.5%  avg +0.022R  PF  1.05  n=  23 | last 40%: won  50.0% avg -0.291R n=6
         Stop-hunt reversal       High-hit 0.5R      won  64.7%  avg -0.016R  PF  0.96  n=  17 | last 40%: won  62.5% avg +0.002R n=8
-        Weak-close dip in trend  Classic 1R+runner  won  45.6%  avg -0.131R  PF  0.77  n=  79 | last 40%: won  45.5% avg -0.139R n=33
+        Squeeze breakout         Trend rider (days) won  52.2%  avg -0.040R  PF  0.93  n=  46 | last 40%: won  64.7% avg +0.087R n=17
+        RSI-2 dip in trend       Trend rider (days) won  55.0%  avg +0.030R  PF  1.06  n=  20 | last 40%: won  50.0% avg -0.376R n=6
+        Weak-close dip in trend  Classic 1R+runner  won  45.6%  avg -0.132R  PF  0.77  n=  79 | last 40%: won  45.5% avg -0.141R n=33
+        Weak-close dip in trend  Swing 3 days       won  45.6%  avg -0.132R  PF  0.77  n=  79 | last 40%: won  45.5% avg -0.141R n=33
+        Weak-close dip in trend  Trend rider (days) won  43.7%  avg -0.103R  PF  0.82  n=  71 | last 40%: won  45.2% avg -0.159R n=31
+        Stop-hunt reversal       Trend rider (days) won  58.8%  avg -0.066R  PF  0.85  n=  17 | last 40%: won  50.0% avg -0.166R n=8
         Opening-range breakout   Mean-revert exit   won  31.2%  avg -0.163R  PF  0.49  n=  16 | last 40%: won  16.7% avg -0.188R n=6
         EMA pullback             Quick 0.6R         won  55.0%  avg -0.158R  PF  0.66  n=  20 | last 40%: won  54.5% avg -0.165R n=11
         EMA pullback             High-hit 0.5R      won  47.1%  avg -0.289R  PF  0.48  n=  17 | last 40%: won  50.0% avg -0.273R n=10
+        Confluence (9 modules)   Trend rider (days) won  50.0%  avg -0.045R  PF  0.91  n=   6 | last 40%: won  66.7% avg -0.019R n=3
         Confluence (9 modules)   High-hit 0.5R      won  50.0%  avg -0.131R  PF  0.74  n=   6 | last 40%: won  66.7% avg +0.161R n=3
         Confluence (9 modules)   Classic 1R+runner  won  50.0%  avg -0.133R  PF  0.74  n=   6 | last 40%: won  66.7% avg +0.180R n=3
+        Confluence (9 modules)   Swing 3 days       won  50.0%  avg -0.133R  PF  0.74  n=   6 | last 40%: won  66.7% avg +0.180R n=3
         Confluence (9 modules)   Quick 0.6R         won  50.0%  avg -0.231R  PF  0.55  n=   6 | last 40%: won  66.7% avg +0.027R n=3
         Opening-range breakout   Quick 0.6R         won  42.9%  avg -0.346R  PF  0.41  n=   7 | last 40%: won  50.0% avg -0.238R n=2
-        EMA pullback             Classic 1R+runner  won  23.5%  avg -0.429R  PF  0.41  n=  17 | last 40%: won  20.0% avg -0.658R n=10
         Opening-range breakout   High-hit 0.5R      won  42.9%  avg -0.369R  PF  0.37  n=   7 | last 40%: won  50.0% avg -0.138R n=2
+        EMA pullback             Classic 1R+runner  won  23.5%  avg -0.432R  PF  0.41  n=  17 | last 40%: won  20.0% avg -0.658R n=10
+        EMA pullback             Swing 3 days       won  23.5%  avg -0.432R  PF  0.41  n=  17 | last 40%: won  20.0% avg -0.658R n=10
+        EMA pullback             Trend rider (days) won  23.5%  avg -0.490R  PF  0.35  n=  17 | last 40%: won  20.0% avg -0.553R n=10
         Opening-range breakout   Classic 1R+runner  won  28.6%  avg -0.550R  PF  0.25  n=   7 | last 40%: won  50.0% avg -0.148R n=2
+        Opening-range breakout   Swing 3 days       won  28.6%  avg -0.550R  PF  0.25  n=   7 | last 40%: won  50.0% avg -0.148R n=2
+        Opening-range breakout   Trend rider (days) won  28.6%  avg -0.648R  PF  0.12  n=   7 | last 40%: won  50.0% avg -0.358R n=2
   pick today: Weak-close dip in trend / Mean-revert exit [PROVEN]
   auto-pick walk-forward (2 folds traded):                     n= 153  win%= 64.1  TP1%=  0.0  expR=+0.053 (se 0.054)  PF= 1.22  holdMed=  2 bars
   v1 confluence + classic exit, v1 fill rule:                     n=   6  win%= 50.0  TP1%= 50.0  expR=-0.172 (se 0.389)  PF= 0.67  holdMed=  6 bars
@@ -43,39 +59,57 @@
   real       days  336, a proven strategy existed on   81 ( 24%)
              LIVE (proven picks only)   1.34 trades/day                     n= 451  win%= 59.0  TP1%= 16.9  expR=-0.008 (se 0.032)  PF= 0.97  holdMed=  2 bars
              DEMO (closest pick always) 4.01 trades/day                     n=1349  win%= 59.9  TP1%= 17.6  expR=-0.017 (se 0.019)  PF= 0.94  holdMed=  3 bars
+             MULTI (all passing, <=3)  1.88 trades/day                     n= 631  win%= 58.8  TP1%= 23.1  expR=-0.026 (se 0.028)  PF= 0.91  holdMed=  3 bars
+             by year, MULTI / LIVE avg R (trades): 2025 -0.04(118)/-0.03(54) 2026 -0.02(513)/-0.00(397)
              most used picks: [Weak-close dip in trend / Mean-revert exit: 25 days] [Double-7 dip in trend / High-hit 0.5R: 22 days] [RSI-2 dip in trend / Mean-revert exit: 9 days]
 
 == REAL DATA by period: research/data/XAUUSD_M5.csv, blocks of 1 years (won% / avg R / trades) ==
   strategy                   exit               | 2025-2025           | 2026-2026           | all
-  Confluence (9 modules)     Classic 1R+runner  |  36% -0.269   11 |  57% +0.038   35 |  52% -0.036   46  (1/2 blocks positive)
-  Confluence (9 modules)     High-hit 0.5R      |  55% -0.253   11 |  77% +0.121   35 |  72% +0.031   46  (1/2 blocks positive)
-  Confluence (9 modules)     Quick 0.6R         |  55% -0.161   11 |  71% +0.111   35 |  67% +0.046   46  (1/2 blocks positive)
+  Confluence (9 modules)     Classic 1R+runner  |  36% -0.290   11 |  57% +0.037   35 |  52% -0.041   46  (1/2 blocks positive)
+  Confluence (9 modules)     High-hit 0.5R      |  55% -0.255   11 |  77% +0.121   35 |  72% +0.031   46  (1/2 blocks positive)
+  Confluence (9 modules)     Quick 0.6R         |  55% -0.163   11 |  71% +0.111   35 |  67% +0.045   46  (1/2 blocks positive)
   Confluence (9 modules)     Mean-revert exit   |  39% -0.071   23 |  44% +0.022   63 |  43% -0.003   86  (1/2 blocks positive)
-  Opening-range breakout     Classic 1R+runner  |  61% +0.180   31 |  38% -0.319   52 |  47% -0.132   83  (1/2 blocks positive)
-  Opening-range breakout     High-hit 0.5R      |  74% +0.102   31 |  58% -0.175   52 |  64% -0.072   83  (1/2 blocks positive)
-  Opening-range breakout     Quick 0.6R         |  68% +0.050   31 |  50% -0.230   52 |  57% -0.126   83  (1/2 blocks positive)
+  Confluence (9 modules)     Trend rider (days) |  36% -0.112   11 |  57% -0.028   35 |  52% -0.048   46  (0/2 blocks positive)
+  Confluence (9 modules)     Swing 3 days       |  36% -0.339   11 |  57% +0.037   35 |  52% -0.053   46  (1/2 blocks positive)
+  Opening-range breakout     Classic 1R+runner  |  61% +0.175   31 |  38% -0.319   52 |  47% -0.135   83  (1/2 blocks positive)
+  Opening-range breakout     High-hit 0.5R      |  74% +0.097   31 |  58% -0.175   52 |  64% -0.074   83  (1/2 blocks positive)
+  Opening-range breakout     Quick 0.6R         |  68% +0.044   31 |  50% -0.231   52 |  57% -0.128   83  (1/2 blocks positive)
   Opening-range breakout     Mean-revert exit   |  53% +0.103   57 |  40% -0.104   84 |  45% -0.020  141  (1/2 blocks positive)
-  RSI-2 dip in trend         Classic 1R+runner  |  73% +0.456   48 |  55% +0.102  297 |  58% +0.151  345  (2/2 blocks positive)
-  RSI-2 dip in trend         High-hit 0.5R      |  82% +0.217   49 |  69% +0.016  321 |  71% +0.042  370  (2/2 blocks positive)
+  Opening-range breakout     Trend rider (days) |  61% +0.183   31 |  38% -0.340   52 |  47% -0.144   83  (1/2 blocks positive)
+  Opening-range breakout     Swing 3 days       |  61% +0.175   31 |  38% -0.319   52 |  47% -0.135   83  (1/2 blocks positive)
+  RSI-2 dip in trend         Classic 1R+runner  |  73% +0.452   48 |  55% +0.101  297 |  58% +0.150  345  (2/2 blocks positive)
+  RSI-2 dip in trend         High-hit 0.5R      |  82% +0.217   49 |  69% +0.015  321 |  71% +0.042  370  (2/2 blocks positive)
   RSI-2 dip in trend         Quick 0.6R         |  80% +0.239   50 |  66% +0.026  324 |  68% +0.055  374  (2/2 blocks positive)
   RSI-2 dip in trend         Mean-revert exit   |  60% +0.008  250 |  61% +0.008  813 |  61% +0.008 1063  (2/2 blocks positive)
-  Double-7 dip in trend      Classic 1R+runner  |  58% +0.107   80 |  50% -0.009  474 |  51% +0.008  554  (1/2 blocks positive)
+  RSI-2 dip in trend         Trend rider (days) |  71% +0.456   45 |  53% +0.106  262 |  56% +0.157  307  (2/2 blocks positive)
+  RSI-2 dip in trend         Swing 3 days       |  73% +0.452   48 |  55% +0.101  297 |  58% +0.150  345  (2/2 blocks positive)
+  Double-7 dip in trend      Classic 1R+runner  |  58% +0.103   80 |  50% -0.009  474 |  51% +0.007  554  (1/2 blocks positive)
   Double-7 dip in trend      High-hit 0.5R      |  78% +0.154   89 |  66% -0.028  555 |  68% -0.003  644  (1/2 blocks positive)
   Double-7 dip in trend      Quick 0.6R         |  72% +0.112   93 |  61% -0.053  568 |  63% -0.030  661  (1/2 blocks positive)
   Double-7 dip in trend      Mean-revert exit   |  57% -0.042  410 |  58% -0.027 1396 |  58% -0.031 1806  (0/2 blocks positive)
-  Weak-close dip in trend    Classic 1R+runner  |  49% -0.059  140 |  50% -0.020  702 |  50% -0.026  842  (0/2 blocks positive)
+  Double-7 dip in trend      Trend rider (days) |  58% +0.024   73 |  49% +0.033  403 |  50% +0.032  476  (2/2 blocks positive)
+  Double-7 dip in trend      Swing 3 days       |  58% +0.103   80 |  50% -0.009  474 |  51% +0.007  554  (1/2 blocks positive)
+  Weak-close dip in trend    Classic 1R+runner  |  49% -0.059  140 |  50% -0.021  702 |  50% -0.027  842  (0/2 blocks positive)
   Weak-close dip in trend    High-hit 0.5R      |  69% -0.007  160 |  67% -0.016  826 |  67% -0.015  986  (0/2 blocks positive)
-  Weak-close dip in trend    Quick 0.6R         |  65% +0.001  170 |  63% -0.026  884 |  63% -0.022 1054  (1/2 blocks positive)
+  Weak-close dip in trend    Quick 0.6R         |  65% +0.001  170 |  63% -0.027  884 |  63% -0.022 1054  (1/2 blocks positive)
   Weak-close dip in trend    Mean-revert exit   |  56% -0.055  624 |  60% +0.005 2069 |  59% -0.009 2693  (1/2 blocks positive)
-  Stop-hunt reversal         Classic 1R+runner  |  53% -0.033   45 |  54% +0.044  160 |  54% +0.027  205  (1/2 blocks positive)
-  Stop-hunt reversal         High-hit 0.5R      |  63% -0.065   46 |  68% -0.007  166 |  67% -0.020  212  (0/2 blocks positive)
-  Stop-hunt reversal         Quick 0.6R         |  61% -0.062   46 |  65% +0.009  166 |  64% -0.006  212  (1/2 blocks positive)
+  Weak-close dip in trend    Trend rider (days) |  49% -0.034  122 |  51% +0.023  586 |  50% +0.013  708  (1/2 blocks positive)
+  Weak-close dip in trend    Swing 3 days       |  49% -0.054  140 |  50% -0.023  702 |  50% -0.028  842  (0/2 blocks positive)
+  Stop-hunt reversal         Classic 1R+runner  |  53% -0.038   45 |  54% +0.041  160 |  54% +0.024  205  (1/2 blocks positive)
+  Stop-hunt reversal         High-hit 0.5R      |  63% -0.065   46 |  68% -0.008  166 |  67% -0.020  212  (0/2 blocks positive)
+  Stop-hunt reversal         Quick 0.6R         |  61% -0.062   46 |  65% +0.009  166 |  64% -0.007  212  (1/2 blocks positive)
   Stop-hunt reversal         Mean-revert exit   |  49% -0.008   78 |  53% -0.036  275 |  52% -0.029  353  (0/2 blocks positive)
-  EMA pullback               Classic 1R+runner  |  40% -0.327   15 |  45% -0.012   60 |  44% -0.075   75  (0/2 blocks positive)
+  Stop-hunt reversal         Trend rider (days) |  52% -0.089   44 |  54% -0.026  159 |  54% -0.040  203  (0/2 blocks positive)
+  Stop-hunt reversal         Swing 3 days       |  53% -0.038   45 |  54% +0.041  160 |  54% +0.024  205  (1/2 blocks positive)
+  EMA pullback               Classic 1R+runner  |  40% -0.341   15 |  45% -0.013   60 |  44% -0.079   75  (0/2 blocks positive)
   EMA pullback               High-hit 0.5R      |  60% -0.150   15 |  60% -0.089   63 |  60% -0.101   78  (0/2 blocks positive)
   EMA pullback               Quick 0.6R         |  60% -0.079   15 |  60% -0.071   68 |  60% -0.073   83  (0/2 blocks positive)
   EMA pullback               Mean-revert exit   |  32% -0.144   25 |  39% -0.073   98 |  37% -0.088  123  (0/2 blocks positive)
-  Squeeze breakout           Classic 1R+runner  |  46% -0.108   84 |  51% -0.000  222 |  50% -0.030  306  (0/2 blocks positive)
-  Squeeze breakout           High-hit 0.5R      |  64% -0.062   90 |  69% +0.005  240 |  68% -0.014  330  (1/2 blocks positive)
-  Squeeze breakout           Quick 0.6R         |  61% -0.068   94 |  66% +0.024  248 |  65% -0.001  342  (1/2 blocks positive)
+  EMA pullback               Trend rider (days) |  40% -0.339   15 |  45% -0.063   60 |  44% -0.118   75  (0/2 blocks positive)
+  EMA pullback               Swing 3 days       |  40% -0.377   15 |  45% -0.013   60 |  44% -0.086   75  (0/2 blocks positive)
+  Squeeze breakout           Classic 1R+runner  |  46% -0.109   84 |  51% -0.003  222 |  50% -0.032  306  (0/2 blocks positive)
+  Squeeze breakout           High-hit 0.5R      |  64% -0.062   90 |  69% +0.004  240 |  68% -0.014  330  (1/2 blocks positive)
+  Squeeze breakout           Quick 0.6R         |  61% -0.068   94 |  66% +0.023  248 |  65% -0.002  342  (1/2 blocks positive)
   Squeeze breakout           Mean-revert exit   |  36% -0.003  195 |  37% -0.035  418 |  37% -0.025  613  (0/2 blocks positive)
+  Squeeze breakout           Trend rider (days) |  48% -0.043   82 |  51% -0.003  214 |  50% -0.014  296  (0/2 blocks positive)
+  Squeeze breakout           Swing 3 days       |  46% -0.112   84 |  51% -0.003  222 |  50% -0.033  306  (0/2 blocks positive)

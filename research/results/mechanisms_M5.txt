@@ -1,0 +1,66 @@
+== NEW MECHANISMS: research/data/XAUUSD_M5.csv (100147 bars of 300 s) | cost 0.35, swap long 0.50 / short 0.20 per night (per 0.01 lot) ==
+   older 2025.04.24 18:00 .. 2026.03.02 13:45 | newer .. 2026.09.30 13:10 | results in $ per 0.01 lot per trade, Sh = yearly Sharpe at one trade a day
+
+  CLOCK: hold gold at fixed server hours (server day opens 01:00), stop 3 x hourly ATR
+    rule                                                       | older: n  won  $/trade (se)  Sharpe    | newer: n  won  $/trade (se)  Sharpe  maxDD$
+    LONG after the reopen 01:30-03:30                          |   219  51.6%  +0.752 (1.383) Sh +0.58 |   151  52.3%  +1.222 (1.857) Sh +0.85 DD    232
+      by year ($/trade): 2025 +0.17 2026 +1.66
+    LONG after the reopen 01:30-05:30                          |   219  48.9%  -0.445 (1.978) Sh -0.24 |   151  53.6%  +2.002 (2.582) Sh +1.00 DD    267
+      by year ($/trade): 2025 -1.38 2026 +2.35
+    LONG after the reopen 01:30-08:30 (to London)              |   219  51.1%  +1.359 (2.592) Sh +0.56 |   151  49.7%  -1.763 (2.700) Sh -0.84 DD    443
+      by year ($/trade): 2025 -0.79 2026 +0.90
+    LONG after the reopen 02:00-06:00                          |   219  43.8%  -0.925 (1.955) Sh -0.51 |   151  51.0%  -0.855 (2.441) Sh -0.45 DD    519
+      by year ($/trade): 2025 -1.96 2026 +0.09
+    LONG 01:30-05:30, daily trend up only                      |   219  48.9%  -0.445 (1.978) Sh -0.24 |    75  53.3%  +3.010 (4.358) Sh +1.27 DD    267
+      by year ($/trade): 2025 -1.38 2026 +3.23
+    LONG 01:30-08:30, daily trend up only                      |   219  51.1%  +1.359 (2.592) Sh +0.56 |    75  52.0%  -1.659 (4.473) Sh -0.68 DD    293
+      by year ($/trade): 2025 -0.79 2026 +2.70
+    LONG through the break 23:30-03:30 (pays swap)             |   206  58.7%  +1.913 (1.685) Sh +1.26 |     5 100.0% +28.780 (9.553) Sh +21.39 DD      0
+      by year ($/trade): 2025 +0.64 2026 +10.02
+    LONG Asia 02:00-10:00 (to London open)                     |   219  49.3%  +1.218 (2.425) Sh +0.54 |   151  43.7%  -1.479 (3.061) Sh -0.62 DD    500
+      by year ($/trade): 2025 -1.45 2026 +1.57
+    SHORT New York 16:30-22:00 (US cash session)               |   218  41.7%  +0.354 (2.238) Sh +0.17 |   151  52.3%  +2.699 (3.044) Sh +1.15 DD    363
+      by year ($/trade): 2025 -0.55 2026 +3.03
+    SHORT New York 16:30-22:00, daily trend down only          |     0   0.0%  +0.000 (0.000) Sh +0.00 |    75  45.3%  +0.424 (3.304) Sh +0.23 DD    262
+      by year ($/trade): 2026 +0.42
+    SHORT London 10:00-15:00                                   |   219  45.2%  -0.903 (1.760) Sh -0.55 |   150  45.3%  +0.169 (2.983) Sh +0.07 DD    467
+      by year ($/trade): 2025 -0.59 2026 -0.36
+    LONG London 10:00-15:00                                    |   219  50.2%  -0.101 (1.875) Sh -0.06 |   150  54.7%  -0.668 (2.852) Sh -0.30 DD    351
+      by year ($/trade): 2025 +0.35 2026 -0.96
+    LONG late 20:00-23:30                                      |   219  52.1%  +1.383 (1.260) Sh +1.18 |   151  33.1%  -8.459 (2.118) Sh -5.16 DD   1412
+      by year ($/trade): 2025 -0.02 2026 -5.05
+
+  FIX: 30 minutes before / after the London fixes (12:30 and 17:00 server); direction chosen on the older part
+    30 min BEFORE the AM fix, SHORT (picked on older)          |   220  51.8%  +0.525 (0.453) Sh +1.24 |   151  56.3%  +1.175 (0.512) Sh +2.97 DD     47  << positive in both
+    30 min AFTER the AM fix, LONG (picked on older)            |   220  47.7%  -0.067 (0.498) Sh -0.14 |   151  48.3%  -0.331 (0.591) Sh -0.72 DD    144
+    30 min BEFORE the PM fix, SHORT (picked on older)          |   217  53.5%  +0.736 (0.880) Sh +0.90 |   151  49.7%  -0.823 (1.552) Sh -0.69 DD    386
+    30 min AFTER the PM fix, SHORT (picked on older)           |   218  46.3%  +1.519 (1.610) Sh +1.01 |   151  45.7%  -1.504 (1.054) Sh -1.84 DD    307
+
+  GAP: Monday open vs Friday close; fade toward Friday's close (target = Friday close, stop = gap size beyond the open, 8 h)
+    fade weekend gaps over 0.3 hourly ATR                      |    26  15.4% -12.342 (4.775) Sh -3.66 |    26  34.6%  -7.753 (4.284) Sh -2.56 DD    202
+      gap filled within 8 h: older 15% of 26, newer 31% of 26
+
+  CONE: fade / follow a close that escapes the 3-bar cone (k = escape beyond the 80% edge, in half-widths)
+    FADE an escape beyond the cone edge + 0.0 half-widths      | 21137  48.0%  -0.462 (0.055) Sh -0.92 | 15963  49.4%  -0.435 (0.066) Sh -0.82 DD   7064
+    FOLLOW an escape beyond the cone edge + 0.0 half-widths    | 21137  47.8%  -0.295 (0.055) Sh -0.59 | 15963  48.2%  -0.384 (0.066) Sh -0.73 DD   7151
+    FADE an escape beyond the cone edge + 0.5 half-widths      | 12614  47.9%  -0.447 (0.080) Sh -0.79 |  9011  49.9%  -0.424 (0.100) Sh -0.71 DD   3882
+    FOLLOW an escape beyond the cone edge + 0.5 half-widths    | 12614  46.8%  -0.309 (0.079) Sh -0.55 |  9011  47.2%  -0.421 (0.100) Sh -0.70 DD   4717
+    FADE an escape beyond the cone edge + 1.0 half-widths      |  7152  48.6%  -0.381 (0.118) Sh -0.61 |  5015  50.5%  -0.420 (0.151) Sh -0.62 DD   2336
+    FOLLOW an escape beyond the cone edge + 1.0 half-widths    |  7152  45.7%  -0.395 (0.116) Sh -0.64 |  5015  46.3%  -0.450 (0.152) Sh -0.66 DD   2866
+      FOLLOW +1.0, upward escapes only (buy)                   |  3496  49.6%  +0.062 (0.132) Sh +0.13 |  2556  45.9%  -0.707 (0.197) Sh -1.13 DD   1857
+      FOLLOW +1.0, downward escapes only (sell)                |  3656  42.1%  -0.832 (0.189) Sh -1.16 |  2459  46.7%  -0.183 (0.234) Sh -0.25 DD   1629
+      FOLLOW +1.0 by year ($/trade, trades): 2025 -0.37(5712) 2026 -0.46(6455)
+      FOLLOW +1.0 by year (R/trade): 2025 -0.064 2026 -0.046
+
+  SQUEEZE: two-way stop orders around a quiet 6-bar box (box in the lowest 20% of its own history)
+    SQUEEZE both ways (one-cancels-other)                      |  3186  41.3%  -0.522 (0.166) Sh -0.89 |  2304  42.8%  -0.273 (0.221) Sh -0.41 DD    926
+    SQUEEZE upside only, daily trend up                        |  1940  43.2%  -0.314 (0.217) Sh -0.52 |   652  38.5%  -1.382 (0.476) Sh -1.81 DD    918
+
+  OVER: day after a 2-sigma day (sigma = 20-day stdev of daily returns), daily file 2004.07.13 00:00 .. 2026.09.29 00:00, halves split 2015.08.24 00:00
+    after a +2 sigma day: BUY the next day (follow)            |    94  55.3%  +0.544 (0.998) Sh +0.89 |   119  52.9%  +2.515 (3.351) Sh +1.09 DD    305
+    after a -2 sigma day: BUY the next day (rebound)           |   124  46.8%  -2.651 (1.591) Sh -2.38 |   112  50.0%  -4.738 (3.497) Sh -2.03 DD    741
+
+  SEASON: months / weekdays chosen on 2004-2015, traded long 2015-2026 (daily close to close, $ per oz, cost per day held)
+    month mean log return x 1e4 (older): 1:+16.6 2:+6.1 3:-5.4 4:+6.2 5:-4.8 6:-2.4 7:+2.4 8:+11.0 9:+5.3 10:-0.9 11:+17.0 12:-3.9
+    newer half: days in the 'good' months +5.14 bps/day (n 1669, se 2.44) vs other months +3.53 bps/day (n 1196, se 2.95)
+    weekday mean bps (older | newer):  Mon -2.6 | -0.7  Tue -2.9 | +3.8  Wed +6.9 | +5.2  Thu +1.3 | +6.0  Fri +16.6 | +8.1

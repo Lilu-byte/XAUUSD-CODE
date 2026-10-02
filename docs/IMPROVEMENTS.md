@@ -99,3 +99,19 @@ protect-profit move to break-even before red-folder news, an XAGUSD correlation 
 | 69 | `SimulateTradeAt`: entry at any bar and price, limit fills handled | DONE | Needed to test precision entries honestly |
 | 70 | Export script: 1-minute gold, related markets, US economic calendar | DONE | The only short-timeframe ideas left need that data |
 | 71 | M30 replay, entries and short-term direction programs in `run_checks.sh` | DONE | |
+
+## Round 10 ("different mechanisms, not new settings on the same breakout")
+Audit: [AUDIT.md](AUDIT.md). Numbers: [REAL_DATA.md section 10](REAL_DATA.md#10-round-10-different-mechanisms-not-new-settings).
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 72 | Two multi-day exits in the engine: **Rider** (1/3 at 1R, stop to entry, 3-ATR trail, up to 5 days) and **Swing** (up to 3 days); 48 Lab combinations | DONE | Payoff shape was the one axis never changed: few big winners instead of many small ones |
+| 73 | Overnight swap charged in the simulator and the Lab (broker's swap mode and rates, triple on Wednesday) | DONE | Multi-day trades pay it; ignoring it would flatter them |
+| 74 | **TREND mode**: every combination that passes a 50% Lab target trades, one position each, up to 3, total open risk capped at 3% | DONE | Best real-data result of the project: H1 +0.11R per trade (H4 +0.14R with a 6,000-bar Lab, +0.01R with 10,000) |
+| 75 | **STEADY mode** = the previous behaviour; AUTO picks TREND on H1/H4 and STEADY elsewhere | DONE | M5/M15 got worse with trend exits |
+| 76 | EA: time stop counted in bars of the chart (`iBarShift`), Friday close skipped for multi-day exits | DONE | Correct over weekends; a 5-day hold must survive Friday |
+| 77 | EA panel: mode, the passing strategies, every open position with its exit style and P/L | DONE | Several positions at once must be readable at a glance |
+| 78 | Indicator: TREND mode shows the signal of any passing strategy; panel line with the current session and the next market event | DONE | "Make trading simple": what the market is doing now and what comes next |
+| 79 | Replay: all-passing (MULTI) track, a random-entry control with the same exits, results per year | DONE | To tell an edge from "being long gold in a bull market" |
+| 80 | `research/sim/mechanisms.cpp`: clock, fixes, weekend gaps, cone fade/follow, squeeze straddle, overreaction, seasonality | DONE | Structurally different mechanisms, each on the older/newer split |
+| 81 | Export script saves the broker's swap mode and rates | DONE | |
+| 82 | Presets `XAU_Sniper_Trend.set` and `XAU_Sniper_Steady.set` | DONE | |

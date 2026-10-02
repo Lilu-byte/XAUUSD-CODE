@@ -57,11 +57,13 @@
 #define XE_MR         6       // mean-reversion exit: price closed back across the fast mean
 
 //--- exit profiles (how a trade is managed after entry)
-#define XP_COUNT      4
+#define XP_COUNT      6
 #define XP_CLASSIC    0       // half at 1R, break-even, runner to 2.5R with ATR trail
 #define XP_HIGHHIT    1       // 70% at 0.5R, break-even, runner to 1.5R: built for a high share of winners
 #define XP_QUICK      2       // everything out at 0.6R: highest hit-rate, smallest wins
 #define XP_MEANREV    3       // wide stop, exit when price closes back over the 5-bar mean (Connors style)
+#define XP_RIDER      4       // a third at 1R, stop to entry, the rest rides a 3-ATR trail for up to 5 days (trend capture)
+#define XP_SWING      5       // the classic exit held up to 3 days instead of 8 hours
 
 //--- complete strategies (entry rule; the exit comes from a profile). Each is put on trial in the Strategy Lab.
 #define XS_COUNT      8
@@ -73,7 +75,7 @@
 #define XS_SWEEP      5       // liquidity sweep of a known level, with the trend
 #define XS_PULLBACK   6       // pullback to the 21 EMA with a rejection candle, with the trend
 #define XS_SQUEEZE    7       // volatility squeeze or Asian-range breakout, with the trend
-#define XLAB_CELLS    32      // XS_COUNT * XP_COUNT
+#define XLAB_CELLS    48      // XS_COUNT * XP_COUNT
 #define XLAB_MAXTR    6000    // trades kept per lab cell
 
 #define XR_OK         0
@@ -270,6 +272,8 @@ struct XConfig
    double cost_price;        // round-turn spread+slippage in price units (simulation, and the cost guard below)
    double min_stop_cost;     // cost guard: skip setups whose stop is shorter than this many round-trip costs (0 = off)
    double dip_gmt_lo, dip_gmt_hi;   // dip strategies enter only in this GMT window on charts up to H1 (lo < 0 = all day)
+   double swap_long, swap_short;   // overnight cost per unit (oz) per server night in price units (positive = you pay)
+   int    swap_triple_dow;   // server weekday whose night is charged three times (3 = Wednesday, -1 = none)
    int    d1_mode;           // daily trend filter: 0 off, 1 trade only in the daily trend's direction, 2 buys only while the daily trend is up
    int    d1_sma;            // daily trend = last completed daily close above / below its d1_sma-day mean
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
@@ -307,6 +311,7 @@ struct XConfig
       cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
       dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
       d1_mode = 0;  d1_sma = 200;
+      swap_long = 0.0;  swap_short = 0.0;  swap_triple_dow = 3;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
    }
@@ -339,6 +344,8 @@ string XExitName(const int p)
       case XP_HIGHHIT: return "High-hit 0.5R";
       case XP_QUICK:   return "Quick 0.6R";
       case XP_MEANREV: return "Mean-revert exit";
+      case XP_RIDER:   return "Trend rider (days)";
+      case XP_SWING:   return "Swing 3 days";
    }
    return "?";
 }
@@ -352,6 +359,8 @@ string XExitShort(const int p)
       case XP_HIGHHIT: return "High-hit";
       case XP_QUICK:   return "Quick";
       case XP_MEANREV: return "Mean-rev";
+      case XP_RIDER:   return "Rider";
+      case XP_SWING:   return "Swing";
    }
    return "?";
 }
@@ -367,6 +376,13 @@ void XMakeExit(const int p, const XConfig &c, XExit &x)
    {
       x.tp1_r = 0.0; x.part = 0.0; x.tp2_r = 0.0; x.trail_atr = 0.0; x.mr_exit = 1;
       x.max_hold = 12; x.sl_min_atr = 1.5; x.sl_max_atr = 3.2;
+   }
+   else if(p == XP_RIDER || p == XP_SWING)
+   {
+      // multi-day holds (round 10): the time stop is counted in days, whatever the chart
+      const int bs = (c.base_sec > 0) ? c.base_sec : 900;
+      if(p == XP_RIDER) { x.tp1_r = 1.0; x.part = 0.33; x.tp2_r = 0.0; x.trail_atr = 3.0; x.max_hold = XMaxI(8, 5 * 86400 / bs); }
+      else               x.max_hold = XMaxI(8, 3 * 86400 / bs);
    }
 }
 
@@ -1159,7 +1175,7 @@ public:
       if(closed)
       {
          r.closed = true;
-         r.r_net = real - cfg.cost_price / risk;
+         r.r_net = real - cfg.cost_price / risk - SwapNights(e, exit_idx) * ((dir > 0) ? cfg.swap_long : cfg.swap_short) / risk;
          r.float_r = r.r_net;
       }
       else
@@ -1168,6 +1184,22 @@ public:
          r.float_r = real + rem * (lastfcl / risk);
       }
       return true;
+   }
+
+   // Server nights a position opened at bar e and closed at bar x is held over (the night after the triple-swap
+   // weekday counts three times). Server time: a night = a change of the server date.
+   int SwapNights(const int e, const int x) const
+   {
+      if(e < 0 || x <= e || x >= n) return 0;
+      const long d0 = (long)m_t[e] / 86400, d1 = (long)m_t[x] / 86400;
+      int nights = 0;
+      for(long d = d0; d < d1; d++)
+      {
+         const int dow = (int)((d + 4) % 7);                 // weekday of the server date being left (0 Sunday)
+         if(dow == 6 || dow == 0) continue;                  // weekend dates have no bars and no swap of their own
+         nights += (cfg.swap_triple_dow >= 0 && dow == cfg.swap_triple_dow) ? 3 : 1;
+      }
+      return nights;
    }
 
    //--- historical trial ----------------------------------------------

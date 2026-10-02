@@ -3,122 +3,122 @@
 
   FILTERS over all 32 strategy/exit combinations (each signal simulated on its own)
     filter                                       | discovery: n  win%  avgR (se)      | holdout: n  win%  avgR (se)        | kept
-    (none: all signals)                          |  49854  59.1  -0.084 (0.004) |  36237  60.8  -0.027 (0.004) | 100% 
-    1  buys only                                 |  29970  60.0  -0.075 (0.005) |  16126  59.0  -0.064 (0.007) |  54% 
-    2  sells only                                |  19884  57.6  -0.097 (0.006) |  20111  62.3  +0.003 (0.006) |  46% 
-    3  higher timeframe agrees (not just neutral) |  26550  59.3  -0.081 (0.005) |  18946  62.1  -0.006 (0.006) |  53% < slightly better in both
-    4  calm: ATR below its reference             |  24457  59.4  -0.090 (0.005) |  18495  60.3  -0.049 (0.006) |  50% 
-    5  busy: ATR above its reference             |  25397  58.7  -0.078 (0.005) |  17742  61.4  -0.003 (0.006) |  50% < slightly better in both
-    6  day range used < 60%                      |  19439  56.0  -0.147 (0.006) |  12515  61.2  -0.024 (0.007) |  37% 
-    7  day range used >= 60%                     |  30415  61.0  -0.043 (0.005) |  23722  60.7  -0.028 (0.005) |  63% 
-    8  trending (efficiency ratio >= 0.3)        |   6304  59.5  -0.060 (0.010) |   4927  58.4  -0.061 (0.012) |  13% 
-    9  choppy (efficiency ratio < 0.3)           |  43550  59.0  -0.087 (0.004) |  31310  61.2  -0.021 (0.005) |  87% 
-    10 entry 07-12 GMT (London)                  |  20492  58.2  -0.109 (0.006) |  14391  61.4  -0.025 (0.007) |  41% 
-    11 entry 12-17 GMT (London/New York overlap) |  18615  59.5  -0.062 (0.006) |  14346  59.5  -0.040 (0.007) |  38% 
-    12 entry 17-21 GMT (New York afternoon)      |   8528  60.4  -0.067 (0.009) |   5263  60.5  -0.028 (0.012) |  16% 
-    13 not Monday                                |  39349  57.8  -0.105 (0.004) |  29048  61.1  -0.021 (0.005) |  79% 
-    14 not Friday                                |  40379  59.2  -0.082 (0.004) |  29472  61.1  -0.020 (0.005) |  81% < slightly better in both
-    15 volume spike on the signal bar            |   3797  58.8  -0.058 (0.014) |   4874  61.6  +0.028 (0.012) |  10% << helps in both halves
-    16 no volume spike                           |  46057  59.1  -0.086 (0.004) |  31363  60.7  -0.035 (0.005) |  90% 
-    17 cost <= 5% of the stop                    |  12187  60.4  -0.015 (0.007) |  17924  61.0  -0.005 (0.006) |  35% << helps in both halves
-    18 cost > 5% of the stop                     |  37667  58.6  -0.106 (0.004) |  18313  60.7  -0.047 (0.006) |  65% 
-    19 5-day move agrees with the trade          |  33279  59.5  -0.079 (0.005) |  24631  61.6  -0.011 (0.005) |  67% < slightly better in both
-    20 20-day move agrees with the trade         |  29324  58.6  -0.096 (0.005) |  20198  60.8  -0.026 (0.006) |  58% 
-    21 1-day move against the trade (a real dip) |   8926  55.5  -0.145 (0.009) |   5713  62.1  -0.009 (0.011) |  17% 
-    22 buys only AND 20-day move up              |  23640  59.3  -0.085 (0.005) |   6610  58.9  -0.070 (0.010) |  35% 
-    23 (2nd stage) cost <= 5% AND entry 17-21 GMT |   2209  62.0  +0.000 (0.016) |   2148  61.0  +0.012 (0.017) |   5% << helps in both halves
-    24 (2nd stage) cost <= 5% AND NOT 17-21 GMT  |   9978  60.1  -0.019 (0.008) |  15776  61.0  -0.008 (0.006) |  30% < slightly better in both
+    (none: all signals)                          |  74640  56.1  -0.086 (0.004) |  54257  57.7  -0.019 (0.005) | 100% 
+    1  buys only                                 |  44872  57.1  -0.072 (0.005) |  24148  55.6  -0.075 (0.006) |  54% 
+    2  sells only                                |  29768  54.7  -0.106 (0.006) |  30109  59.3  +0.027 (0.006) |  46% 
+    3  higher timeframe agrees (not just neutral) |  39766  56.2  -0.084 (0.005) |  28378  59.1  +0.009 (0.006) |  53% < slightly better in both
+    4  calm: ATR below its reference             |  36637  56.5  -0.086 (0.005) |  27699  57.1  -0.048 (0.006) |  50% 
+    5  busy: ATR above its reference             |  38003  55.7  -0.085 (0.005) |  26558  58.2  +0.012 (0.007) |  50% < slightly better in both
+    6  day range used < 60%                      |  29075  53.1  -0.153 (0.006) |  18721  57.9  -0.013 (0.008) |  37% 
+    7  day range used >= 60%                     |  45565  58.0  -0.042 (0.005) |  35536  57.5  -0.021 (0.006) |  63% 
+    8  trending (efficiency ratio >= 0.3)        |   9404  56.8  -0.073 (0.010) |   7353  55.7  -0.051 (0.012) |  13% 
+    9  choppy (efficiency ratio < 0.3)           |  65236  56.0  -0.087 (0.004) |  46904  58.0  -0.013 (0.005) |  87% 
+    10 entry 07-12 GMT (London)                  |  30674  55.3  -0.120 (0.006) |  21529  58.4  -0.013 (0.007) |  40% 
+    11 entry 12-17 GMT (London/New York overlap) |  27865  56.5  -0.063 (0.006) |  21496  56.1  -0.034 (0.007) |  38% 
+    12 entry 17-21 GMT (New York afternoon)      |  12786  57.4  -0.056 (0.009) |   7885  57.5  -0.026 (0.011) |  16% 
+    13 not Monday                                |  58905  54.8  -0.114 (0.004) |  43492  57.9  -0.009 (0.005) |  79% 
+    14 not Friday                                |  60457  56.2  -0.085 (0.004) |  44126  58.0  -0.006 (0.005) |  81% < slightly better in both
+    15 volume spike on the signal bar            |   5653  55.8  -0.061 (0.014) |   7254  59.1  +0.064 (0.014) |  10% << helps in both halves
+    16 no volume spike                           |  68987  56.1  -0.088 (0.004) |  47003  57.4  -0.031 (0.005) |  90% 
+    17 cost <= 5% of the stop                    |  16647  57.8  -0.018 (0.007) |  24746  58.1  +0.002 (0.006) |  32% << helps in both halves
+    18 cost > 5% of the stop                     |  57993  55.6  -0.105 (0.004) |  29511  57.3  -0.036 (0.006) |  68% 
+    19 5-day move agrees with the trade          |  49831  56.5  -0.082 (0.005) |  36889  58.5  -0.001 (0.005) |  67% < slightly better in both
+    20 20-day move agrees with the trade         |  43908  55.6  -0.105 (0.005) |  30254  57.6  -0.015 (0.006) |  58% 
+    21 1-day move against the trade (a real dip) |  13350  52.6  -0.149 (0.009) |   8551  58.8  -0.011 (0.011) |  17% 
+    22 buys only AND 20-day move up              |  35396  56.2  -0.093 (0.005) |   9906  55.3  -0.085 (0.010) |  35% 
+    23 (2nd stage) cost <= 5% AND entry 17-21 GMT |   3027  59.0  -0.005 (0.018) |   2876  58.9  +0.035 (0.018) |   5% << helps in both halves
+    24 (2nd stage) cost <= 5% AND NOT 17-21 GMT  |  13620  57.6  -0.020 (0.008) |  21870  58.0  -0.002 (0.007) |  28% < slightly better in both
 
   FILTERS on the dip strategies only (RSI-2, Double-7, Weak-close)
     filter                                       | discovery: n  win%  avgR (se)      | holdout: n  win%  avgR (se)        | kept
-    (none: all signals)                          |  44850  59.5  -0.086 (0.004) |  32380  61.4  -0.024 (0.005) | 100% 
-    1  buys only                                 |  26742  60.3  -0.079 (0.005) |  14400  59.8  -0.056 (0.007) |  53% 
-    2  sells only                                |  18108  58.2  -0.096 (0.006) |  17980  62.7  +0.002 (0.006) |  47% 
-    3  higher timeframe agrees (not just neutral) |  23734  59.8  -0.081 (0.005) |  16680  62.6  -0.006 (0.006) |  52% < slightly better in both
-    4  calm: ATR below its reference             |  22099  59.8  -0.093 (0.006) |  16431  61.1  -0.045 (0.007) |  50% 
-    5  busy: ATR above its reference             |  22751  59.2  -0.080 (0.006) |  15949  61.7  -0.002 (0.007) |  50% < slightly better in both
-    6  day range used < 60%                      |  16794  56.4  -0.157 (0.007) |  10749  61.8  -0.025 (0.008) |  36% 
-    7  day range used >= 60%                     |  28056  61.3  -0.044 (0.005) |  21631  61.2  -0.023 (0.006) |  64% < slightly better in both
-    8  trending (efficiency ratio >= 0.3)        |   5150  61.6  -0.050 (0.011) |   4143  59.0  -0.064 (0.013) |  12% 
-    9  choppy (efficiency ratio < 0.3)           |  39700  59.2  -0.091 (0.004) |  28237  61.7  -0.018 (0.005) |  88% 
-    10 entry 07-12 GMT (London)                  |  18285  58.9  -0.110 (0.006) |  12619  62.0  -0.024 (0.007) |  40% 
-    11 entry 12-17 GMT (London/New York overlap) |  16819  59.5  -0.071 (0.007) |  12980  59.7  -0.040 (0.007) |  39% 
-    12 entry 17-21 GMT (New York afternoon)      |   7857  61.0  -0.059 (0.009) |   4836  61.5  -0.016 (0.012) |  16% < slightly better in both
-    13 not Monday                                |  35330  58.2  -0.107 (0.004) |  26156  61.5  -0.020 (0.005) |  80% 
-    14 not Friday                                |  36210  59.6  -0.084 (0.004) |  26325  61.7  -0.017 (0.005) |  81% < slightly better in both
-    15 volume spike on the signal bar            |   3194  59.7  -0.053 (0.016) |   3915  62.5  +0.033 (0.014) |   9% << helps in both halves
-    16 no volume spike                           |  41656  59.4  -0.089 (0.004) |  28465  61.2  -0.032 (0.005) |  91% 
-    17 cost <= 5% of the stop                    |   9860  61.5  -0.012 (0.008) |  14979  62.0  -0.000 (0.007) |  32% << helps in both halves
-    18 cost > 5% of the stop                     |  34990  58.9  -0.107 (0.005) |  17401  60.9  -0.044 (0.007) |  68% 
-    19 5-day move agrees with the trade          |  29874  60.0  -0.080 (0.005) |  21886  62.1  -0.009 (0.006) |  67% < slightly better in both
-    20 20-day move agrees with the trade         |  26239  59.0  -0.099 (0.005) |  18124  61.3  -0.025 (0.006) |  57% 
-    21 1-day move against the trade (a real dip) |   7668  56.3  -0.146 (0.010) |   4943  62.8  -0.007 (0.012) |  16% 
-    22 buys only AND 20-day move up              |  21141  59.6  -0.090 (0.006) |   5980  59.7  -0.060 (0.011) |  35% 
-    23 (2nd stage) cost <= 5% AND entry 17-21 GMT |   1950  63.9  +0.029 (0.017) |   1860  62.7  +0.035 (0.018) |   5% << helps in both halves
-    24 (2nd stage) cost <= 5% AND NOT 17-21 GMT  |   7910  60.9  -0.022 (0.009) |  13119  61.9  -0.005 (0.007) |  27% < slightly better in both
+    (none: all signals)                          |  67264  56.4  -0.088 (0.004) |  48558  58.1  -0.014 (0.005) | 100% 
+    1  buys only                                 |  40106  57.3  -0.076 (0.005) |  21594  56.3  -0.065 (0.007) |  53% 
+    2  sells only                                |  27158  55.1  -0.104 (0.006) |  26964  59.6  +0.027 (0.007) |  47% 
+    3  higher timeframe agrees (not just neutral) |  35594  56.6  -0.084 (0.005) |  25016  59.4  +0.010 (0.007) |  52% < slightly better in both
+    4  calm: ATR below its reference             |  33147  56.8  -0.089 (0.006) |  24641  57.8  -0.041 (0.007) |  50% 
+    5  busy: ATR above its reference             |  34117  56.1  -0.087 (0.005) |  23917  58.4  +0.013 (0.007) |  50% < slightly better in both
+    6  day range used < 60%                      |  25186  53.4  -0.164 (0.007) |  16121  58.3  -0.014 (0.008) |  36% 
+    7  day range used >= 60%                     |  42078  58.2  -0.042 (0.005) |  32437  58.0  -0.015 (0.006) |  64% 
+    8  trending (efficiency ratio >= 0.3)        |   7722  58.5  -0.067 (0.011) |   6211  56.2  -0.051 (0.014) |  12% 
+    9  choppy (efficiency ratio < 0.3)           |  59542  56.2  -0.090 (0.004) |  42347  58.4  -0.009 (0.005) |  88% 
+    10 entry 07-12 GMT (London)                  |  27423  55.8  -0.121 (0.006) |  18921  58.9  -0.011 (0.008) |  40% 
+    11 entry 12-17 GMT (London/New York overlap) |  25223  56.4  -0.072 (0.006) |  19468  56.2  -0.033 (0.008) |  39% 
+    12 entry 17-21 GMT (New York afternoon)      |  11785  58.0  -0.045 (0.010) |   7252  58.5  -0.011 (0.012) |  16% < slightly better in both
+    13 not Monday                                |  52986  55.1  -0.116 (0.004) |  39222  58.2  -0.008 (0.005) |  80% 
+    14 not Friday                                |  54308  56.6  -0.087 (0.004) |  39477  58.5  -0.001 (0.005) |  81% < slightly better in both
+    15 volume spike on the signal bar            |   4786  56.6  -0.056 (0.016) |   5869  59.6  +0.072 (0.016) |   9% << helps in both halves
+    16 no volume spike                           |  62478  56.4  -0.090 (0.004) |  42689  57.9  -0.026 (0.005) |  91% 
+    17 cost <= 5% of the stop                    |  13296  58.9  -0.011 (0.008) |  20493  58.9  +0.008 (0.007) |  29% << helps in both halves
+    18 cost > 5% of the stop                     |  53968  55.8  -0.106 (0.005) |  28065  57.5  -0.030 (0.007) |  71% 
+    19 5-day move agrees with the trade          |  44804  56.9  -0.083 (0.005) |  32822  58.9  +0.002 (0.006) |  67% < slightly better in both
+    20 20-day move agrees with the trade         |  39351  55.9  -0.108 (0.005) |  27182  58.0  -0.012 (0.007) |  57% 
+    21 1-day move against the trade (a real dip) |  11500  53.1  -0.150 (0.010) |   7413  59.3  -0.010 (0.012) |  16% 
+    22 buys only AND 20-day move up              |  31705  56.4  -0.099 (0.006) |   8970  56.2  -0.073 (0.011) |  35% 
+    23 (2nd stage) cost <= 5% AND entry 17-21 GMT |   2648  61.1  +0.031 (0.020) |   2464  60.6  +0.066 (0.019) |   4% << helps in both halves
+    24 (2nd stage) cost <= 5% AND NOT 17-21 GMT  |  10648  58.3  -0.022 (0.009) |  18029  58.7  -0.000 (0.008) |  25% < slightly better in both
 
   FILTERS on the breakout strategies only (ORB, Squeeze)
     filter                                       | discovery: n  win%  avgR (se)      | holdout: n  win%  avgR (se)        | kept
-    (none: all signals)                          |   2427  52.5  -0.076 (0.015) |   1693  56.1  -0.018 (0.018) | 100% 
-    1  buys only                                 |   1511  53.1  -0.069 (0.020) |    827  49.0  -0.136 (0.027) |  57% 
-    2  sells only                                |    916  51.4  -0.087 (0.025) |    866  62.8  +0.094 (0.025) |  43% 
-    3  higher timeframe agrees (not just neutral) |    906  52.0  -0.074 (0.026) |    798  60.5  +0.037 (0.026) |  41% < slightly better in both
-    4  calm: ATR below its reference             |   1302  51.7  -0.105 (0.021) |    912  56.6  -0.008 (0.025) |  54% 
-    5  busy: ATR above its reference             |   1125  53.3  -0.042 (0.023) |    781  55.4  -0.031 (0.026) |  46% 
-    6  day range used < 60%                      |   1519  52.3  -0.074 (0.020) |    968  55.8  -0.016 (0.024) |  60% < slightly better in both
-    7  day range used >= 60%                     |    908  52.6  -0.078 (0.025) |    725  56.4  -0.021 (0.028) |  40% 
-    8  trending (efficiency ratio >= 0.3)        |    894  49.2  -0.097 (0.026) |    579  53.2  -0.058 (0.031) |  36% 
-    9  choppy (efficiency ratio < 0.3)           |   1533  54.3  -0.063 (0.019) |   1114  57.5  +0.002 (0.023) |  64% < slightly better in both
-    10 entry 07-12 GMT (London)                  |   1215  51.3  -0.094 (0.022) |    883  55.2  -0.028 (0.025) |  51% 
-    11 entry 12-17 GMT (London/New York overlap) |    852  55.5  -0.024 (0.026) |    526  57.4  -0.020 (0.033) |  33% 
-    12 entry 17-21 GMT (New York afternoon)      |    202  43.6  -0.224 (0.052) |    162  54.9  +0.027 (0.066) |   9% 
-    13 not Monday                                |   1938  52.8  -0.071 (0.017) |   1327  56.7  +0.003 (0.021) |  79% < slightly better in both
-    14 not Friday                                |   2012  52.9  -0.071 (0.017) |   1358  57.1  -0.012 (0.020) |  82% < slightly better in both
-    15 volume spike on the signal bar            |    290  46.9  -0.152 (0.042) |    497  55.9  +0.004 (0.033) |  19% 
-    16 no volume spike                           |   2137  53.2  -0.065 (0.017) |   1196  56.1  -0.028 (0.022) |  81% 
-    17 cost <= 5% of the stop                    |   1279  54.4  -0.020 (0.021) |   1533  55.5  -0.026 (0.019) |  68% 
-    18 cost > 5% of the stop                     |   1148  50.3  -0.137 (0.023) |    160  61.2  +0.051 (0.062) |  32% 
-    19 5-day move agrees with the trade          |   1337  50.2  -0.110 (0.021) |   1067  57.4  +0.006 (0.023) |  58% 
-    20 20-day move agrees with the trade         |   1336  51.6  -0.094 (0.021) |    871  56.0  -0.018 (0.026) |  54% 
-    21 1-day move against the trade (a real dip) |    719  53.5  -0.068 (0.029) |    418  56.2  +0.001 (0.036) |  28% < slightly better in both
-    22 buys only AND 20-day move up              |   1076  51.2  -0.098 (0.023) |    311  46.3  -0.202 (0.044) |  34% 
-    23 (2nd stage) cost <= 5% AND entry 17-21 GMT |     89  50.6  -0.079 (0.080) |    138  52.9  -0.048 (0.070) |   6% 
-    24 (2nd stage) cost <= 5% AND NOT 17-21 GMT  |   1190  54.7  -0.016 (0.021) |   1395  55.8  -0.023 (0.020) |  63% 
+    (none: all signals)                          |   3531  50.7  -0.079 (0.015) |   2467  54.2  -0.020 (0.018) | 100% 
+    1  buys only                                 |   2205  51.3  -0.062 (0.020) |   1211  46.5  -0.168 (0.025) |  57% 
+    2  sells only                                |   1326  49.5  -0.107 (0.024) |   1256  61.6  +0.123 (0.025) |  43% 
+    3  higher timeframe agrees (not just neutral) |   1322  50.2  -0.071 (0.026) |   1170  58.7  +0.041 (0.025) |  42% < slightly better in both
+    4  calm: ATR below its reference             |   1910  49.7  -0.117 (0.021) |   1334  54.3  -0.020 (0.025) |  54% 
+    5  busy: ATR above its reference             |   1621  51.8  -0.035 (0.023) |   1133  54.1  -0.020 (0.026) |  46% 
+    6  day range used < 60%                      |   2211  51.2  -0.066 (0.020) |   1410  54.2  -0.013 (0.024) |  60% < slightly better in both
+    7  day range used >= 60%                     |   1320  49.8  -0.102 (0.025) |   1057  54.2  -0.029 (0.027) |  40% 
+    8  trending (efficiency ratio >= 0.3)        |   1298  48.4  -0.081 (0.026) |    839  51.5  -0.055 (0.031) |  36% 
+    9  choppy (efficiency ratio < 0.3)           |   2233  52.0  -0.078 (0.019) |   1628  55.6  -0.001 (0.022) |  64% < slightly better in both
+    10 entry 07-12 GMT (London)                  |   1771  49.5  -0.103 (0.022) |   1283  53.4  -0.040 (0.024) |  51% 
+    11 entry 12-17 GMT (London/New York overlap) |   1238  54.2  -0.008 (0.026) |    772  55.2  -0.010 (0.032) |  34% < slightly better in both
+    12 entry 17-21 GMT (New York afternoon)      |    298  38.9  -0.303 (0.049) |    236  54.7  +0.026 (0.067) |   9% 
+    13 not Monday                                |   2816  50.9  -0.082 (0.017) |   1933  55.4  +0.010 (0.021) |  79% 
+    14 not Friday                                |   2930  51.0  -0.076 (0.017) |   1978  55.0  -0.011 (0.020) |  82% < slightly better in both
+    15 volume spike on the signal bar            |    404  46.5  -0.139 (0.044) |    701  55.1  +0.029 (0.033) |  18% 
+    16 no volume spike                           |   3127  51.2  -0.071 (0.017) |   1766  53.9  -0.039 (0.022) |  82% 
+    17 cost <= 5% of the stop                    |   1825  52.8  -0.027 (0.021) |   2221  53.8  -0.025 (0.019) |  67% 
+    18 cost > 5% of the stop                     |   1706  48.4  -0.135 (0.023) |    246  57.7  +0.025 (0.061) |  33% 
+    19 5-day move agrees with the trade          |   1943  48.6  -0.114 (0.021) |   1561  55.7  +0.007 (0.022) |  58% 
+    20 20-day move agrees with the trade         |   1950  49.4  -0.111 (0.020) |   1275  53.6  -0.013 (0.026) |  54% 
+    21 1-day move against the trade (a real dip) |   1047  52.6  -0.050 (0.029) |    612  55.4  -0.000 (0.034) |  28% < slightly better in both
+    22 buys only AND 20-day move up              |   1570  48.9  -0.120 (0.023) |    459  42.3  -0.258 (0.040) |  34% 
+    23 (2nd stage) cost <= 5% AND entry 17-21 GMT |    129  47.3  -0.108 (0.080) |    200  51.5  -0.082 (0.069) |   5% 
+    24 (2nd stage) cost <= 5% AND NOT 17-21 GMT  |   1696  53.2  -0.021 (0.022) |   2021  54.0  -0.019 (0.020) |  62% < slightly better in both
 
   BY ENTRY HOUR (GMT), dips: discovery n / avgR | holdout n / avgR
-    06-08 |   5703  -0.112 |   4450  +0.036
-    08-10 |   6997  -0.104 |   5044  -0.031
-    10-12 |   7474  -0.112 |   5070  -0.034
-    12-14 |   6897  -0.075 |   4857  -0.009
-    14-16 |   6378  -0.045 |   5278  -0.034
-    16-18 |   7424  -0.102 |   5272  -0.045
-    18-20 |   3977  -0.023 |   2409  -0.057
+    06-08 |   8553  -0.106 |   6674  +0.064
+    08-10 |  10493  -0.112 |   7560  -0.026
+    10-12 |  11210  -0.131 |   7604  -0.028
+    12-14 |  10343  -0.076 |   7285  +0.032
+    14-16 |   9564  -0.038 |   7916  -0.053
+    16-18 |  11136  -0.114 |   7906  -0.039
+    18-20 |   5965  +0.011 |   3613  -0.060
 
   BY ENTRY HOUR (GMT), breakouts: discovery n / avgR | holdout n / avgR
-    06-08 |    439  -0.101 |    352  -0.080
-    08-10 |    528  -0.001 |    348  -0.078
-    10-12 |    406  -0.177 |    305  +0.100
-    12-14 |    507  -0.085 |    341  +0.021
-    14-16 |    214  +0.121 |    137  -0.129
-    16-18 |    198  -0.134 |    120  +0.060
-    18-20 |    135  -0.164 |     90  -0.034
+    06-08 |    633  -0.114 |    512  -0.076
+    08-10 |    774  -0.004 |    508  -0.095
+    10-12 |    588  -0.178 |    439  +0.093
+    12-14 |    735  -0.064 |    497  +0.025
+    14-16 |    308  +0.140 |    203  -0.120
+    16-18 |    294  -0.189 |    178  +0.097
+    18-20 |    199  -0.205 |    130  -0.054
 
   BY ENTRY HOUR (GMT), all: discovery n / avgR | holdout n / avgR
-    06-08 |   6526  -0.118 |   5117  +0.025
-    08-10 |   7900  -0.090 |   5741  -0.027
-    10-12 |   8285  -0.117 |   5770  -0.036
-    12-14 |   7887  -0.066 |   5628  -0.005
-    14-16 |   6927  -0.039 |   5673  -0.041
-    16-18 |   7949  -0.101 |   5696  -0.052
-    18-20 |   4380  -0.031 |   2612  -0.063
+    06-08 |   9760  -0.114 |   7655  +0.051
+    08-10 |  11826  -0.097 |   8589  -0.020
+    10-12 |  12403  -0.134 |   8632  -0.033
+    12-14 |  11797  -0.064 |   8424  +0.030
+    14-16 |  10369  -0.034 |   8505  -0.060
+    16-18 |  11919  -0.114 |   8540  -0.047
+    18-20 |   6566  -0.002 |   3912  -0.068
 
   BY COST SHARE OF THE STOP (cost / stop distance), all strategies: discovery n / win% / avgR | holdout
-       0% -    2% |   1699  61.6  +0.007 |   1687  59.0  -0.029   (gross of cost:  +0.017 |  -0.019)
-       2% -    3% |   2444  61.7  +0.024 |   4225  59.4  -0.029   (gross of cost:  +0.049 |  -0.004)
-       3% -    5% |   8044  59.8  -0.032 |  12012  61.9  +0.006   (gross of cost:  +0.008 |  +0.046)
-       5% -    8% |  14092  58.2  -0.081 |  13102  61.2  -0.028   (gross of cost:  -0.016 |  +0.037)
-       8% -   12% |  13254  59.8  -0.077 |   4989  60.0  -0.088   (gross of cost:  +0.023 |  +0.012)
-      12% -  100% |  10321  57.8  -0.177 |    222  47.7  -0.253   (gross of cost:  -0.017 |  -0.093)
+       0% -    2% |   2345  58.4  -0.001 |   2205  55.9  -0.040   (gross of cost:  +0.009 |  -0.030)
+       2% -    3% |   3312  59.2  +0.038 |   5581  56.4  -0.027   (gross of cost:  +0.063 |  -0.002)
+       3% -    5% |  10990  57.3  -0.038 |  16960  59.0  +0.017   (gross of cost:  +0.002 |  +0.057)
+       5% -    8% |  20540  55.2  -0.086 |  20848  58.0  -0.004   (gross of cost:  -0.021 |  +0.061)
+       8% -   12% |  20564  57.0  -0.069 |   8293  56.1  -0.105   (gross of cost:  +0.031 |  -0.005)
+      12% -  100% |  16889  54.4  -0.172 |    370  42.7  -0.265   (gross of cost:  -0.012 |  -0.105)
 
   SESSION DRIFT: average close-open move per base bar by GMT hour, in ATR, discovery vs holdout
     hour | disc: n  meanATR t    up% | hold: n  meanATR t    up%
@@ -153,31 +153,47 @@
     A  prev-day high/low breakout close, with trend High-hit 0.5R      |    233  67.0  -0.036 (0.048) |    165  67.9  +0.007 (0.057) 
     A  prev-day high/low breakout close, with trend Quick 0.6R         |    228  64.0  -0.029 (0.051) |    160  62.5  -0.035 (0.061) 
     A  prev-day high/low breakout close, with trend Mean-revert exit   |    332  47.6  -0.039 (0.023) |    226  53.5  +0.013 (0.029) 
+    A  prev-day high/low breakout close, with trend Trend rider (days) |    213  52.1  +0.021 (0.091) |    146  51.4  -0.049 (0.097) 
+    A  prev-day high/low breakout close, with trend Swing 3 days       |    213  52.1  +0.017 (0.075) |    146  52.1  -0.007 (0.090) 
     B  prev-day low sweep + close back inside, buy Classic 1R+runner  |     55  50.9  +0.017 (0.150) |     36  36.1  -0.322 (0.166) 
     B  prev-day low sweep + close back inside, buy High-hit 0.5R      |     60  71.7  +0.029 (0.089) |     45  64.4  -0.086 (0.107) 
     B  prev-day low sweep + close back inside, buy Quick 0.6R         |     64  65.6  +0.004 (0.095) |     45  57.8  -0.108 (0.117) 
     B  prev-day low sweep + close back inside, buy Mean-revert exit   |     87  44.8  -0.030 (0.062) |     63  55.6  -0.010 (0.071) 
+    B  prev-day low sweep + close back inside, buy Trend rider (days) |     52  51.9  +0.078 (0.191) |     36  36.1  -0.314 (0.190) 
+    B  prev-day low sweep + close back inside, buy Swing 3 days       |     55  50.9  +0.022 (0.151) |     36  36.1  -0.322 (0.166) 
     C  3 lower closes in uptrend (buy), mirror     Classic 1R+runner  |   1468  52.7  -0.042 (0.029) |   1006  53.4  +0.016 (0.035) 
     C  3 lower closes in uptrend (buy), mirror     High-hit 0.5R      |   1623  68.4  -0.053 (0.018) |   1121  69.0  -0.012 (0.022) 
     C  3 lower closes in uptrend (buy), mirror     Quick 0.6R         |   1630  64.3  -0.068 (0.019) |   1112  64.8  -0.022 (0.023) 
     C  3 lower closes in uptrend (buy), mirror     Mean-revert exit   |   1485  60.0  -0.068 (0.018) |   1033  64.4  +0.015 (0.021) 
+    C  3 lower closes in uptrend (buy), mirror     Trend rider (days) |   1239  54.2  +0.001 (0.047) |    867  53.6  +0.062 (0.056) 
+    C  3 lower closes in uptrend (buy), mirror     Swing 3 days       |   1468  52.7  -0.042 (0.029) |   1006  53.4  +0.016 (0.035) 
     D  close below lower Bollinger in uptrend      Classic 1R+runner  |      0   0.0  +0.000 (0.000) |      0   0.0  +0.000 (0.000) 
     D  close below lower Bollinger in uptrend      High-hit 0.5R      |      0   0.0  +0.000 (0.000) |      0   0.0  +0.000 (0.000) 
     D  close below lower Bollinger in uptrend      Quick 0.6R         |      0   0.0  +0.000 (0.000) |      0   0.0  +0.000 (0.000) 
     D  close below lower Bollinger in uptrend      Mean-revert exit   |      0   0.0  +0.000 (0.000) |      0   0.0  +0.000 (0.000) 
+    D  close below lower Bollinger in uptrend      Trend rider (days) |      0   0.0  +0.000 (0.000) |      0   0.0  +0.000 (0.000) 
+    D  close below lower Bollinger in uptrend      Swing 3 days       |      0   0.0  +0.000 (0.000) |      0   0.0  +0.000 (0.000) 
     E  20-bar Donchian breakout with trend         Classic 1R+runner  |    749  41.4  -0.220 (0.038) |    480  50.8  -0.022 (0.048) 
     E  20-bar Donchian breakout with trend         High-hit 0.5R      |    857  60.4  -0.143 (0.026) |    548  65.7  -0.036 (0.031) 
     E  20-bar Donchian breakout with trend         Quick 0.6R         |    902  56.8  -0.144 (0.026) |    579  62.3  -0.035 (0.032) 
     E  20-bar Donchian breakout with trend         Mean-revert exit   |   1390  39.7  -0.080 (0.011) |    892  43.7  -0.050 (0.013) 
+    E  20-bar Donchian breakout with trend         Trend rider (days) |    692  41.0  -0.181 (0.051) |    446  50.4  -0.041 (0.056) 
+    E  20-bar Donchian breakout with trend         Swing 3 days       |    747  41.4  -0.223 (0.038) |    480  50.8  -0.022 (0.048) 
     F  touch of 50 EMA in trend, bullish close     Classic 1R+runner  |   1016  50.3  -0.041 (0.034) |    646  53.1  +0.016 (0.042) 
     F  touch of 50 EMA in trend, bullish close     High-hit 0.5R      |   1218  66.3  -0.068 (0.021) |    795  67.5  -0.019 (0.026) 
     F  touch of 50 EMA in trend, bullish close     Quick 0.6R         |   1187  62.7  -0.064 (0.023) |    768  62.9  -0.037 (0.028) 
     F  touch of 50 EMA in trend, bullish close     Mean-revert exit   |   1675  50.8  -0.049 (0.012) |   1109  52.5  -0.018 (0.016) 
+    F  touch of 50 EMA in trend, bullish close     Trend rider (days) |    957  50.3  -0.006 (0.047) |    624  53.7  +0.002 (0.051) 
+    F  touch of 50 EMA in trend, bullish close     Swing 3 days       |   1016  50.3  -0.040 (0.034) |    646  53.1  +0.016 (0.042) 
     G  RSI-2 dip, trend AND higher TF agree        Classic 1R+runner  |    749  51.4  -0.061 (0.040) |    481  53.2  +0.016 (0.050) 
     G  RSI-2 dip, trend AND higher TF agree        High-hit 0.5R      |    830  67.7  -0.071 (0.026) |    531  68.9  -0.017 (0.031) 
     G  RSI-2 dip, trend AND higher TF agree        Quick 0.6R         |    828  62.8  -0.096 (0.027) |    536  64.9  -0.020 (0.033) 
     G  RSI-2 dip, trend AND higher TF agree        Mean-revert exit   |    739  59.1  -0.057 (0.027) |    472  63.3  -0.010 (0.031) 
+    G  RSI-2 dip, trend AND higher TF agree        Trend rider (days) |    644  52.2  -0.029 (0.064) |    419  52.3  +0.102 (0.092) 
+    G  RSI-2 dip, trend AND higher TF agree        Swing 3 days       |    749  51.4  -0.061 (0.040) |    481  53.2  +0.016 (0.050) 
     H  weak close + day range used < 60%           Classic 1R+runner  |    953  48.2  -0.141 (0.035) |    632  52.5  +0.032 (0.045) 
     H  weak close + day range used < 60%           High-hit 0.5R      |   1168  64.6  -0.134 (0.022) |    784  72.1  +0.039 (0.025) 
     H  weak close + day range used < 60%           Quick 0.6R         |   1272  59.5  -0.159 (0.022) |    860  65.7  -0.014 (0.026) 
     H  weak close + day range used < 60%           Mean-revert exit   |   1273  56.8  -0.098 (0.020) |    860  64.4  +0.027 (0.022) 
+    H  weak close + day range used < 60%           Trend rider (days) |    807  50.2  -0.095 (0.056) |    499  53.1  +0.094 (0.073) 
+    H  weak close + day range used < 60%           Swing 3 days       |    953  48.2  -0.140 (0.035) |    632  52.5  +0.032 (0.045) 
