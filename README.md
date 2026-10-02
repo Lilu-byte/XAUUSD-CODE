@@ -26,6 +26,8 @@ every day a **Strategy Lab** tests 8 strategies x 6 exit styles on your chart's 
   paying the broker's real swap. Real-data replay on H1, Oct 2020 - Sep 2026: **676 trades, 57% winners, +0.11R per trade** (profit
   factor 1.25), the best result of the project. It is a trend follower: most of the profit came in 2025; quiet years lost a little.
 * **STEADY mode** (AUTO on M5-M30) is the previous behaviour: one strategy, 60%+ winners, about break-even.
+* A **TODAY:** line at the top of both panels says in plain words what to do today (wait for a signal / buys only / stand aside, and how
+  much of the usual day range is already used).
 * The indicator shows the current session and the next market event, and in TREND mode the signal of any passing strategy.
   The EA panel lists every open position with its exit style and profit.
 * **Account size has not changed**: TREND mode needs about 2,000-6,000 USD per position at 1% risk. It cannot run on 50-100 USD.

@@ -1238,6 +1238,16 @@ void DrawPanel()
    g_panel.Line("XAU SNIPER  " + XTfName((ENUM_TIMEFRAMES)_Period) + mode, cGold);
    g_panel.Line(status, sc, 3);
    g_panel.Line(sub, cDim);
+   if(g_lab_ok && g_eng.n > 0)
+   {
+      bool go;
+      const int n = g_eng.n;
+      const bool intraday = PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400;
+      const string today = XTodayPlan(g_mode, g_npass, g_proven || (DemoFree() && InpDemoUnproven), g_small, g_eng.cfg.d1_mode,
+                                      (g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0, intraday ? g_eng.m_adr[n - 1] : 0.0,
+                                      intraday ? g_eng.m_adru[n - 1] : 0.0, go);
+      g_panel.Line(today, go ? cGreen : cGold);
+   }
    if(g_mode == XAU_MODE_TREND && g_npass > 0)
    {
       g_panel.Line("TREND mode: " + IntegerToString(g_npass) + " strateg" + (g_npass > 1 ? "ies" : "y") + " passed today, each may trade (max "

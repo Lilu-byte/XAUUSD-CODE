@@ -433,7 +433,7 @@ Includes the earlier ideas that were proposed but never built.
 | 296 | Pause after a drawdown on the EA's own equity curve | PROPOSED | Usually cuts recoveries as much as losses; test before building |
 | 297 | Add to a winning Rider position (pyramiding) | PROPOSED | Raises the payoff skew; needs margin |
 | 298 | Weekly trend filter on top of the daily | PROPOSED | Fewer trades; may avoid 2021-2024 chop |
-| 299 | One-line "today's plan" on the indicator (buy only / stand aside, expected range) | PROPOSED | Next simplification step |
+| 299 | One-line "today's plan" on both panels (trade or stand aside, direction, day range used) | BUILT | "TODAY: wait for a signal, buys only, 2 strategies armed. Usual day range 62, 40% used" |
 | 300 | Cent account or FX pairs with finer lots for $50-100 | NEEDS BROKER | The only way a small account can use these rules |
 | 301 | Export the EA's own trades to compare demo with the replay | PROPOSED | Detects broker differences early |
 | 302 | Options-implied gold volatility (GVZ) for the range forecast | REJECTED for now | Not in an MT5 feed |

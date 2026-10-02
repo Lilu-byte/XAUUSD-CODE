@@ -115,3 +115,4 @@ Audit: [AUDIT.md](AUDIT.md). Numbers: [REAL_DATA.md section 10](REAL_DATA.md#10-
 | 80 | `research/sim/mechanisms.cpp`: clock, fixes, weekend gaps, cone fade/follow, squeeze straddle, overreaction, seasonality | DONE | Structurally different mechanisms, each on the older/newer split |
 | 81 | Export script saves the broker's swap mode and rates | DONE | |
 | 82 | Presets `XAU_Sniper_Trend.set` and `XAU_Sniper_Steady.set` | DONE | |
+| 83 | "TODAY:" line at the top of both panels: trade or stand aside, which direction, how much of the usual day range is used | DONE | One line that says what to do today |

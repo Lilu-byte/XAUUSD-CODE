@@ -920,6 +920,13 @@ void DrawMainPanel()
    g_pm.Line("XAU ORACLE  " + XTfName((ENUM_TIMEFRAMES)_Period) + "   " + Px(bid), ClrGold());
    g_pm.Line(status, sc, 4);
    g_pm.Line(sub, ClrDim());
+   {
+      bool go;
+      const bool intraday = PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400;
+      const string today = XTodayPlan(g_mode, g_npass, g_proven, false, g_eng.cfg.d1_mode, (g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0,
+                                      intraday ? g_eng.m_adr[n - 1] : 0.0, intraday ? g_eng.m_adru[n - 1] : 0.0, go);
+      g_pm.Line(today, go ? ClrGreen() : ClrGold());
+   }
 
    if(plan)
    {

@@ -1320,6 +1320,26 @@ static void test_entry_at()
 }
 
 // cost guard: no setup may carry a stop shorter than min_stop_cost round-trip costs
+static void test_today_plan()
+{
+   std::printf("\n== unit tests: today's plan line ==\n");
+   bool go;
+   std::string s = XTodayPlan(XAU_MODE_TREND, 2, true, false, 2, 1, 40.0, 0.5, go);
+   CHECK(go && s.find("buys only") != std::string::npos && s.find("2 strategies armed") != std::string::npos && s.find("50% used") != std::string::npos,
+         "TREND, daily up: wait for a signal, buys only, 2 strategies armed, range used");
+   s = XTodayPlan(XAU_MODE_TREND, 2, true, false, 2, -1, 40.0, 0.5, go);
+   CHECK(!go && s.find("daily trend is down") != std::string::npos, "daily trend down on a buys-only chart: stand aside");
+   s = XTodayPlan(XAU_MODE_STEADY, 0, false, false, 0, 0, 40.0, 1.2, go);
+   CHECK(!go && s.find("no strategy passed") != std::string::npos && s.find("most of today's move is done") != std::string::npos,
+         "STEADY, nothing proven: stand aside, and a used-up day is flagged");
+   s = XTodayPlan(XAU_MODE_STEADY, 0, true, true, 0, 0, 0.0, 0.0, go);
+   CHECK(!go && s.find("too big for the account") != std::string::npos && s.find("Usual day range") == std::string::npos,
+         "account too small: watch only (no range on D1+)");
+   s = XTodayPlan(XAU_MODE_STEADY, 0, true, false, 0, 0, 40.0, 0.3, go);
+   CHECK(go && s.find("both directions") != std::string::npos, "STEADY, proven, no daily filter: both directions");
+   CHECK(s.size() < 120, "fits in two panel lines");
+}
+
 static void test_cost_guard()
 {
    std::printf("\n== unit tests: cost guard (stop must be >= 20 round-trip costs) ==\n");
@@ -1746,7 +1766,7 @@ int main(int argc, char **argv)
       else if(std::sscanf(w, "%lf-%lf", &g_dip_lo, &g_dip_hi) != 2) { g_dip_lo = -2.0; }
    }
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); test_entry_at(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); test_entry_at(); test_today_plan(); }
    if(all || !std::strcmp(mode, "calib"))   run_calibration();
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); test_strategy_windows(); test_resolve(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);

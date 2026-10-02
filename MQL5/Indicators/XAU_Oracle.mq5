@@ -2848,6 +2848,35 @@ int XResolveMode(const int input_mode, const ENUM_TIMEFRAMES tf)
    return (ps == 3600 || ps == 14400) ? XAU_MODE_TREND : XAU_MODE_STEADY;
 }
 
+// "Today's plan" in one line for both panels: trade or stand aside, which direction, and how much of the usual day
+// range is already used. go = true when the tools may trade today (the line is then drawn green).
+string XTodayPlan(const int mode, const int npass, const bool proven, const bool too_small, const int d1_mode, const int dreg,
+                  const double adr, const double adru, bool &go)
+{
+   go = false;
+   string s = "TODAY: ";
+   if(too_small)                       s += "watch only - trades on this chart are too big for the account";
+   else if(d1_mode == 2 && dreg < 0)   s += "stand aside - daily trend is down and this chart only buys";
+   else if((mode == XAU_MODE_TREND && npass == 0 && !proven) || (mode != XAU_MODE_TREND && !proven))
+                                       s += "stand aside - no strategy passed the Lab here";
+   else
+   {
+      go = true;
+      string side = "both directions";
+      if(d1_mode == 2) side = "buys only";
+      else if(d1_mode == 1 && dreg > 0) side = "buys only (daily trend up)";
+      else if(d1_mode == 1 && dreg < 0) side = "sells only (daily trend down)";
+      s += "wait for a signal, " + side;
+      if(mode == XAU_MODE_TREND && npass > 0) s += ", " + IntegerToString(npass) + " strateg" + (npass > 1 ? "ies" : "y") + " armed";
+   }
+   if(adr > 0.0)
+   {
+      s += ". Usual day range " + DoubleToString(adr, 0) + ", " + DoubleToString(100.0 * adru, 0) + "% used";
+      if(adru >= 1.0) s += ": most of today's move is done";
+   }
+   return s;
+}
+
 // Session clock for the panel: where the day is and what comes next (London local time; server midnight = daily break).
 string XSessionLine(const XConfig &c, const datetime server_now)
 {
@@ -4346,6 +4375,13 @@ void DrawMainPanel()
    g_pm.Line("XAU ORACLE  " + XTfName((ENUM_TIMEFRAMES)_Period) + "   " + Px(bid), ClrGold());
    g_pm.Line(status, sc, 4);
    g_pm.Line(sub, ClrDim());
+   {
+      bool go;
+      const bool intraday = PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400;
+      const string today = XTodayPlan(g_mode, g_npass, g_proven, false, g_eng.cfg.d1_mode, (g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0,
+                                      intraday ? g_eng.m_adr[n - 1] : 0.0, intraday ? g_eng.m_adru[n - 1] : 0.0, go);
+      g_pm.Line(today, go ? ClrGreen() : ClrGold());
+   }
 
    if(plan)
    {

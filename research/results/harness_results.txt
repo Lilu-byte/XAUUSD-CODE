@@ -99,6 +99,14 @@
   ok:   a high made before the limit fill is not counted as a target hit
   ok:   a high made after the fill (bullish bar path) reaches the first target
 
+== unit tests: today's plan line ==
+  ok:   TREND, daily up: wait for a signal, buys only, 2 strategies armed, range used
+  ok:   daily trend down on a buys-only chart: stand aside
+  ok:   STEADY, nothing proven: stand aside, and a used-up day is flagged
+  ok:   account too small: watch only (no range on D1+)
+  ok:   STEADY, proven, no daily filter: both directions
+  ok:   fits in two panel lines
+
 == simulator calibration: bar-level fills vs minute-level truth (4 seeds x 16000 M15 bars, entries every 7th bar) ==
   exit profile       world       truthR     pathR     pessR |   truthW%    pathW%    pessW% | mean |error| per trade: path / pessimistic
   Classic 1R+runner  null        +0.005    +0.007    -0.071 |     50.9%     50.9%     50.7% | 0.002 / 0.076  (n=3454)
@@ -200,7 +208,7 @@
 == analog (pattern-matching) forecaster ==
   causality: 16 queries compared on truncated vs full history, 0 differ
   ok:   analog forecast identical on truncated vs full history (no look-ahead)
-  audit + live query on 6000 bars: 40 ms
+  audit + live query on 6000 bars: 41 ms
   NULL (no edge: must be ~50%)     next bar: all 49.8% (n=19995) confident 50.5% (n=4477) | +4 bars: all 50.1% confident 51.4% (n=6655, z=+2.2) | old drift model: next 49.8%, +4 49.9%
   ok:   no-edge world: analog hit-rate is a coin flip (no leakage)
   ok:   no-edge world: even the 'confident' calls do not beat a coin flip
