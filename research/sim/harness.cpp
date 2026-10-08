@@ -1362,7 +1362,9 @@ static void test_today_plan()
    CHECK(go && s.find("buys only") != std::string::npos && s.find("2 strategies armed") != std::string::npos && s.find("about 40 expected, 20 so far") != std::string::npos,
          "TREND, daily up: wait for a signal, buys only, 2 strategies armed, expected range and so far");
    s = XTodayPlan(XAU_MODE_TREND, 2, true, false, 2, -1, 40.0, 0.5, go);
-   CHECK(!go && s.find("daily trend is down") != std::string::npos, "daily trend down on a buys-only chart: stand aside");
+   CHECK(!go && s.find("daily trend is not up") != std::string::npos, "daily trend down on a buys-only chart: stand aside");
+   s = XTodayPlan(XAU_MODE_TREND, 2, true, false, 2, 0, 40.0, 20.0, go);
+   CHECK(!go && s.find("not up") != std::string::npos, "daily trend undecided (below a rising mean) on a buys-only chart: stand aside, not 'buys only'");
    s = XTodayPlan(XAU_MODE_STEADY, 0, false, false, 0, 0, 40.0, 38.0, go);
    CHECK(!go && s.find("no strategy passed") != std::string::npos && s.find("most of today's move is done") != std::string::npos,
          "STEADY, nothing proven: stand aside, and a used-up day is flagged");

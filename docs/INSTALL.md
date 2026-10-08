@@ -80,6 +80,11 @@ needs a connected terminal). Run it with the terminal online.
 cooldown), so a demo collects as much data as possible. The presets Balanced, Conservative, HighWin, Growth and Aggressive switch them
 back on. **Load one of those before using a real account.**
 
+**Collecting data on three charts.** Attach the EA to XAUUSD M5, M15 and H1 charts with `XAU_Sniper_DataCollect_M5.set`,
+`_M15.set` and `_H1.set` (each has its own magic number). In the replay of your data that is about 4 + 1 + 0.6 trades a day.
+The H1 set switches the daily trend filter off, because H1 and H4 otherwise only buy while gold is above a rising 200-day mean
+(on 30 Sep 2026 gold closed at 4,187, below its 200-day mean of 4,540, so a filtered H1/H4 copy would wait until that changes).
+
 **The EA's journal** (*InpJournal*, on): every trade it opens (OPEN), closes (CLOSE, with the money result) and every signal it skipped
 (SKIP, with the reason) goes to `MQL5/Files/XAU_Export/XAU_Sniper_journal_XAUUSD.csv` (File > Open Data Folder). Zip and send it
 together with the export script's files: that is how the live behaviour is compared with the tests.

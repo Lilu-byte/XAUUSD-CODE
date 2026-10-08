@@ -40,6 +40,13 @@ def live(over):
 
 PRESETS = {
     "XAU_Sniper_Balanced": ("For a real account (or a demo rehearsal of one): trades only what passed the Strategy Lab, 1% risk, 3% daily / 6% weekly stop, 15% drawdown kill-switch, pause after 3 losses in a row.", live({})),
+    # one data-collection copy per chart (own magic numbers, so the copies never block each other)
+    "XAU_Sniper_DataCollect_M5": ("DEMO DATA COLLECTION on an XAUUSD M5 chart (about 4 trades a day in the replay): every signal, all day, no loss limits, journal on. Run with the _M15 and _H1 sets on two more charts.",
+        {"InpDemoMode": "1", "InpDemoUnproven": "true", "InpSessionFilter": "false", "InpDemoMaxPositions": "5", "InpJournal": "true", "InpMagic": "20262005", "InpComment": "XAUD5"}),
+    "XAU_Sniper_DataCollect_M15": ("DEMO DATA COLLECTION on an XAUUSD M15 chart (about 1 trade a day in the replay): every signal, all day, no loss limits, journal on.",
+        {"InpDemoMode": "1", "InpDemoUnproven": "true", "InpSessionFilter": "false", "InpDemoMaxPositions": "5", "InpJournal": "true", "InpMagic": "20262015", "InpComment": "XAUD15"}),
+    "XAU_Sniper_DataCollect_H1": ("DEMO DATA COLLECTION on an XAUUSD H1 chart: TREND mode with the daily trend filter OFF, so it also trades (both ways) while gold is below its 200-day mean; about 0.6 trades a day in the replay, weaker than with the filter (+0.03R vs +0.12R). Journal on.",
+        {"InpDemoMode": "1", "InpDemoUnproven": "true", "InpSessionFilter": "false", "InpDemoMaxPositions": "5", "InpJournal": "true", "InpDailyTrend": "0", "InpMagic": "20262060", "InpComment": "XAUD60"}),
     "XAU_Sniper_DataCollect": ("DEMO DATA COLLECTION: trades every signal the strategies find (proven or not), all day, up to 5 positions, no loss limits, and writes every trade and skipped signal to MQL5/Files/XAU_Export/XAU_Sniper_journal_<symbol>.csv. Send that file for analysis. Not a preview of a real account.",
         {"InpDemoMode": "1", "InpDemoUnproven": "true", "InpSessionFilter": "false", "InpDemoMaxPositions": "5", "InpJournal": "true"}),
     "XAU_Sniper_Conservative": ("Capital preservation: 0.5% risk, tighter limits, and the lab must see 65% winning trades.",

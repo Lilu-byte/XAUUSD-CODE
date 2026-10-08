@@ -156,3 +156,5 @@ Numbers: [REAL_DATA.md section 11](REAL_DATA.md#11-round-11-supplydemand-zones-s
 | 104 | EA journal: OPEN / CLOSE / SKIP rows with strategy, exit, prices, risk, ATR, spread, daily trend, proven flag, result, equity, reason | DONE | Send the file for analysis |
 | 105 | Indicator: the last setup stays (faded) for 24 bars after it ended with its outcome ("stop touched at 17:10 (-1.0R)"), a "target reached later" mark, and a "Last setup" panel line | DONE | The box disappeared right after the stop was touched, so the later run to the target could not be seen on the chart |
 | 106 | Wider stops tested (`research/sim/stopbuf.cpp`), not adopted | DONE (research) | REAL_DATA section 13 |
+| 107 | TODAY line: "stand aside - the daily trend is not up" also when the trend is undecided (price below a still-rising 200-day mean); it said "buys only" although the filter blocks every buy then | DONE | Found while checking whether H1/H4 would trade on 8 Oct 2026 |
+| 108 | Presets `XAU_Sniper_DataCollect_M5 / _M15 / _H1` with their own magic numbers; the H1 one trades without the daily filter | DONE | Three copies at once, and H1 data while gold is below its 200-day mean |

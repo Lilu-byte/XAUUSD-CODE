@@ -3048,7 +3048,8 @@ string XTodayPlan(const int mode, const int npass, const bool proven, const bool
    go = false;
    string s = "TODAY: ";
    if(too_small)                       s += "watch only - trades on this chart are too big for the account";
-   else if(d1_mode == 2 && dreg < 0)   s += "stand aside - daily trend is down and this chart only buys";
+   else if(d1_mode == 2 && dreg <= 0)  s += "stand aside - the daily trend is not up and this chart only buys";
+   else if(d1_mode == 1 && dreg == 0)  s += "stand aside - no clear daily trend (the filter trades only with it)";
    else if((mode == XAU_MODE_TREND && npass == 0 && !proven) || (mode != XAU_MODE_TREND && !proven))
                                        s += "stand aside - no strategy passed the Lab here";
    else
