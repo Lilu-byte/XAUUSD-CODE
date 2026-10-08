@@ -1413,6 +1413,7 @@ static void test_panel_helpers()
    CHECK(XLiveDrift(20, 5, 60.0) == "", "no alarm before 30 live trades");
    CHECK(XLiveDrift(50, 28, 60.0) == "", "56% live vs 60% tested over 50 trades: within luck");
    CHECK(XLiveDrift(50, 18, 60.0) != "", "36% live vs 60% tested over 50 trades: alarm");
+   CHECK(XOpenTradeLine("XAUUSD", 4122.14, 1) == "", "no manual position: no own-trade line");
 }
 
 static void test_supertrend()

@@ -31,6 +31,7 @@ InpWeeklyLossPct=8.0
 InpMaxDDPct=20.0
 InpKillFlatten=true
 InpResetKill=false
+InpLimitsOwnTradesOnly=false
 InpMaxConsecLosses=3
 InpPaperResume=true
 InpMaxTradesPerDay=6

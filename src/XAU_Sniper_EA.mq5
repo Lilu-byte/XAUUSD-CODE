@@ -73,6 +73,7 @@ input double InpWeeklyLossPct   = 6.0;    // Stop for the week at this equity lo
 input double InpMaxDDPct        = 15.0;   // Kill-switch: drawdown from peak equity (0 = off)
 input bool   InpKillFlatten     = true;   // Kill-switch also closes open EA positions
 input bool   InpResetKill       = false;  // Set true for one start to clear a kill-switch / reset peak
+input bool   InpLimitsOwnTradesOnly = false; // Loss limits count only this EA's trades (your manual trades on the account do not stop it)
 input int    InpMaxConsecLosses = 3;      // Pause after N losses in a row (until tomorrow or until paper trades recover)
 input bool   InpPaperResume     = true;   // During that pause, paper-trade the signals and resume as soon as they recover
 input int    InpMaxTradesPerDay = 6;      // Entries per day
@@ -182,6 +183,9 @@ XExit    g_act_x;
 // risk state
 double   g_day_start_eq = 0.0, g_week_start_eq = 0.0, g_peak_eq = 0.0;
 long     g_day_id = -1, g_week_id = -1;
+double   g_ea_base = 0.0;            // own-trades-only limits: equity when counting started, plus this EA's P/L since then
+datetime g_ea_base_t = 0;
+double   g_ea_closed = 0.0;
 double   g_dd_chance = -1.0;         // chance of a 20% drawdown in the next 100 trades (cached per Lab result and risk)
 int      g_dd_key = -1;
 double   g_dd_risk = -1.0;
@@ -204,6 +208,55 @@ void DrawPanel();
 string GvName(const string tag)
 {
    return "XS_" + IntegerToString((long)AccountInfoInteger(ACCOUNT_LOGIN)) + "_" + IntegerToString(InpMagic) + "_" + tag;
+}
+
+// peak and kill-switch are kept separately for own-trades-only limits
+string GvLim(const string tag)
+{
+   return GvName(InpLimitsOwnTradesOnly ? tag + "O" : tag);
+}
+
+// The equity the loss limits watch: the whole account, or (InpLimitsOwnTradesOnly) the account as it was when
+// counting started plus only this EA's closed and open results since then.
+double RiskEquity()
+{
+   if(!InpLimitsOwnTradesOnly) return AccountInfoDouble(ACCOUNT_EQUITY);
+   double fl = 0.0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      const ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+      fl += PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+   }
+   return g_ea_base + g_ea_closed + fl;
+}
+
+// this EA's closed results (profit, swap, commission) since own-trades-only counting started
+void RecomputeOwnClosed()
+{
+   g_ea_closed = 0.0;
+   if(!InpLimitsOwnTradesOnly || g_ea_base_t == 0) return;
+   if(!HistorySelect(g_ea_base_t, TimeCurrent() + 3600)) return;
+   const int total = HistoryDealsTotal();
+   for(int i = 0; i < total; i++)
+   {
+      const ulong d = HistoryDealGetTicket(i);
+      if(d == 0) continue;
+      if(HistoryDealGetInteger(d, DEAL_MAGIC) != InpMagic || HistoryDealGetString(d, DEAL_SYMBOL) != _Symbol) continue;
+      g_ea_closed += HistoryDealGetDouble(d, DEAL_PROFIT) + HistoryDealGetDouble(d, DEAL_SWAP) + HistoryDealGetDouble(d, DEAL_COMMISSION);
+   }
+}
+
+// Why the EA stopped, in numbers
+string KillText()
+{
+   const double eq = RiskEquity();
+   const double dd = (g_peak_eq > 0.0) ? 100.0 * (g_peak_eq - eq) / g_peak_eq : 0.0;
+   string s = (InpLimitsOwnTradesOnly ? "this EA's results are " : "the account is ") + DoubleToString(dd, 1) + "% below its peak of " +
+              DoubleToString(g_peak_eq, 2) + " (limit " + DoubleToString(InpMaxDDPct, 0) + "%)";
+   if(!InpLimitsOwnTradesOnly) s += "; your own trades count too (InpLimitsOwnTradesOnly = true counts only the EA's)";
+   return s + ". InpResetKill = true for one start resumes";
 }
 
 string GvPos(const ulong ticket, const string tag)
@@ -372,22 +425,36 @@ int OnInit()
    g_news.after_min = InpNewsAfter;
    g_news.min_importance = 3;
 
-   const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
    if(InpResetKill)
    {
-      GlobalVariableDel(GvName("KILL"));
-      GlobalVariableDel(GvName("PEAK"));
+      GlobalVariableDel(GvLim("KILL"));
+      GlobalVariableDel(GvLim("PEAK"));
+      GlobalVariableDel(GvName("EABASE"));
+      GlobalVariableDel(GvName("EABASET"));
       Print("XAU Sniper: kill-switch and peak equity reset.");
    }
+   // own-trades-only limits: remember where counting started (survives restarts)
+   if(InpLimitsOwnTradesOnly)
+   {
+      if(!GlobalVariableCheck(GvName("EABASE")) || !GlobalVariableCheck(GvName("EABASET")))
+      {
+         GlobalVariableSet(GvName("EABASE"), AccountInfoDouble(ACCOUNT_EQUITY));
+         GlobalVariableSet(GvName("EABASET"), (double)TimeCurrent());
+      }
+      g_ea_base = GlobalVariableGet(GvName("EABASE"));
+      g_ea_base_t = (datetime)GlobalVariableGet(GvName("EABASET"));
+      RecomputeOwnClosed();
+   }
+   const double eq = RiskEquity();
    if(DemoFree())
    {
-      GlobalVariableDel(GvName("KILL"));
-      GlobalVariableDel(GvName("PEAK"));
+      GlobalVariableDel(GvLim("KILL"));
+      GlobalVariableDel(GvLim("PEAK"));
       Print("XAU Sniper: DEMO free run - guardrails are warnings only. This is not a preview of a real account.");
    }
    else if(IsDemo()) Print("XAU Sniper: DEMO rehearsal - the same rules as a real account (InpDemoMode).");
-   g_kill = GlobalVariableCheck(GvName("KILL"));
-   g_peak_eq = GlobalVariableCheck(GvName("PEAK")) ? GlobalVariableGet(GvName("PEAK")) : eq;
+   g_kill = GlobalVariableCheck(GvLim("KILL"));
+   g_peak_eq = GlobalVariableCheck(GvLim("PEAK")) ? GlobalVariableGet(GvLim("PEAK")) : eq;
    if(g_peak_eq < eq) g_peak_eq = eq;
    g_day_start_eq = eq; g_week_start_eq = eq;
    g_day_id = -1; g_week_id = -1;
@@ -676,6 +743,7 @@ void CheckMeanExits()
 void RecomputeStats()
 {
    g_stats_dirty = false;
+   RecomputeOwnClosed();
    const datetime now = TimeCurrent();
    const long day_now = (long)TimeTradeServer() / 86400;
    if(!HistorySelect(now - 45 * 86400, now + 3600)) return;
@@ -771,7 +839,7 @@ void RecomputeStats()
 //+------------------------------------------------------------------+
 void UpdateRisk()
 {
-   const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   const double eq = RiskEquity();
    if(eq <= 0.0) return;
    const long day = (long)TimeTradeServer() / 86400;
    const long week = (day + 3) / 7;
@@ -780,7 +848,7 @@ void UpdateRisk()
       // the day that just ended (stats still describe it until they are recomputed)
       if(InpPushDaily && g_day_id >= 0 && g_day_start_eq > 0.0)
          SendNotification("XAU Sniper " + XTfName((ENUM_TIMEFRAMES)_Period) + " day summary: " + IntegerToString(g_trades_today) + " trade(s), P/L " +
-                          StringFormat("%+.2f (%+.2f%%)", eq - g_day_start_eq, 100.0 * (eq - g_day_start_eq) / g_day_start_eq) + ", equity " + DoubleToString(eq, 2) +
+                          StringFormat("%+.2f (%+.2f%%)", eq - g_day_start_eq, 100.0 * (eq - g_day_start_eq) / g_day_start_eq) + ", equity " + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2) +
                           ", open positions " + IntegerToString(CountPositions()));
       g_day_id = day;
       g_day_start_eq = eq;
@@ -796,14 +864,14 @@ void UpdateRisk()
    if(eq > g_peak_eq)
    {
       g_peak_eq = eq;
-      GlobalVariableSet(GvName("PEAK"), g_peak_eq);
+      GlobalVariableSet(GvLim("PEAK"), g_peak_eq);
    }
    g_block_note = "";
    if(DemoFree()) g_kill = false;
    if(!g_kill && !DemoFree() && InpMaxDDPct > 0.0 && g_peak_eq > 0.0 && 100.0 * (g_peak_eq - eq) / g_peak_eq >= InpMaxDDPct)
    {
       g_kill = true;
-      GlobalVariableSet(GvName("KILL"), 1.0);
+      GlobalVariableSet(GvLim("KILL"), 1.0);
       Print("XAU Sniper: KILL-SWITCH - drawdown ", DoubleToString(100.0 * (g_peak_eq - eq) / g_peak_eq, 1), "% from peak. Trading stopped.");
       if(InpKillFlatten) CloseAllOurs("kill-switch");
    }
@@ -819,9 +887,10 @@ void UpdateRisk()
       g_week_block = true;
       Print("XAU Sniper: weekly loss limit reached - no new trades this week.");
    }
-   if(g_kill)            g_block_note = "KILL-SWITCH: drawdown limit hit (set InpResetKill to clear)";
-   else if(g_week_block) g_block_note = "paused: weekly loss limit";
-   else if(g_day_block)  g_block_note = "paused: daily loss limit";
+   const string who = InpLimitsOwnTradesOnly ? " (this EA's trades)" : " (whole account, your own trades included)";
+   if(g_kill)            g_block_note = "KILL-SWITCH: " + KillText();
+   else if(g_week_block) g_block_note = "paused: this week's loss reached " + DoubleToString(InpWeeklyLossPct, 1) + "%" + who;
+   else if(g_day_block)  g_block_note = "paused: today's loss reached " + DoubleToString(InpDailyLossPct, 1) + "%" + who + ", resumes tomorrow";
 }
 
 // A loss streak pauses trading for the rest of that day, or until the paper-traded signals recover.
@@ -1251,13 +1320,30 @@ double TestedWinRate()
    return (g_cell >= 0) ? g_lab.lab[g_cell].all.WinRate() : 0.0;
 }
 
-// Chance of a 20% drawdown within the next 100 trades with the tested win/loss sizes and the current risk.
+// % of equity the smallest lot risks with a typical stop on this chart (the last signal's, else 1.5 ATR)
+double MinLotRiskPct()
+{
+   const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(eq <= 0.0 || g_eng.n < 3) return 0.0;
+   const double dist = (g_last_sig.risk > 0.0) ? g_last_sig.risk : 1.5 * g_eng.m_atr[g_eng.n - 2];
+   string note = "";
+   const double per_lot = XLossPerLot(_Symbol, true, g_eng.m_c[g_eng.n - 2], dist, note);
+   return 100.0 * SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN) * per_lot / eq;
+}
+
+// risk per trade the account really takes: the chosen risk, or more when even the smallest lot is bigger
+double EffectiveRiskPct()
+{
+   return XMax(RiskCapped(), MinLotRiskPct());
+}
+
+// Chance of a 20% drawdown within the next 100 trades with the tested win/loss sizes and the effective risk.
 // Recomputed only when the Lab result or the risk changes (-1 = not available).
 double DrawdownChance()
 {
    if(!g_lab_ok || g_cell < 0) return -1.0;
    const int key = g_cell * 100 + g_npass;
-   const double risk = RiskCapped();
+   const double risk = MathRound(EffectiveRiskPct() * 10.0) / 10.0;
    if(key == g_dd_key && risk == g_dd_risk) return g_dd_chance;
    int nn = 0, ww = 0, ll = 0;
    double sw = 0.0, sl = 0.0;
@@ -1291,7 +1377,7 @@ void DrawPanel()
    string status = "LOOKING FOR A SETUP";
    color sc = cCyan;
    string sub = StringLen(g_skip_note) > 0 ? g_skip_note : XReasonText(g_last_reason);
-   if(g_kill)                           { status = "STOPPED - loss limit hit"; sc = cRed; sub = "set InpResetKill = true for one start to resume"; }
+   if(g_kill)                           { status = "STOPPED - loss limit hit"; sc = cRed; sub = KillText(); }
    else if(g_week_block || g_day_block) { status = "PAUSED"; sc = cGold; sub = g_block_note; }
    else if(np > 0)                      { status = "IN " + IntegerToString(np) + " TRADE"; if(np > 1) status += "S"; sc = cGreen; sub = "managing the exit: " + XExitName(g_act_p); }
    else if(g_news_blocked)              { status = "PAUSED - NEWS"; sc = cGold; sub = g_news_note; }
@@ -1322,7 +1408,10 @@ void DrawPanel()
       const bool lab_ok = g_proven || (g_mode == XAU_MODE_TREND && g_npass > 0) || (DemoFree() && InpDemoUnproven);
       const bool trend_ok = !(g_eng.cfg.d1_mode == 2 && dr <= 0) && !(g_eng.cfg.d1_mode == 1 && dr == 0);
       const bool limits_ok = DemoFree() || !(g_kill || g_day_block || g_week_block || StreakPauseActive());
-      const string row = XCheckRow(lab_ok, trend_ok, !(InpUseNews && g_news_blocked), spread_ok, margin_ok, !g_small, limits_ok);
+      // size: the smallest lot must fit the risk rule (free run allows up to InpDemoMaxRiskPct)
+      const double size_cap = DemoFree() ? XClamp(InpDemoMaxRiskPct, 0.5, 50.0) : RiskCapped() * XMax(InpMaxRiskOverrun, 1.0);
+      const bool size_ok = !g_small && EffectiveRiskPct() <= size_cap + 1e-9;
+      const string row = XCheckRow(lab_ok, trend_ok, !(InpUseNews && g_news_blocked), spread_ok, margin_ok, size_ok, limits_ok);
       g_panel.Line(row, (StringFind(row, "NO") < 0) ? cGreen : cDim);
    }
    if(g_mode == XAU_MODE_TREND && g_npass > 0)
@@ -1362,7 +1451,7 @@ void DrawPanel()
                    + "  stop " + DoubleToString(PositionGetDouble(POSITION_SL), _Digits) + "  P/L " + DoubleToString(PositionGetDouble(POSITION_PROFIT), 2) + plan,
                    PositionGetDouble(POSITION_PROFIT) >= 0.0 ? cGreen : cRed);
    }
-   const double dpl = (g_day_start_eq > 0.0) ? 100.0 * (eq - g_day_start_eq) / g_day_start_eq : 0.0;
+   const double dpl = (g_day_start_eq > 0.0) ? 100.0 * (RiskEquity() - g_day_start_eq) / g_day_start_eq : 0.0;
    g_panel.Line("Equity " + DoubleToString(eq, 2) + "   today " + StringFormat("%+.2f%%", dpl) + "   trades today " + IntegerToString(g_trades_today), cText);
    if(g_tot_n > 0)
    {
@@ -1375,8 +1464,13 @@ void DrawPanel()
    if(StringLen(drift) > 0) g_panel.Line(drift, cRed);
    const double ddc = DrawdownChance();
    if(ddc >= 0.0)
-      g_panel.Line("Risk check: chance of a 20% drawdown within the next 100 trades at " + DoubleToString(RiskCapped(), 1) + "% risk: about "
+   {
+      const double er = EffectiveRiskPct();
+      const string at = (er > RiskCapped() + 0.05) ? (DoubleToString(er, 1) + "% risk (the smallest lot here; your setting " + DoubleToString(RiskCapped(), 1) + "%)")
+                                                   : (DoubleToString(er, 1) + "% risk");
+      g_panel.Line("Risk check: chance of a 20% drawdown within the next 100 trades at " + at + ": about "
                    + DoubleToString(100.0 * ddc, 0) + "%", (ddc > 0.10) ? cRed : cDim);
+   }
    const string warn = XAccountWarning(_Symbol);
    if(StringLen(warn) > 0) g_panel.Line("RISK: " + warn, cRed);
    if(StringFind(warn, "NO stop") >= 0 && !InpProtectManual) g_panel.Line("Tip: InpProtectManual = true lets the EA put a stop on them", cDim);

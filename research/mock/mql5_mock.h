@@ -339,7 +339,7 @@ public:
 };
 enum { POSITION_TYPE_BUY = 0, POSITION_TYPE_SELL = 1 };
 enum { POSITION_SYMBOL = 1, POSITION_MAGIC, POSITION_TYPE, POSITION_PRICE_OPEN, POSITION_SL, POSITION_TP, POSITION_VOLUME,
-       POSITION_TIME, POSITION_IDENTIFIER, POSITION_PROFIT };
+       POSITION_TIME, POSITION_IDENTIFIER, POSITION_PROFIT, POSITION_SWAP };
 inline int PositionsTotal() { return 0; }
 inline ulong PositionGetTicket(int) { return 0; }
 inline string PositionGetString(int) { return ""; }

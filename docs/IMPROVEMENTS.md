@@ -134,3 +134,16 @@ Numbers: [REAL_DATA.md section 11](REAL_DATA.md#11-round-11-supplydemand-zones-s
 | # | Change | Status | Why |
 |--:|---|---|---|
 | 92 | Engine: adaptive Supertrend (`ComputeSupertrend`, `st_trail`, `st_filter`), off by default and not an input; `research/sim/supertrend.cpp`; replay options `XAU_STTRAIL`, `XAU_STFILTER`; unit tests | DONE (research only) | The user's TradingView indicator, tested before adopting: it did not improve anything everywhere, so the EA and indicator are unchanged |
+
+## Round 13 (screenshots of 8 Oct 2026: a manual buy on a "TOO BIG, SKIP" signal)
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 93 | Indicator headline: only a tradable signal (proven AND fits the account) starts with BUY NOW / SELL NOW; otherwise "NO TRADE - too big for this account" or "WATCH ONLY - unproven setup" | DONE | "BUY SIGNAL - TOO BIG, SKIP" was read as BUY |
+| 94 | Skipped setups drawn as outlines labelled "(skip)", never as a filled green/red box | DONE | A coloured box looks like an instruction |
+| 95 | Pattern matcher's direction (ghost candles, "PREDICTED: UP", UP/DOWN in the timeframe line) off by default (*InpShowPatternCall*); the panel calls it a hint | DONE | Tested at 50% on real gold (section 8); it showed "PREDICTED: UP" right after the stop was hit |
+| 96 | Indicator: "Your trade" line with the real risk of your own position, and a red warning when its stop is further away than the plan's | DONE | The stop was moved from 4122.13 to 4120.30 after the plan's stop was reached |
+| 97 | Indicator: for a too-big setup, the chance of losing 20% of the account within 100 such trades at that size | DONE | Turns "5.8% of the account" into what it means |
+| 98 | Stop-hit message: "price touched the stop X: close it, do not move the stop" | DONE | |
+| 99 | EA: *InpLimitsOwnTradesOnly* (loss limits count only the EA's trades); STOPPED / PAUSED messages give the numbers and say that manual trades count | DONE | The EA was stopped by drawdowns from manual trades on the same account |
+| 100 | EA: risk check and the Checks row use the risk the smallest lot really takes when it is above your setting | DONE | "about 0% at 1% risk" was true only for an account big enough to trade 1% |
+| 101 | Alerts (pop-up, phone, e-mail) only for tradable signals; the plan line of a skipped setup reads "Setup (not a trade): buy ..."; the mean-revert exit rule says when its level is already past the entry | DONE | Same rule everywhere: nothing that is not a trade may look like one |

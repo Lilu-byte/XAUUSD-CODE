@@ -817,6 +817,41 @@ string XAccountWarning(const string sym)
    return w;
 }
 
+// Your own (manual, magic 0) trades on this symbol in one line: size, stop and what the stop really risks.
+// plan_stop / plan_dir: the indicator's plan for the current setup (0 = none); a stop moved further away than the
+// plan's is flagged, because widening a stop after entry is how small losses become large ones.
+string XOpenTradeLine(const string sym, const double plan_stop, const int plan_dir)
+{
+   string s = "";
+   int cnt = 0;
+   const double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      const ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != sym || PositionGetInteger(POSITION_MAGIC) != 0) continue;
+      cnt++;
+      if(cnt > 1) continue;
+      const bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      const double op = PositionGetDouble(POSITION_PRICE_OPEN), sl = PositionGetDouble(POSITION_SL), vol = PositionGetDouble(POSITION_VOLUME);
+      const int dg = (int)SymbolInfoInteger(sym, SYMBOL_DIGITS);
+      const string side = buy ? "BUY " : "SELL ";
+      s = "Your trade: " + side + DoubleToString(vol, 2) + " @" + DoubleToString(op, dg);
+      if(sl <= 0.0) { s += ", NO STOP"; continue; }
+      const double dist = buy ? (op - sl) : (sl - op);
+      s += ", stop " + DoubleToString(sl, dg);
+      if(dist <= 0.0) { s += " (locked in, no risk left)"; continue; }
+      string note = "";
+      const double money = vol * XLossPerLot(sym, buy, op, dist, note);
+      s += ": risk " + DoubleToString(money, 2) + " " + AccountInfoString(ACCOUNT_CURRENCY);
+      if(eq > 0.0) s += " (" + DoubleToString(100.0 * money / eq, 1) + "% of the account)";
+      if(plan_dir != 0 && plan_stop > 0.0 && (buy == (plan_dir > 0)) && (buy ? (sl < plan_stop - 1e-9) : (sl > plan_stop + 1e-9)))
+         s += " - further away than the plan's stop " + DoubleToString(plan_stop, dg) + ": that raises the loss";
+   }
+   if(cnt > 1) s += " (+" + IntegerToString(cnt - 1) + " more)";
+   return s;
+}
+
 //+------------------------------------------------------------------+
 //| daily Strategy Lab on a fixed data window                         |
 //| Both the indicator and the EA run the lab on exactly the same     |

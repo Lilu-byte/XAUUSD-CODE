@@ -125,6 +125,21 @@ The MT5 phone app cannot run custom indicators or EAs: they run on a computer (o
 * A red line comparing the live win-rate with the tested one appears only when, after 30+ trades, the live result is
   worse than bad luck explains (usually broker fills or spread).
 
+## What the indicator's headline means (round 13)
+| Headline | Meaning |
+|---|---|
+| **BUY NOW / SELL NOW** | A tested strategy fired and the trade fits your risk setting. The only headline that is a trade |
+| **WATCH ONLY - unproven setup** | A setup appeared, but no strategy passed the Lab on this chart: for learning only |
+| **NO TRADE - too big for this account** | Even 0.01 lot risks far more than your risk setting: skip it (the panel shows what that size means over 100 trades) |
+| **MISSED - don't chase** | Price already left the entry |
+| **HOLD / EXIT NOW** | Managing a setup it showed; on EXIT NOW close the trade, never move the stop further away |
+The pattern matcher's direction (ghost candles, PREDICTED: UP/DOWN) is off by default (*InpShowPatternCall*): on real gold it was
+right 50% of the time. The grey outlines and the cone show the expected size and range, which is what can be predicted.
+
+**Manual trades and the EA on one account.** By default the EA's loss limits watch the whole account, so your own losing
+trades can pause or stop it ("PAUSED: today's loss ..." / "STOPPED ... your own trades count too"). Set
+*InpLimitsOwnTradesOnly* = true to let the limits count only the EA's trades.
+
 ## Troubleshooting
 | Symptom | Likely cause |
 |---|---|

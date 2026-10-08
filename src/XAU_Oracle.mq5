@@ -94,7 +94,8 @@ input bool            InpShowTradeBox   = true;          // Green (profit) / red
 input bool            InpShowForecast   = true;          // Projected next candles
 input int             InpForecastBars   = 6;             // Candles to project (max 7)
 input bool            InpShowCone       = true;          // Expected range cone
-input bool            InpShowTfForecast = true;          // Next-candle direction for M15 / H1 / H4
+input bool            InpShowTfForecast = true;          // Next-candle size for M15 / H1 / H4
+input bool            InpShowPatternCall = false;        // Draw the pattern matcher's direction (ghost candles, UP/DOWN). Off: tested at 50% on real gold
 input bool            InpShowLevels     = true;          // Yesterday's high/low and the Asian range
 input bool            InpShowOrb        = true;          // Opening range box
 input bool            InpShowHistory    = true;          // Past entries and how they ended
@@ -577,7 +578,7 @@ void AnalogRefresh()
    const bool proven = (g_aud.nc4 >= 25 && g_aud.LowerBound(g_aud.hitc4, g_aud.nc4, g_eng.cfg.an_z) >= 0.5);
    if(!confident)   g_an_state = 1;
    else if(!proven) g_an_state = 2;
-   else             { g_an_state = 3; g_an_show = true; }
+   else             { g_an_state = 3; g_an_show = InpShowPatternCall; }
 }
 
 string AnalogLine()
@@ -586,9 +587,12 @@ string AnalogLine()
    string dir = "DOWN";
    if(g_an.dir4 > 0) dir = "UP";
    const int agree = (g_an.dir4 > 0) ? g_an_up : g_an_dn;
-   if(g_an_state == 3)
+   if(g_an_state == 3 && InpShowPatternCall)
       return "Next candles: " + dir + " (" + IntegerToString(agree) + " of " + IntegerToString(g_an.k) + " similar cases; such calls right "
              + DoubleToString(100.0 * g_aud.Rate(g_aud.hitc4, g_aud.nc4), 0) + "%)";
+   if(g_an_state == 3)
+      return "Pattern hint: " + dir + " (" + IntegerToString(agree) + " of " + IntegerToString(g_an.k) + " similar cases, right "
+             + DoubleToString(100.0 * g_aud.Rate(g_aud.hitc4, g_aud.nc4), 0) + "% lately) - a hint, not a forecast";
    if(g_an_state == 2)
       return "Next candles: leaning " + dir + ", not proven here (such calls right " + DoubleToString(100.0 * g_aud.Rate(g_aud.hitc4, g_aud.nc4), 0) + "%)";
    return "Next candles: no clear direction (" + IntegerToString(g_an_up) + " up / " + IntegerToString(g_an_dn) + " down of " + IntegerToString(g_an.k) + ")";
@@ -626,7 +630,7 @@ void RefreshTfForecasts()
       g_tfe[k].AnalogAudit(gb - 2, 800, 4, au);
       const bool conf = g_tfe[k].AnalogConfident(a);
       const bool prov = (au.nc4 >= 25 && au.LowerBound(au.hitc4, au.nc4, g_tfe[k].cfg.an_z) >= 0.5);
-      if(conf && prov)
+      if(conf && prov && InpShowPatternCall)
       {
          string d = "down";
          if(a.dir4 > 0) d = "up";
@@ -748,20 +752,26 @@ void DrawTradeBox()
    const double entry = g_sig.entry;
    const double tgt = TargetPrice();
    const double tp1 = g_sig.tp1;
+   // a setup the panel says not to trade (unproven or too big) is drawn as outlines only, never as a coloured box
+   XLotPlan fp;
+   bool fits = false;
+   SignalSize(fp, fits);
+   const bool tradable = g_proven && fits;
+   const color cr = tradable ? XRGB(110, 34, 38) : XRGB(150, 90, 95), cg = tradable ? XRGB(28, 110, 72) : XRGB(90, 140, 115);
 
-   XObjRect("XO_BX_R", t0, entry, t_end, g_sig.sl, XRGB(110, 34, 38), true);
+   XObjRect("XO_BX_R", t0, entry, t_end, g_sig.sl, cr, tradable);
    if(tp1 > 0.0 && g_sig.tp2 > 0.0 && MathAbs(g_sig.tp2 - tp1) > 1e-9)
    {
-      XObjRect("XO_BX_G1", t0, entry, t_end, tp1, XRGB(28, 110, 72), true);
-      XObjRect("XO_BX_G2", t0, tp1, t_end, g_sig.tp2, XRGB(20, 84, 56), true);
+      XObjRect("XO_BX_G1", t0, entry, t_end, tp1, cg, tradable);
+      XObjRect("XO_BX_G2", t0, tp1, t_end, g_sig.tp2, tradable ? XRGB(20, 84, 56) : cg, tradable);
    }
-   else XObjRect("XO_BX_G1", t0, entry, t_end, tgt, XRGB(28, 110, 72), true);
+   else XObjRect("XO_BX_G1", t0, entry, t_end, tgt, cg, tradable);
    XObjTrend("XO_BX_E", t0, entry, t_end, entry, XRGB(235, 235, 245), STYLE_SOLID, 1, false);
    if(g_live_ok && !g_live.closed && g_live.stage == 1)
       XObjTrend("XO_BX_TR", t0, g_live.cur_sl, t_end, g_live.cur_sl, XRGB(255, 170, 60), STYLE_SOLID, 1, false);
 
    const datetime tl = t_end + (datetime)period;
-   const string side = buy ? "BUY " : "SELL ";
+   const string side = tradable ? (buy ? "BUY " : "SELL ") : (buy ? "(skip) buy " : "(skip) sell ");
    XObjText("XO_BX_T0", tl, entry, side + Px(entry), XRGB(235, 235, 245), 9);
    XObjText("XO_BX_T1", tl, g_sig.sl, "STOP " + Px(g_sig.sl), XRGB(255, 120, 120), 9);
    if(g_act_x.mr_exit == 1)
@@ -875,24 +885,32 @@ void DrawMainPanel()
          XLotPlan fp;
          bool fits = false;
          SignalSize(fp, fits);
-         if(fits)
+         // the first word is what people act on: only a tradable signal may start with BUY or SELL
+         const string side_l = buy ? "buy" : "sell";
+         if(fits && g_proven)
          {
             status = buy ? "BUY NOW" : "SELL NOW";
             sc = buy ? ClrGreen() : ClrRed();
             bg = buy ? XRGB(10, 46, 32) : XRGB(56, 20, 24);
-            sub = g_proven ? "tested strategy, see plan below" : "UNPROVEN strategy: demo / small size only";
+            sub = "tested strategy, see plan below";
          }
          else if(StringFind(fp.note, "margin") >= 0)
          {
-            status = buy ? "BUY SIGNAL - NO FREE MARGIN" : "SELL SIGNAL - NO FREE MARGIN";
-            sc = ClrGold(); bg = XRGB(46, 40, 16);
-            sub = "your open trades use all the margin: close or protect them first";
+            status = "NO TRADE - no free margin";
+            sc = ClrGold();
+            sub = "a " + side_l + " setup appeared, but your open trades use all the margin";
+         }
+         else if(!fits)
+         {
+            status = "NO TRADE - too big for this account";
+            sc = ClrGold();
+            sub = "a " + side_l + " setup" + (g_proven ? "" : " (unproven)") + ", but even the smallest lot risks " + DoubleToString(fp.risk_pct, 1) + "% of the account";
          }
          else
          {
-            status = buy ? "BUY SIGNAL - TOO BIG, SKIP" : "SELL SIGNAL - TOO BIG, SKIP";
-            sc = ClrGold(); bg = XRGB(46, 40, 16);
-            sub = "even the smallest lot risks " + DoubleToString(fp.risk_pct, 1) + "% of this account here";
+            status = "WATCH ONLY - unproven " + side_l + " setup";
+            sc = ClrGold();
+            sub = "no strategy passed the Lab here: shown for learning, not a trade signal";
          }
          plan = true;
       }
@@ -909,7 +927,7 @@ void DrawMainPanel()
    {
       status = "EXIT NOW";
       sc = ClrGold();
-      if(g_live.exit_kind == XE_STOP)          sub = "stop level was hit";
+      if(g_live.exit_kind == XE_STOP)          sub = "price touched the stop " + Px(g_sig.sl) + ": close it, do not move the stop";
       else if(g_live.exit_kind == XE_TRAIL)    sub = "protective stop was hit";
       else if(g_live.exit_kind == XE_MR)       sub = "price is back at the mean: take the profit";
       else if(g_live.exit_kind == XE_TIME)     sub = "trade went nowhere: close it";
@@ -933,14 +951,22 @@ void DrawMainPanel()
    if(plan)
    {
       const double tgt = TargetPrice();
+      XLotPlan pfp;
+      bool pfits = false;
+      SignalSize(pfp, pfits);
+      const bool trad = g_proven && pfits;
+      const string head = trad ? (buy ? "Buy " : "Sell ") : (buy ? "Setup (not a trade): buy " : "Setup (not a trade): sell ");
       if(g_act_x.mr_exit == 1)
       {
-         g_pm.Line((buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Typical exit " + Px(tgt), ClrText());
+         g_pm.Line(head + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Typical exit " + Px(tgt), trad ? ClrText() : ClrDim());
          const string side = buy ? "above " : "below ";
-         g_pm.Line("Exit rule: close when a candle closes " + side + Px(MeanTrigger()) + " (the 5-bar mean, it moves)", ClrDim());
+         const double trg = MeanTrigger();
+         string er = "Exit rule: close when a candle closes " + side + Px(trg) + " (the 5-bar mean, it moves)";
+         if(buy ? (trg <= g_sig.entry) : (trg >= g_sig.entry)) er += ". It is already past the entry: little left to gain";
+         g_pm.Line(er, ClrDim());
       }
       else
-         g_pm.Line((buy ? "Buy " : "Sell ") + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Target " + Px(tgt), ClrText());
+         g_pm.Line(head + Px(g_sig.entry) + "   Stop " + Px(g_sig.sl) + "   Target " + Px(tgt), trad ? ClrText() : ClrDim());
       XLotPlan lp;
       bool fits = false;
       if(SignalSize(lp, fits))
@@ -956,6 +982,15 @@ void DrawMainPanel()
             g_pm.Line("That is " + DoubleToString(lp.risk_pct, 1) + "% of the account (your limit " + DoubleToString(InpRiskPct, 1)
                       + "%). This trade needs about " + DoubleToString(need, 0) + " " + AccountInfoString(ACCOUNT_CURRENCY)
                       + ", or use a lower timeframe.", ClrGold());
+            // what that size means over many trades, with this strategy's tested wins and losses
+            if(g_cell >= 0 && g_lab.lab[g_cell].all.n >= 30 && g_lab.lab[g_cell].all.wins > 0 && g_lab.lab[g_cell].all.losses > 0)
+            {
+               const XStats st = g_lab.lab[g_cell].all;
+               const double ddc = XDrawdownChance((double)st.wins / st.n, (double)st.losses / st.n, st.sum_win / st.wins, st.sum_loss / st.losses,
+                                                  lp.risk_pct, 100, 20.0, 2000);
+               g_pm.Line("At that size the chance of losing 20% of the account within 100 such trades is about " + DoubleToString(100.0 * ddc, 0) + "%",
+                         (ddc > 0.10) ? ClrRed() : ClrGold());
+            }
          }
          else if(!lp.ok) g_pm.Line("Size: " + lp.note, ClrRed());
       }
@@ -1013,11 +1048,13 @@ void DrawMainPanel()
    if(PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400) trl += "   Day range used " + DoubleToString(100.0 * g_eng.m_adru[n - 1], 0) + "%";
    g_pm.Line(trl, ClrText());
    g_pm.Line(XSessionLine(g_eng.cfg, TimeTradeServer()), ClrDim());
-   g_pm.Line(AnalogLine(), (g_an_state == 3) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
+   g_pm.Line(AnalogLine(), (g_an_state == 3 && InpShowPatternCall) ? ((g_an.dir4 > 0) ? ClrGreen() : ClrRed()) : ClrDim());
    const string rl = RangeLine();
    if(StringLen(rl) > 0) g_pm.Line(rl, ClrText());
    if(InpShowTfForecast)
       g_pm.Line("Next candle size:  M15 " + g_tf_txt[0] + "   H1 " + g_tf_txt[1] + "   H4 " + g_tf_txt[2], ClrDim());
+   const string mine = XOpenTradeLine(_Symbol, TradeActive() ? g_sig.sl : 0.0, TradeActive() ? g_sig.dir : 0);
+   if(StringLen(mine) > 0) g_pm.Line(mine, (StringFind(mine, "raises") >= 0 || StringFind(mine, "NO STOP") >= 0) ? ClrRed() : ClrText());
    const string warn = XAccountWarning(_Symbol);
    if(StringLen(warn) > 0) g_pm.Line("RISK: " + warn, ClrRed());
    if(InpUseNews && !g_news_blocked && StringFind(g_news_text, " in ") >= 0) g_pm.Line("News: " + g_news_text, ClrDim());
@@ -1065,10 +1102,10 @@ void MaybeAlert()
    bool fits = false;
    SignalSize(fp, fits);
    if(!fits) { Print("XAU Oracle: signal not alerted, too big for this account (", fp.note, " ", DoubleToString(fp.risk_pct, 1), "%)"); return; }
+   if(!g_proven) { Print("XAU Oracle: signal not alerted, the strategy is unproven on this chart (watch only)"); return; }
    string msg = "XAU Oracle " + _Symbol + " " + XTfName((ENUM_TIMEFRAMES)_Period) + ": ";
    msg += (g_sig.dir > 0) ? "BUY " : "SELL ";
    msg += Px(g_sig.entry) + " stop " + Px(g_sig.sl) + " target " + Px(TargetPrice()) + " [" + XStratName(g_act_s) + "]";
-   if(!g_proven) msg += " UNPROVEN";
    if(InpAlertPopup) Alert(msg);
    if(InpAlertSound) PlaySound("alert.wav");
    if(InpAlertPush)  SendNotification(msg);
