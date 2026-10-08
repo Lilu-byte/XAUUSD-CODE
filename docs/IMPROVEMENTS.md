@@ -116,3 +116,16 @@ Audit: [AUDIT.md](AUDIT.md). Numbers: [REAL_DATA.md section 10](REAL_DATA.md#10-
 | 81 | Export script saves the broker's swap mode and rates | DONE | |
 | 82 | Presets `XAU_Sniper_Trend.set` and `XAU_Sniper_Steady.set` | DONE | |
 | 83 | "TODAY:" line at the top of both panels: trade or stand aside, which direction, how much of the usual day range is used | DONE | One line that says what to do today |
+
+## Round 11 ("20 new ideas, sharper predictions")
+Numbers: [REAL_DATA.md section 11](REAL_DATA.md#11-round-11-supplydemand-zones-sharper-size-forecasts-a-stronger-trend-filter).
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 84 | Engine: next candle size from a HAR regression (`FitHar`, `NextRange`), used by the projected candle sizes and the "Next candle size" line | DONE | 2-10% smaller error than ATR x hour profile, every year, every chart |
+| 85 | Engine: today's final range from the 14-day mean and the range made so far (`FitDayRange`, `DayRangeForecast`); TODAY line shows "about X expected, Y so far" | DONE | 12-43% smaller error 2-8 hours into the day |
+| 86 | Daily trend definition `d1_def` / *InpDailyTrendDef*, default "above a RISING 200-day mean" | DONE | TREND mode H4 +0.01R -> +0.10R at the EA's window; H1 +0.11 -> +0.12R |
+| 87 | EA phone notifications: *InpPushTrades* (opened / closed with P/L), *InpPushDaily* (day summary) | DONE | Follow the EA from an iPhone |
+| 88 | EA panel: Checks row (Lab, Trend, News, Spread, Margin, Size, Limits) | DONE | "Why is it not trading?" at a glance |
+| 89 | EA panel: risk check (chance of a 20% drawdown in the next 100 trades at your risk) and a live-vs-tested alarm | DONE | Shows what a risk setting really means; flags broker differences early |
+| 90 | Research: `zones.cpp`, `sizefc.cpp`, `enginefc.cpp`; replay options `XAU_D1DEF`, `XAU_DAYS`, `XAU_DIAG`, `XAU_RANDCTRL=2` | DONE | |
+| 91 | Unit tests: HAR and day range (no look-ahead), check row, drawdown chance, live alarm, TODAY line | DONE | |

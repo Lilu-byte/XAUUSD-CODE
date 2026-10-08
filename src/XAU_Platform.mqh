@@ -124,10 +124,10 @@ int XResolveMode(const int input_mode, const ENUM_TIMEFRAMES tf)
    return (ps == 3600 || ps == 14400) ? XAU_MODE_TREND : XAU_MODE_STEADY;
 }
 
-// "Today's plan" in one line for both panels: trade or stand aside, which direction, and how much of the usual day
-// range is already used. go = true when the tools may trade today (the line is then drawn green).
+// "Today's plan" in one line for both panels: trade or stand aside, which direction, and today's expected range
+// (CXauEngine::DayRangeForecast) against what the day has already made. go = true when the tools may trade today.
 string XTodayPlan(const int mode, const int npass, const bool proven, const bool too_small, const int d1_mode, const int dreg,
-                  const double adr, const double adru, bool &go)
+                  const double day_fc, const double day_sofar, bool &go)
 {
    go = false;
    string s = "TODAY: ";
@@ -145,12 +145,66 @@ string XTodayPlan(const int mode, const int npass, const bool proven, const bool
       s += "wait for a signal, " + side;
       if(mode == XAU_MODE_TREND && npass > 0) s += ", " + IntegerToString(npass) + " strateg" + (npass > 1 ? "ies" : "y") + " armed";
    }
-   if(adr > 0.0)
+   if(day_fc > 0.0)
    {
-      s += ". Usual day range " + DoubleToString(adr, 0) + ", " + DoubleToString(100.0 * adru, 0) + "% used";
-      if(adru >= 1.0) s += ": most of today's move is done";
+      s += ". Today's range: about " + DoubleToString(day_fc, 0) + " expected, " + DoubleToString(day_sofar, 0) + " so far";
+      if(day_sofar >= 0.9 * day_fc) s += ": most of today's move is done";
    }
    return s;
+}
+
+// One row that says which entry checks pass right now, so "why is it not trading?" is answered at a glance.
+string XCheckRow(const bool lab, const bool trend, const bool news, const bool spread, const bool margin, const bool size, const bool limits)
+{
+   const string ok = "ok", no = "NO";
+   string s = "Checks: Lab ";
+   s += lab ? ok : no;
+   s += ", Trend ";  s += trend ? ok : no;
+   s += ", News ";   s += news ? ok : no;
+   s += ", Spread "; s += spread ? ok : no;
+   s += ", Margin "; s += margin ? ok : no;
+   s += ", Size ";   s += size ? ok : no;
+   s += ", Limits "; s += limits ? ok : no;
+   return s;
+}
+
+// Chance (0-1) that the next `trades` trades at `risk_pct` per trade dig a drawdown of `dd_pct` or more from the
+// running peak, when trades win with probability win_p (average win avg_win_r R, average loss avg_loss_r R) and
+// otherwise scratch at 0. Monte Carlo with a fixed-seed generator, so the same inputs always give the same answer.
+double XDrawdownChance(const double win_p, const double loss_p, const double avg_win_r, const double avg_loss_r,
+                       const double risk_pct, const int trades, const double dd_pct, const int paths)
+{
+   if(paths <= 0 || trades <= 0 || risk_pct <= 0.0) return 0.0;
+   uint seed = 2463534242;
+   int hit = 0;
+   const double r = risk_pct / 100.0, lim = 1.0 - dd_pct / 100.0;
+   for(int p = 0; p < paths; p++)
+   {
+      double eq = 1.0, peak = 1.0;
+      for(int t = 0; t < trades; t++)
+      {
+         seed ^= (seed << 13); seed ^= (seed >> 17); seed ^= (seed << 5);
+         const double u = (double)(seed % 1000000) / 1000000.0;
+         if(u < win_p) eq *= 1.0 + r * avg_win_r;
+         else if(u < win_p + loss_p) eq *= 1.0 - r * avg_loss_r;
+         if(eq > peak) peak = eq;
+         if(eq <= peak * lim) { hit++; break; }
+      }
+   }
+   return (double)hit / paths;
+}
+
+// Live results that fall below what the Lab tested by more than bad luck explains (2 standard errors, 30+ trades)
+// usually mean the broker's fills or spread differ from the test. Returns a warning, or "" when all is normal.
+string XLiveDrift(const int live_n, const int live_wins, const double tested_win_pct)
+{
+   if(live_n < 30 || tested_win_pct <= 0.0) return "";
+   const double p = tested_win_pct / 100.0;
+   const double live = (double)live_wins / live_n;
+   const double se = MathSqrt(p * (1.0 - p) / live_n);
+   if(live >= p - 2.0 * se) return "";
+   return "Live win-rate " + DoubleToString(100.0 * live, 0) + "% is below the tested " + DoubleToString(tested_win_pct, 0) +
+          "% by more than luck explains: check spread and fills, or pause";
 }
 
 // Session clock for the panel: where the day is and what comes next (London local time; server midnight = daily break).
@@ -206,6 +260,23 @@ int XResolveHistoryBars(const int input_bars, const ENUM_TIMEFRAMES tf)
 }
 
 // Daily bars needed to know the daily trend over `base_bars` bars of timeframe tf (plus the 200-day mean).
+// What "the daily trend is up" means (round 11, docs/REAL_DATA.md section 11)
+enum ENUM_XAU_D1DEF
+{
+   XAU_D1DEF_RISING = 1,   // close above its 200-day mean AND that mean rising (default since round 11)
+   XAU_D1DEF_ABOVE  = 0,   // close above its 200-day mean (round 8-10)
+   XAU_D1DEF_MOM12  = 2,   // close above the close of 12 months ago
+   XAU_D1DEF_BOTH   = 3    // above the 200-day mean and above 12 months ago
+};
+
+// daily bars the chosen definition needs before it can say anything
+int XDailyMinBars(const int d1_def)
+{
+   if(d1_def == XAU_D1DEF_RISING) return 225;
+   if(d1_def == XAU_D1DEF_MOM12 || d1_def == XAU_D1DEF_BOTH) return 260;
+   return 210;
+}
+
 int XDailyBarsNeeded(const int base_bars, const ENUM_TIMEFRAMES tf)
 {
    return (int)((double)base_bars * PeriodSeconds(tf) / 86400.0 * 1.45) + 260;
@@ -781,7 +852,7 @@ bool XRunDailyLab(CXauEngine &le, const string sym, const ENUM_TIMEFRAMES tf, co
    if(le.cfg.d1_mode > 0)
    {
       gd = CopyRates(sym, PERIOD_D1, upto, XDailyBarsNeeded(gb, tf), d);
-      if(gd < 210) return false;          // daily history still loading: retry, never test the filter blind
+      if(gd < XDailyMinBars(le.cfg.d1_def)) return false;   // daily history still loading: retry, never test the filter blind
    }
    le.SetDaily(d, gd);
    if(StringLen(inter_sym) > 0)

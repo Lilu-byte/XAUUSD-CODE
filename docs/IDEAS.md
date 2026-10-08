@@ -437,3 +437,31 @@ Includes the earlier ideas that were proposed but never built.
 | 300 | Cent account or FX pairs with finer lots for $50-100 | NEEDS BROKER | The only way a small account can use these rules |
 | 301 | Export the EA's own trades to compare demo with the replay | PROPOSED | Detects broker differences early |
 | 302 | Options-implied gold volatility (GVZ) for the range forecast | REJECTED for now | Not in an MT5 feed |
+
+## Round 11: twenty more ideas (supply/demand, sharper size forecasts, a stronger trend filter, phone and panel)
+Numbers: [REAL_DATA.md section 11](REAL_DATA.md#11-round-11-supplydemand-zones-sharper-size-forecasts-a-stronger-trend-filter).
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 303 | Supply/demand zone: limit order at the zone | TESTED - rejected | Lost on M5, M15, H1 and H4: the orders that fill are the zones that break |
+| 304 | Supply/demand zone: engulfing candle in the zone | TESTED - rejected | Changes sign from half to half |
+| 305 | Supply/demand zone: retest after a break of structure | TESTED - rejected | Positive on M5 only, negative on M15 and H1 |
+| 306 | Yesterday's volume point of control as a magnet | TESTED - rejected | Reached first 49-54% of the time: a coin flip |
+| 307 | **HAR model for the next candle's size** (last 1, 6, 48, 480 candles) | BUILT | Error 2-10% lower than before, every year, every chart |
+| 308 | Weekday x hour size profile (jobs Fridays, Fed Wednesdays) | TESTED - not adopted | At most 1% better |
+| 309 | **Today's range updated with the range already made** | BUILT | 12-43% more accurate than the 14-day mean 2-8 hours into the day |
+| 310 | HAR day range from yesterday, 5 and 22 days | TESTED - folded into 309 | 7% better than the 14-day mean; 309 is better still |
+| 311 | Self-correcting (conformal) cone | TESTED - rejected | Steadier on H4, worse on M15 |
+| 312 | Cone leaning with the daily trend | TESTED - rejected | No gain: the trend does not move the next 3 candles |
+| 313 | **Daily trend = above a RISING 200-day mean** | BUILT (default) | TREND mode H1 +0.12R, H4 +0.10R with either Lab window (was +0.01 to +0.14) |
+| 314 | 12-month momentum (alone or with the 200-day mean) as the daily trend | TESTED - not adopted | Good on H1, weaker on H4 |
+| 315 | Regime switch: STEADY both ways while the trend is not up | TESTED - rejected | -0.14R |
+| 316 | Number of strategies passing as a confidence signal | TESTED - rejected | No consistent pattern |
+| 317 | TREND Lab target 40 / 45 / 55% | TESTED - unchanged | Higher target: fewer, slightly better trades; differences within noise |
+| 318 | Does the Lab's quoted win-rate come true? | TESTED | H1 within 3 points; H4 10-18 points too high (see section 11) |
+| 319 | Buy at the London open while the trend is up, Rider exit (no pattern at all) | TESTED - rejected | +0.01 to +0.06R over 414-498 trades; the Lab's picks made +0.10 to +0.12R on the same days |
+| 320 | **Phone notifications from the EA** (trade opened / closed, daily summary) | BUILT | *InpPushTrades*, *InpPushDaily* |
+| 321 | **Checks row on the EA panel** (Lab, Trend, News, Spread, Margin, Size, Limits) | BUILT | Answers "why is it not trading?" |
+| 322 | **Risk check line + live-vs-tested alarm** | BUILT | Chance of a 20% drawdown in 100 trades at your risk; red alarm when live results fall below bad luck |
+
+Refused on purpose: martingale, grid and averaging down. They lift the win-rate to 80-95% by hiding losses until one
+move wipes out the account; on gold's $50-100 daily ranges that happens within months.

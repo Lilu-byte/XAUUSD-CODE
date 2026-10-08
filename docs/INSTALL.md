@@ -89,8 +89,10 @@ where it would lose *InpProtectPct* (5%) of equity; a position already losing mo
 `XAU_Sniper_Multi_H1.set` and `XAU_Sniper_Multi_H4.set` (each has its own magic number, so the copies do not block each other).
 Each runs its own daily Strategy Lab. On a netting account only one position per symbol is possible; use a hedging account.
 
-**Daily trend filter** (*InpDailyTrend*, both programs): AUTO = on H1 and above buy only while the last daily close is above its 200-day
-mean; on M5-M30 no filter. OFF, WITH (only in the daily trend's direction) and LONG (buys only, every timeframe) are the other choices.
+**Daily trend filter** (*InpDailyTrend*, both programs): AUTO = on H1 and above buy only while the daily trend is up; on M5-M30 no
+filter. OFF, WITH (only in the daily trend's direction) and LONG (buys only, every timeframe) are the other choices.
+*InpDailyTrendDef* says what "up" means: since round 11 the last daily close above a **rising** 200-day mean (needs 225 daily
+bars); the round 8-10 rule (above the mean), 12-month momentum, or both are the alternatives. Keep it equal in the EA and the indicator.
 **Lab window** (*InpHistoryBars*): 0 = AUTO, 25,000 bars on H1 (about 4 years), 10,000 elsewhere. Keep both settings equal in the EA and
 the indicator so they choose the same strategy. The H1 window needs *Tools > Options > Charts > Max bars in chart* of at least 30,000.
 
@@ -105,6 +107,23 @@ Keep *InpMode* and *InpTrendWinTarget* equal in the EA and the indicator so both
 
 **Account size.** The indicator shows "TOO BIG, SKIP" when even 0.01 lot risks more than 1.5x your *Risk per trade*, and the balance the
 trade would need. Rough minimums for 1% risk at 0.01 lot (Sep 2026): M5 550 USD, M15 1,100, H1 2,400, H4 5,300.
+
+## On your phone (iPhone / Android)
+The MT5 phone app cannot run custom indicators or EAs: they run on a computer (or a Windows VPS) and the phone receives them.
+1. Phone: MT5 app > Settings > Messages: note your **MetaQuotes ID**.
+2. Computer: Tools > Options > Notifications: tick *Enable Push Notifications*, paste the ID, press *Test*.
+3. Indicator: *InpAlertPush* = true sends every signal (with entry, stop, target).
+   EA: *InpPushTrades* = true sends every trade it opens and closes (price, P/L, equity); *InpPushDaily* = true sends a
+   summary when the server day ends.
+4. Log into the same account in the phone app to see and close the EA's positions. To see the chart itself, use a remote-desktop app.
+
+## Reading the EA panel (round 11)
+* **TODAY:** what to do today, and today's expected high-low range against what the day has already made.
+* **Checks:** Lab, Trend, News, Spread, Margin, Size, Limits. Any "NO" is the reason the EA is waiting.
+* **Risk check:** the chance of a 20% drawdown within the next 100 trades at your risk setting, from the tested
+  win/loss sizes. Above 10% it turns red: lower *InpRiskPct*.
+* A red line comparing the live win-rate with the tested one appears only when, after 30+ trades, the live result is
+  worse than bad luck explains (usually broker fills or spread).
 
 ## Troubleshooting
 | Symptom | Likely cause |

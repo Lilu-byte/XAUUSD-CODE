@@ -1,0 +1,17 @@
+== ENGINE FORECASTS, new vs old: research/data/XAUUSD_M15.csv (99999 bars of 900 s), scored 2025.01.14 09:30 .. 2026.09.30 13:00, day fit on all bars ==
+
+  NEXT CANDLE SIZE   mean abs error   within +-25%
+    old (ATR x profile x median)    3.089        42.7%
+    new (HAR)                       2.776        46.2%   (-10.1%)
+    by year (new vs old): 2025 -11.0% 2026 -9.6%
+
+  CONE 3 bars ahead (should hold 60%)   year: old | new
+    2025:  60.0% |  60.0%  (22791)
+    2026:  59.9% |  59.9%  (17105)
+    all :  59.9% |  59.9%   width old 1.74 ATR, new 1.74 ATR
+
+  DAY RANGE (final high-low of the day)  mean abs error: 14-day mean | max(mean, so far) | engine forecast
+     2 h into the day (448 days):   32.56 |   32.12 |   28.58 (-12.2% vs 14-day mean), within +-25%: 50% vs 47%
+     8 h into the day (448 days):   32.56 |   29.93 |   23.59 (-27.6% vs 14-day mean), within +-25%: 59% vs 47%
+    14 h into the day (448 days):   32.56 |   26.36 |   19.08 (-41.4% vs 14-day mean), within +-25%: 65% vs 47%
+    20 h into the day (445 days):   32.63 |   18.02 |    5.48 (-83.2% vs 14-day mean), within +-25%: 98% vs 47%

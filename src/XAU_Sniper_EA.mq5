@@ -46,6 +46,7 @@ input int    InpLabMinTrades         = 50;     // Strategy Lab: minimum trades b
 input int    InpLabFolds             = 5;      // Strategy Lab: walk-forward folds
 input int    InpHistoryBars          = 0;      // Bars the lab tests (0 = auto: 25,000 on H1, else 10,000; keep equal to the indicator)
 input ENUM_XAU_D1 InpDailyTrend      = XAU_D1_AUTO;  // Daily trend filter (AUTO: H1 and above buy only in a daily uptrend)
+input ENUM_XAU_D1DEF InpDailyTrendDef = XAU_D1DEF_RISING; // What "daily trend up" means (keep equal to the indicator)
 input int    InpSignalBars           = 3000;   // Bars used for live signals (faster; same signals, tested)
 
 input group "=== Risk ==="
@@ -122,6 +123,10 @@ input long   InpMagic         = 20260901;
 input int    InpSlippagePts   = 50;
 input string InpComment       = "XAUS";
 
+input group "=== Phone notifications (set your MetaQuotes ID in Tools > Options > Notifications) ==="
+input bool   InpPushTrades    = false;    // Push every trade the EA opens and closes to your phone
+input bool   InpPushDaily     = false;    // Push a short summary when the server day ends
+
 input group "=== Display ==="
 input bool   InpShowPanel     = true;
 input ENUM_XAU_PANEL_POS InpPanelPos = XAU_PANEL_BOTTOM_LEFT;   // Panel position (the indicator uses the top left)
@@ -177,6 +182,9 @@ XExit    g_act_x;
 // risk state
 double   g_day_start_eq = 0.0, g_week_start_eq = 0.0, g_peak_eq = 0.0;
 long     g_day_id = -1, g_week_id = -1;
+double   g_dd_chance = -1.0;         // chance of a 20% drawdown in the next 100 trades (cached per Lab result and risk)
+int      g_dd_key = -1;
+double   g_dd_risk = -1.0;
 bool     g_kill = false, g_day_block = false, g_week_block = false;
 string   g_block_note = "";
 
@@ -318,6 +326,7 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf)
    c.cost_price = XMax(InpCostPrice, 0.01);
    c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
    c.d1_mode = XResolveD1Mode((int)InpDailyTrend, tf);
+   c.d1_def = (int)InpDailyTrendDef;
    // the broker's real overnight swap, so multi-day exits are tested with what holding really costs
    c.swap_long = XSwapCostPerUnit(_Symbol, true);
    c.swap_short = XSwapCostPerUnit(_Symbol, false);
@@ -768,6 +777,11 @@ void UpdateRisk()
    const long week = (day + 3) / 7;
    if(day != g_day_id)
    {
+      // the day that just ended (stats still describe it until they are recomputed)
+      if(InpPushDaily && g_day_id >= 0 && g_day_start_eq > 0.0)
+         SendNotification("XAU Sniper " + XTfName((ENUM_TIMEFRAMES)_Period) + " day summary: " + IntegerToString(g_trades_today) + " trade(s), P/L " +
+                          StringFormat("%+.2f (%+.2f%%)", eq - g_day_start_eq, 100.0 * (eq - g_day_start_eq) / g_day_start_eq) + ", equity " + DoubleToString(eq, 2) +
+                          ", open positions " + IntegerToString(CountPositions()));
       g_day_id = day;
       g_day_start_eq = eq;
       g_day_block = false;
@@ -935,7 +949,7 @@ bool RefreshEngine()
    if(g_eng.cfg.d1_mode > 0)
    {
       gd = XLoadRates(_Symbol, PERIOD_D1, XDailyBarsNeeded(got, (ENUM_TIMEFRAMES)_Period), g_drates);
-      if(gd < 210) { g_engine_ok = false; return false; }      // never trade the daily filter blind
+      if(gd < XDailyMinBars(g_eng.cfg.d1_def)) { g_engine_ok = false; return false; }      // never trade the daily filter blind
    }
    g_eng.SetDaily(g_drates, gd);
    if(StringLen(g_inter_sym) > 0)
@@ -944,6 +958,7 @@ bool RefreshEngine()
       if(gi > 100) g_eng.SetInter(g_irates, gi, g_inter_invert);
    }
    if(!g_eng.Compute()) { g_engine_ok = false; return false; }
+   g_eng.FitDayRange(g_eng.n - 2);                  // today's expected range for the panel (same model as the indicator)
    g_engine_ok = true;
    return true;
 }
@@ -970,6 +985,7 @@ void RunLabIfNeeded()
    int us = (int)InpStrategy;
    if(InpOrbSolo) us = XS_ORB;
    g_cell = XResolveCell(g_lab, us, (int)InpExit, InpLabMinTrades, g_proven);
+   g_dd_key = -1;                                   // new Lab result: recompute the drawdown chance
    if(g_cell < 0) { g_act_s = -1; return; }
    g_act_s = g_cell / XP_COUNT;
    g_act_p = g_cell % XP_COUNT;
@@ -1095,6 +1111,10 @@ bool TryEnterCell(const int st, const int pr, const bool proven)
       if(ord > 0) { GlobalVariableSet(GvPos(ord, "X"), (double)pr); GlobalVariableSet(GvPos(ord, "C"), (double)(st * XP_COUNT + pr)); }
       if(demo && lp.risk_pct > risk * 1.5)
          Print("XAU Sniper: DEMO note - minimum lot risks ", DoubleToString(lp.risk_pct, 1), "% (target ", DoubleToString(risk, 2), "%). A live account would have refused this trade.");
+      if(InpPushTrades)
+         SendNotification("XAU Sniper " + XTfName((ENUM_TIMEFRAMES)_Period) + ": " + (buy ? "BUY " : "SELL ") + DoubleToString(lp.lots, 2) + " at " +
+                          DoubleToString(entry, _Digits) + ", stop " + DoubleToString(sl, _Digits) + ", risk " + DoubleToString(lp.risk_pct, 1) + "% [" +
+                          XStratName(st) + " / " + XExitShort(pr) + "]");
       Print("XAU Sniper: ", (buy ? "BUY " : "SELL "), DoubleToString(lp.lots, 2), " ", _Symbol, " [", XStratName(st), " + ", XExitName(pr), "]",
             " entry ", DoubleToString(entry, _Digits), " SL ", DoubleToString(sl, _Digits), " TP ", DoubleToString(tp, _Digits),
             " risk ", DoubleToString(lp.risk_pct, 2), "% (", DoubleToString(lp.risk_money, 2), ")");
@@ -1190,7 +1210,18 @@ void OnTimer()
 
 void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest &request, const MqlTradeResult &result)
 {
-   if(trans.type == TRADE_TRANSACTION_DEAL_ADD) g_stats_dirty = true;
+   if(trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
+   g_stats_dirty = true;
+   if(!InpPushTrades || !HistoryDealSelect(trans.deal)) return;
+   if(HistoryDealGetInteger(trans.deal, DEAL_MAGIC) != InpMagic || HistoryDealGetString(trans.deal, DEAL_SYMBOL) != _Symbol) return;
+   const long entry = HistoryDealGetInteger(trans.deal, DEAL_ENTRY);
+   if(entry != DEAL_ENTRY_OUT && entry != DEAL_ENTRY_OUT_BY && entry != DEAL_ENTRY_INOUT) return;
+   const double pl = HistoryDealGetDouble(trans.deal, DEAL_PROFIT) + HistoryDealGetDouble(trans.deal, DEAL_SWAP) + HistoryDealGetDouble(trans.deal, DEAL_COMMISSION);
+   // the closing deal of a buy is a sell
+   const bool was_buy = (HistoryDealGetInteger(trans.deal, DEAL_TYPE) == DEAL_TYPE_SELL);
+   SendNotification("XAU Sniper " + XTfName((ENUM_TIMEFRAMES)_Period) + ": closed " + (was_buy ? "BUY " : "SELL ") +
+                    DoubleToString(HistoryDealGetDouble(trans.deal, DEAL_VOLUME), 2) + " at " + DoubleToString(HistoryDealGetDouble(trans.deal, DEAL_PRICE), _Digits) +
+                    ", P/L " + StringFormat("%+.2f ", pl) + AccountInfoString(ACCOUNT_CURRENCY) + ", equity " + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2));
 }
 
 //+------------------------------------------------------------------+
@@ -1205,6 +1236,41 @@ double OnTester()
    const double np = TesterStatistics(STAT_PROFIT);
    if(np <= 0.0) return np;
    return rf * XMin(pf, 3.0) * MathSqrt(trades);
+}
+
+// Win-rate the Lab measured for what the EA trades now (TREND: all passing combinations together).
+double TestedWinRate()
+{
+   if(!g_lab_ok) return 0.0;
+   if(g_mode == XAU_MODE_TREND && g_npass > 0)
+   {
+      int nn = 0, ww = 0;
+      for(int k = 0; k < g_npass; k++) { nn += g_lab.lab[g_pass[k]].all.n; ww += g_lab.lab[g_pass[k]].all.wins; }
+      return (nn > 0) ? 100.0 * ww / nn : 0.0;
+   }
+   return (g_cell >= 0) ? g_lab.lab[g_cell].all.WinRate() : 0.0;
+}
+
+// Chance of a 20% drawdown within the next 100 trades with the tested win/loss sizes and the current risk.
+// Recomputed only when the Lab result or the risk changes (-1 = not available).
+double DrawdownChance()
+{
+   if(!g_lab_ok || g_cell < 0) return -1.0;
+   const int key = g_cell * 100 + g_npass;
+   const double risk = RiskCapped();
+   if(key == g_dd_key && risk == g_dd_risk) return g_dd_chance;
+   int nn = 0, ww = 0, ll = 0;
+   double sw = 0.0, sl = 0.0;
+   const int cnt = (g_mode == XAU_MODE_TREND && g_npass > 0) ? g_npass : 1;
+   for(int k = 0; k < cnt; k++)
+   {
+      const int c = (g_mode == XAU_MODE_TREND && g_npass > 0) ? g_pass[k] : g_cell;
+      nn += g_lab.lab[c].all.n; ww += g_lab.lab[c].all.wins; ll += g_lab.lab[c].all.losses;
+      sw += g_lab.lab[c].all.sum_win; sl += g_lab.lab[c].all.sum_loss;
+   }
+   g_dd_key = key; g_dd_risk = risk;
+   g_dd_chance = (nn >= 30 && ww > 0 && ll > 0) ? XDrawdownChance((double)ww / nn, (double)ll / nn, sw / ww, sl / ll, risk, 100, 20.0, 2000) : -1.0;
+   return g_dd_chance;
 }
 
 //+------------------------------------------------------------------+
@@ -1244,9 +1310,20 @@ void DrawPanel()
       const int n = g_eng.n;
       const bool intraday = PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400;
       const string today = XTodayPlan(g_mode, g_npass, g_proven || (DemoFree() && InpDemoUnproven), g_small, g_eng.cfg.d1_mode,
-                                      (g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0, intraday ? g_eng.m_adr[n - 1] : 0.0,
-                                      intraday ? g_eng.m_adru[n - 1] : 0.0, go);
+                                      (g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0, intraday ? g_eng.DayRangeForecast(n - 1) : 0.0,
+                                      intraday ? g_eng.m_adru[n - 1] * g_eng.m_adr[n - 1] : 0.0, go);
       g_panel.Line(today, go ? cGreen : cGold);
+      // every entry check in one row
+      const int dr = (g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0;
+      MqlTick ck;
+      const bool spread_ok = !(SymbolInfoTick(_Symbol, ck) && InpCostPrice > 0.0 && ck.ask - ck.bid > 1.5 * InpCostPrice);
+      const double mlv = AccountInfoDouble(ACCOUNT_MARGIN_LEVEL);
+      const bool margin_ok = AccountInfoDouble(ACCOUNT_MARGIN_FREE) > 0.0 && (mlv <= 0.0 || mlv >= 300.0);
+      const bool lab_ok = g_proven || (g_mode == XAU_MODE_TREND && g_npass > 0) || (DemoFree() && InpDemoUnproven);
+      const bool trend_ok = !(g_eng.cfg.d1_mode == 2 && dr <= 0) && !(g_eng.cfg.d1_mode == 1 && dr == 0);
+      const bool limits_ok = DemoFree() || !(g_kill || g_day_block || g_week_block || StreakPauseActive());
+      const string row = XCheckRow(lab_ok, trend_ok, !(InpUseNews && g_news_blocked), spread_ok, margin_ok, !g_small, limits_ok);
+      g_panel.Line(row, (StringFind(row, "NO") < 0) ? cGreen : cDim);
    }
    if(g_mode == XAU_MODE_TREND && g_npass > 0)
    {
@@ -1294,6 +1371,12 @@ void DrawPanel()
                    + DoubleToString(g_tot_profit, 2) + ", profit factor " + DoubleToString(pf, 2), g_tot_profit >= 0.0 ? cGreen : cRed);
    }
    else g_panel.Line("Live results: no closed trades yet", cDim);
+   const string drift = XLiveDrift(g_tot_n, g_tot_win, TestedWinRate());
+   if(StringLen(drift) > 0) g_panel.Line(drift, cRed);
+   const double ddc = DrawdownChance();
+   if(ddc >= 0.0)
+      g_panel.Line("Risk check: chance of a 20% drawdown within the next 100 trades at " + DoubleToString(RiskCapped(), 1) + "% risk: about "
+                   + DoubleToString(100.0 * ddc, 0) + "%", (ddc > 0.10) ? cRed : cDim);
    const string warn = XAccountWarning(_Symbol);
    if(StringLen(warn) > 0) g_panel.Line("RISK: " + warn, cRed);
    if(StringFind(warn, "NO stop") >= 0 && !InpProtectManual) g_panel.Line("Tip: InpProtectManual = true lets the EA put a stop on them", cDim);

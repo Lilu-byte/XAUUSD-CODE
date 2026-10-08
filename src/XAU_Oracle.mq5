@@ -78,6 +78,7 @@ input int             InpLabMinTrades   = 50;            // Strategy Lab: minimu
 input int             InpLabFolds       = 5;             // Strategy Lab: walk-forward folds
 input int             InpHistoryBars    = 0;             // Bars tested (0 = auto: 25,000 on H1, else 10,000; keep equal to the EA)
 input ENUM_XAU_D1     InpDailyTrend     = XAU_D1_AUTO;   // Daily trend filter (AUTO: H1 and above buy only in a daily uptrend)
+input ENUM_XAU_D1DEF  InpDailyTrendDef  = XAU_D1DEF_RISING; // What "daily trend up" means (keep equal to the EA)
 
 input group "=== Money ==="
 input double          InpRiskPct        = 1.0;           // Risk per trade, % of balance (for the lot size shown)
@@ -331,6 +332,7 @@ void FillConfig(XConfig &c, const ENUM_TIMEFRAMES tf, const ENUM_TIMEFRAMES htf)
    c.cost_price = XMax(InpCostPrice, 0.01);
    c.min_stop_cost = XMax(InpMinStopCosts, 0.0);
    c.d1_mode = XResolveD1Mode((int)InpDailyTrend, tf);
+   c.d1_def = (int)InpDailyTrendDef;
    // the broker's real overnight swap, so multi-day exits are tested with what holding really costs
    c.swap_long = XSwapCostPerUnit(_Symbol, true);
    c.swap_short = XSwapCostPerUnit(_Symbol, false);
@@ -616,7 +618,7 @@ void RefreshTfForecasts()
       g_tfe[k].CalibrateForecast(gb - 2, 2000);
       string sz = "";
       if(g_tfe[k].fc_cal_ok)
-         sz = "~" + DoubleToString(g_tfe[k].m_atr[gb - 2] * g_tfe[k].SeasonAt(bt + (datetime)PeriodSeconds(g_tfs[k])) * g_tfe[k].fc_krange, 1);
+         sz = "~" + DoubleToString(g_tfe[k].NextRange(gb - 2, bt + (datetime)PeriodSeconds(g_tfs[k])), 1);
       g_tf_txt[k] = sz;
       XAnalog a;
       XAnalogAudit au;
@@ -924,7 +926,7 @@ void DrawMainPanel()
       bool go;
       const bool intraday = PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400;
       const string today = XTodayPlan(g_mode, g_npass, g_proven, false, g_eng.cfg.d1_mode, (g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0,
-                                      intraday ? g_eng.m_adr[n - 1] : 0.0, intraday ? g_eng.m_adru[n - 1] : 0.0, go);
+                                      intraday ? g_eng.DayRangeForecast(n - 1) : 0.0, intraday ? g_eng.m_adru[n - 1] * g_eng.m_adr[n - 1] : 0.0, go);
       g_pm.Line(today, go ? ClrGreen() : ClrGold());
    }
 

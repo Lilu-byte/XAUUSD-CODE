@@ -343,3 +343,65 @@ TREND mode, average R per trade by year (trades):
   so the Lab's choices add something, but the control samples are small and, on H1 with 25,000 bars, the gap is within noise.
 * **Account size.** Trend exits use H1/H4 stops of about $20-60 per 0.01 lot. At 1% risk that needs about $2,000-6,000 per position,
   and TREND mode may hold three. On a $50-100 account each position would risk 20-100% of the account; the EA refuses such trades.
+
+## 11. Round 11: supply/demand zones, sharper size forecasts, a stronger trend filter
+Programs: `research/sim/zones.cpp`, `sizefc.cpp`, `enginefc.cpp` (the engine's own forecast code, new vs old) and the EA
+replay with new options (`XAU_D1DEF`, `XAU_DAYS`, `XAU_DIAG`). Outputs: `research/results/zones_*`, `sizefc_*`, `enginefc_*`.
+All rules fixed before the runs; older 60% / newer 40% of each file.
+
+### A. Supply and demand zones (the popular "different types of entries" picture)
+Zone = 1-3 quiet bars followed by a 2-ATR impulse; traded at its first return; stop beyond the zone, target 2R (a coin
+flip wins about 33% at 2R). Net R per trade after 0.35 cost, older / newer:
+| Entry | M5 | M15 | H1 | H4 |
+|---|---|---|---|---|
+| Limit order at the zone (most fills) | -0.22 / -0.17 | -0.22 / -0.07 | -0.20 / -0.19 | -0.15 / +0.04 |
+| Engulfing candle in the zone | -0.04 / -0.16 | -0.19 / -0.01 | +0.07 / -0.03 | +0.09 / -0.15 |
+| Retest after a break of structure | +0.07 / +0.12 | -0.10 / +0.02 | -0.21 / -0.08 | +0.24 / -0.19 |
+| Point of control of yesterday's volume profile (1:1 back to it) | win 51% / 54% | 51% / 50% | 50% / 49% | |
+
+The classic entry, a limit order at the zone, **lost on every chart**: the orders that fill are the zones that break.
+Before costs every entry is within a few hundredths of R of zero: the zone does not tell where price goes. The retest
+looked good on M5 only (15 months) and failed on M15 and H1. The point of control is not a magnet (49-54% to reach it first).
+
+### B. Size forecasts (built)
+| Forecast | Old method | New method | Error vs old (newer part, every year better?) |
+|---|---|---|---|
+| Next candle's high-low | ATR x hour profile x median | **HAR**: regression on the last 1, 6, 48 and 480 candles | M5 -9.6%, M15 -10.1%, H1 -5.2%, H4 -1.9% (every year) |
+| Today's high-low, 2 hours into the day | 14-day mean | **14-day mean + range made so far, fitted** | M5 -4%, M15 -12%, H1 -12%, H4 -28% |
+| same, 8 hours in | 14-day mean | same model | M5 -18%, M15 -26%, H1 -25%, H4 -43% |
+| same, 14 hours in | 14-day mean | same model | -34% to -70% |
+| Day range from yesterday / 5 / 22 days (HAR) | 14-day mean | | -7% (22 years of daily bars, better in 10 of 10 years); the intraday model above beats it |
+| Weekday x hour profile (jobs Fridays, Fed Wednesdays) | hour profile | | -0% to -1%: not worth it |
+| Self-correcting (conformal) cone | fixed 20/80% | | H4 coverage per year steadier (59-61%), but M15 fell to 58%: not adopted |
+| Cone leaning with the daily trend | | | pinball loss unchanged (+-0.1%): the trend does not move the next 3 bars |
+(Measured on the engine's own code by `enginefc.cpp`, with the history a chart really loads: 10,000 bars on M5/M15.)
+
+### C. TREND mode structure (EA replay, 50% target, all passing combinations, swap charged)
+What "daily trend up" means (buys only while it is true), MULTI = TREND mode, average R per trade (trades):
+| Definition | H1, 25,000-bar Lab | H1, 10,000 | H4, 10,000 (EA AUTO) | H4, 6,000 |
+|---|---|---|---|---|
+| Close above its 200-day mean (rounds 8-10) | +0.107 (676) | +0.118 (654) | +0.013 (459) | +0.140 (529) |
+| **Close above a RISING 200-day mean (new default)** | **+0.122 (722)** | **+0.119 (684)** | **+0.097 (714)** | **+0.105 (815)** |
+| Close above the close of 12 months ago | +0.120 (776) | | +0.047 (680) | |
+| Both of the first and the third | +0.132 (682) | | +0.069 (610) | |
+
+The rising-mean rule wins where it was meant to: it stands aside in the choppy years (H1 2023: -0.23R became -0.07R;
+H4 2021-2023 losses shrank) and makes H4 independent of the Lab window. By year with the new rule, H1:
+2022 -0.09 (12), 2023 -0.07 (30), 2024 +0.10 (109), 2025 +0.19 (345), 2026 +0.06 (226).
+
+Other structure tests (H1, 25,000-bar Lab unless noted):
+| Test | Result |
+|---|---|
+| Lab target 40 / 45 / 50 / 55% | +0.051 (747) / +0.081 (727) / +0.107 (676) / +0.139 (506): a higher target trades less and a little better; kept at 50 (differences within noise) |
+| STEADY both directions on days the trend is not up (regime switch) | -0.140R (72 trades). Rejected |
+| More strategies passing = better trades? | H1: 1-2 passing -0.07R, 6-10 +0.17R; H4: 1-2 +0.05R, 3-5 -0.05R. No consistent pattern. Rejected |
+| Lab's quoted win-rate vs the real one | H1: quoted 55-60% came true at 54-55%, 65%+ at 65-66%. **H4: quoted 55-65% came true at 43-54%.** Treat H4 win-rates on the scoreboard as 5-15 points too high |
+| Random buys with the same exit and filter | H1 +0.04 / +0.01R, H4 +0.06R over 414-498 trades (deterministic: every London open while the trend is up). The Lab's picks: +0.10 to +0.12R. The Lab adds about 0.06-0.10R over simply being long, within about 1.5 standard errors |
+
+### Plain reading
+* The one thing that predicts gold better than before is **size**: the next candle's high-low (2-10% better) and today's
+  range once the day is under way (12-43% better). The indicator and the EA panel use both now.
+* Direction still cannot be called from patterns, zones or volume profiles: supply/demand zones lost like everything else.
+* TREND mode's edge is mostly **being long gold while its 200-day mean is rising, and letting winners run for days**.
+  The stricter definition of "rising" made it steadier (H1 +0.12R, H4 +0.10R, either Lab window). It is still a trend
+  follower that earns in years like 2024-2025 and stands aside or loses a little in years like 2022-2023.

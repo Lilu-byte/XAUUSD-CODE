@@ -10,11 +10,26 @@ every day a **Strategy Lab** tests 8 strategies x 6 exit styles on your chart's 
 * **Win-rate alone means little.** A target half as far as the stop wins ~67% of trades even in a random market, and still loses money after costs. The tools therefore always show win-rate **and** the average result per trade (R). See [docs/STRATEGY_LAB.md](docs/STRATEGY_LAB.md).
 * **Tested on your real XAUUSD history (M5 to D1, up to 22 years).** Replayed day by day exactly as the EA trades, the high win-rate
   STEADY mode wins **58-65% of trades at about break-even** (within +-0.05R per trade) on every timeframe, at this broker's cost.
-  The round 10 **TREND mode** on H1 wins fewer (57%) but made **+0.11R per trade** over 676 trades, mostly in the 2025 bull run.
+  The **TREND mode** (rounds 10-11) on H1 wins fewer (57%) but made **+0.12R per trade** over 722 trades, mostly in 2024-2025.
   Nothing tested predicts the direction of the next few candles. Details: [docs/REAL_DATA.md](docs/REAL_DATA.md).
 * **A demo account cannot guarantee a real one.** Treat the demo as a rehearsal: same balance you would really deposit, same rules
   (the EA's default *Demo mode = Rehearsal*), and judge it after 100+ trades, not after 3.
 * **"Double every month" needs about 10% risk per trade** and fails most months even with a strong edge ([docs/RISK_MATH.md](docs/RISK_MATH.md)). The EA caps risk at 5% per trade.
+
+## What changed in round 11 (20 more ideas, sharper predictions)
+* **Sharper size predictions** (the part of the market that *is* predictable): the next candle's size now comes from a HAR
+  model (2-10% more accurate, every year, every chart) and the TODAY line forecasts **today's full range** from what the day
+  has already made (12-43% more accurate than the 14-day average once the day is under way).
+* **Stronger trend filter**: "daily trend up" now means price above a **rising** 200-day average. TREND mode on real data:
+  H1 +0.12R per trade (722 trades), H4 +0.10R (714 trades) with either Lab window (H4 was +0.01R before). Switch back with
+  *InpDailyTrendDef*.
+* **Supply/demand zones tested** (limit, engulfing and retest entries) on all four charts: they lost like every other
+  pattern; the volume-profile point of control is not a magnet either. Not added.
+* **EA on your phone**: *InpPushTrades* and *InpPushDaily* send trades and a daily summary to the MT5 phone app.
+* **EA panel**: a *Checks* row (why it is or is not trading), a *Risk check* (chance of a 20% drawdown in the next
+  100 trades at your risk) and an alarm when live results fall below the tested ones by more than bad luck.
+* Honest note: random buys while the trend is up, with the same exit, made +0.01 to +0.06R; the Lab's strategies
+  +0.10 to +0.12R. Most of the edge is the trend itself. On H4 the scoreboard's win-rates ran 5-15 points high.
 
 ## What changed in round 10 (a different kind of strategy)
 * **An honest audit** of nine rounds ([docs/AUDIT.md](docs/AUDIT.md)): almost everything so far was a new way to guess gold's direction from

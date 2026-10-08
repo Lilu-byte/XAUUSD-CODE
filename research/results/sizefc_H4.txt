@@ -1,0 +1,24 @@
+== SIZE FORECASTS: research/data/XAUUSD_H4.csv (19999 bars of 14400 s), scored 2021.08.24 00:00 .. 2026.09.30 08:00 ==
+
+  NEXT CANDLE SIZE          mean abs error   vs NOW   within +-25%
+    NOW  ATR x hour x median        6.723       +0.0%      45.4%
+    WEEK weekday x hour profile     6.677       -0.7%      45.9%
+    HAR  fitted 1/6/48/480 bars     6.606       -1.7%      45.5%
+    HAR + weekday x hour            6.550       -2.6%      46.6%
+    by year, error vs NOW (HAR / HAR+WK): 2021 -1.5%/-5.3% 2022 -1.7%/-2.8% 2023 -2.8%/-4.3% 2024 -1.5%/-1.6% 2025 -1.6%/-3.2% 2026 -1.7%/-1.9%
+
+  CONE 3 bars ahead (should hold the close 60% of the time)
+    year : NOW inside | ACI inside | TREND inside
+    2021 :   57.4%     |   58.8%    |   58.5%   (556)
+    2022 :   58.4%     |   60.5%    |   58.2%   (1548)
+    2023 :   60.2%     |   59.9%    |   58.9%   (1542)
+    2024 :   58.9%     |   59.7%    |   58.0%   (1554)
+    2025 :   57.3%     |   60.4%    |   56.8%   (1545)
+    2026 :   62.2%     |   60.3%    |   61.4%   (1152)
+    all  :   59.1%     |   60.1%    |   58.5%   width NOW 1.77 ATR, ACI 1.82 ATR
+    pinball loss (20/50/80%, lower is better): NOW 20.1553  TREND 20.1300  (-0.13%)
+
+  DAY RANGE (daily file, 2292 days scored)   mean abs error   within +-25%
+    ADR  mean of 14 days               12.60           44.2%
+    HARd fitted 1/5/22 days            11.75 (-6.7%)   47.3%
+    HARd better than ADR in 10 of 10 years

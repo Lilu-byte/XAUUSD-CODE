@@ -1,5 +1,5 @@
 ; XAU_Sniper_Trend
-; TREND mode on any chart (best on XAUUSD H1): every strategy that passes a 50% Lab target trades, up to 3 positions, multi-day trend-riding exits, H1+ buys only in a daily uptrend. Real-data replay H1 Oct 2020 - Sep 2026: +0.11R per trade over 676 trades, 57% winners, mostly earned in 2025 (a trend follower). Positions are held for days and pay swap.
+; TREND mode on any chart (best on XAUUSD H1): every strategy that passes a 50% Lab target trades, up to 3 positions, multi-day trend-riding exits, H1+ buys only in a daily uptrend. Real-data replay H1 Oct 2020 - Sep 2026 (rising 200-day mean filter): +0.12R per trade over 722 trades, 57% winners, mostly earned in 2024-2025 (a trend follower). Positions are held for days and pay swap.
 ; Load via the EA inputs dialog: Load. Symbol XAUUSD (M15 or H1).
 InpMode=1
 InpTrendWinTarget=50.0
@@ -12,6 +12,7 @@ InpLabMinTrades=50
 InpLabFolds=5
 InpHistoryBars=0
 InpDailyTrend=-1
+InpDailyTrendDef=1
 InpSignalBars=3000
 InpRiskPct=1.0
 InpStreakScale=0.5
@@ -73,6 +74,8 @@ InpInterSymbol=
 InpMagic=20260901
 InpSlippagePts=50
 InpComment=XAUS
+InpPushTrades=false
+InpPushDaily=false
 InpShowPanel=true
 InpPanelPos=1
 InpFontSize=10

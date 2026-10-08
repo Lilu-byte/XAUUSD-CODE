@@ -345,10 +345,11 @@ inline ulong PositionGetTicket(int) { return 0; }
 inline string PositionGetString(int) { return ""; }
 inline long PositionGetInteger(int) { return 0; }
 inline double PositionGetDouble(int) { return 0.0; }
-enum { DEAL_MAGIC = 1, DEAL_SYMBOL, DEAL_ENTRY, DEAL_TYPE, DEAL_POSITION_ID, DEAL_TIME, DEAL_PROFIT, DEAL_SWAP, DEAL_COMMISSION };
+enum { DEAL_MAGIC = 1, DEAL_SYMBOL, DEAL_ENTRY, DEAL_TYPE, DEAL_POSITION_ID, DEAL_TIME, DEAL_PROFIT, DEAL_SWAP, DEAL_COMMISSION, DEAL_VOLUME, DEAL_PRICE };
 enum { DEAL_ENTRY_IN = 0, DEAL_ENTRY_OUT = 1, DEAL_ENTRY_INOUT = 2, DEAL_ENTRY_OUT_BY = 3 };
 enum { DEAL_TYPE_BUY = 0, DEAL_TYPE_SELL = 1 };
 inline bool HistorySelect(datetime, datetime) { return true; }
+inline bool HistoryDealSelect(ulong) { return true; }
 inline int HistoryDealsTotal() { return 0; }
 inline ulong HistoryDealGetTicket(int) { return 0; }
 inline long HistoryDealGetInteger(ulong, int) { return 0; }

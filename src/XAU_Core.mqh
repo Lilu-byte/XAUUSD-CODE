@@ -107,6 +107,36 @@ double XClamp(const double x, const double lo, const double hi)
    return x;
 }
 
+// Least squares helpers: m is a k x (k+1) normal-equation matrix (row-major), accumulated with XOlsAdd.
+void XOlsAdd(XD(m), XCD(x), const int k, const double y)
+{
+   for(int i = 0; i < k; i++)
+   {
+      for(int j = 0; j < k; j++) m[i * (k + 1) + j] += x[i] * x[j];
+      m[i * (k + 1) + k] += x[i] * y;
+   }
+}
+
+bool XOlsSolve(XD(m), const int k, XD(out))
+{
+   for(int i = 0; i < k; i++) m[i * (k + 1) + i] += 1e-6;
+   for(int c = 0; c < k; c++)
+   {
+      int p = c;
+      for(int r = c + 1; r < k; r++) if(XAbs(m[r * (k + 1) + c]) > XAbs(m[p * (k + 1) + c])) p = r;
+      if(XAbs(m[p * (k + 1) + c]) < 1e-12) return false;
+      if(p != c) for(int j = 0; j <= k; j++) { const double t = m[c * (k + 1) + j]; m[c * (k + 1) + j] = m[p * (k + 1) + j]; m[p * (k + 1) + j] = t; }
+      for(int r = 0; r < k; r++)
+      {
+         if(r == c) continue;
+         const double f = m[r * (k + 1) + c] / m[c * (k + 1) + c];
+         for(int j = c; j <= k; j++) m[r * (k + 1) + j] -= f * m[c * (k + 1) + j];
+      }
+   }
+   for(int i = 0; i < k; i++) out[i] = m[i * (k + 1) + k] / m[i * (k + 1) + i];
+   return true;
+}
+
 string XModuleName(const int m)
 {
    switch(m)
@@ -275,11 +305,15 @@ struct XConfig
    double swap_long, swap_short;   // overnight cost per unit (oz) per server night in price units (positive = you pay)
    int    swap_triple_dow;   // server weekday whose night is charged three times (3 = Wednesday, -1 = none)
    int    d1_mode;           // daily trend filter: 0 off, 1 trade only in the daily trend's direction, 2 buys only while the daily trend is up
+   int    d1_def;            // what "daily trend up" means: 0 close above its 200-day mean, 1 and that mean rising (20 days),
+                              // 2 close above the close of 252 days ago (12-month momentum), 3 both 0 and 2 agree
    int    d1_sma;            // daily trend = last completed daily close above / below its d1_sma-day mean
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
 
    // forecast
    double fc_drift, fc_decay, fc_mr;
+   bool   fc_har, fc_dayfit;  // round 11: HAR candle size, intraday day-range model
+   int    fc_daybars;         // bars the day-range fit may look back (0 = all loaded bars), as the chart's history allows
 
    void Defaults()
    {
@@ -310,10 +344,11 @@ struct XConfig
       max_hold_bars = 0;  hold_minutes = 480;  min_hold_bars = 8;
       cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
       dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
-      d1_mode = 0;  d1_sma = 200;
+      d1_mode = 0;  d1_sma = 200;  d1_def = 1;
       swap_long = 0.0;  swap_short = 0.0;  swap_triple_dow = 3;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
+      fc_har = true;  fc_dayfit = true;  fc_daybars = 0;
    }
 };
 
@@ -740,7 +775,7 @@ public:
    XDARR(m_rsi); XDARR(m_adx); XDARR(m_pdi); XDARR(m_mdi);
    XDARR(m_bbw); XDARR(m_bbp); XDARR(m_donh); XDARR(m_donl); XDARR(m_vavg);
    XDARR(m_vwap); XDARR(m_vsd); XDARR(m_hour);
-   XIARR(m_daybars); XIARR(m_asiaok); XDARR(m_asiahi); XDARR(m_asialo);
+   XIARR(m_daybars); XIARR(m_dkey); XIARR(m_asiaok); XDARR(m_asiahi); XDARR(m_asialo);
    XDARR(m_pdh); XDARR(m_pdl); XDARR(m_adr); XDARR(m_adru); XDARR(m_er);
    // higher timeframe
    XTARR(m_ht); XDARR(m_hc); XDARR(m_hh); XDARR(m_hl); XDARR(m_hema2); XDARR(m_hema3);
@@ -770,13 +805,20 @@ public:
    // the time (the pattern-match cone: 51-55%) and the candle-size error fell 14-19%.
    double  fcz_lo[XA_H], fcz_md[XA_H], fcz_hi[XA_H];   // percentiles 20 / 50 / 80 of standardised s-step moves (index s-1)
    double  fc_krange;         // median of real high-low / (ATR x hour profile)
+   // round 11 (research/sim/sizefc.cpp, enginefc.cpp): next candle size from a HAR regression on the last 1, 6, 48 and
+   // 480 de-seasonalised ranges (error 2-10% lower than ATR x profile in every year on M5-H4); the day's final range
+   // from the 14-day mean and the range already made today (error 12-43% lower than the 14-day mean 2-8 hours in)
+   XDARR(har_b);
+   bool    har_ok;
+   XDARR(dr_b);
+   bool    dr_ok;
    bool    fc_cal_ok;
    int     rg_n;
    XTARR(rg_t); XDARR(rg_mid); XDARR(rg_up); XDARR(rg_dn); XDARR(rg_size);
    double  fc_rmse;      // realised one-step error of the drift model (calibrates the cone)
    bool    fc_nomap;     // choppy / spiking market: show range only, no directional path
 
-   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; d1n = 0; fc_cal_ok = false; fc_krange = 1.0; rg_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false;
+   CXauEngine() { cfg.Defaults(); n = 0; hn = 0; in_n = 0; d1n = 0; fc_cal_ok = false; fc_krange = 1.0; har_ok = false; dr_ok = false; ArrayResize(har_b, 5); ArrayResize(dr_b, 3); rg_n = 0; inter_invert = false; fc_n = 0; fc_drift_atr = 0.0; fc_rmse = 0.0; fc_nomap = false;
                   lab_buffer = 3.0; lab_window = 0; lab_recent = 1; lab_se_k = 1.0; lab_k = 0; lab_pick_s = -1; lab_pick_p = -1; lab_qualified = 0;
                   lab_auto_folds = 0; lab_first = 0; lab_last = 0; lab_target = 60.0; }
 
@@ -1289,7 +1331,15 @@ public:
       {
          const datetime done = m_t[i] + (datetime)cfg.base_sec;
          while(j + 1 < d1n && m_dt[j + 1] + 86400 <= done) j++;
-         if(j >= L - 1) m_dreg[i] = (m_dc[j] > sm[j]) ? 1 : -1;
+         if(j < L - 1) continue;
+         const int sma = (m_dc[j] > sm[j]) ? 1 : -1;
+         if(cfg.d1_def == 0) m_dreg[i] = sma;
+         else if(cfg.d1_def == 1) { if(j >= L + 19) m_dreg[i] = (sma > 0 && sm[j] > sm[j - 20]) ? 1 : ((sma < 0 && sm[j] < sm[j - 20]) ? -1 : 0); }
+         else if(j >= 252)
+         {
+            const int mom = (m_dc[j] > m_dc[j - 252]) ? 1 : -1;
+            m_dreg[i] = (cfg.d1_def == 2) ? mom : ((mom == sma) ? mom : 0);
+         }
       }
    }
 
@@ -1685,6 +1735,136 @@ public:
       ArraySort(v);
       fc_krange = XClamp(v[m / 2], 0.3, 3.0);
       fc_cal_ok = true;
+      FitHar(last_closed);
+      FitDayRange(last_closed);
+   }
+
+   // de-seasonalised range of bar i
+   double DsRange(const int i) const
+   {
+      return XMax(m_h[i] - m_l[i], 0.02 * XMax(m_atr[i], 1e-9)) / SeasonAt(m_t[i]);
+   }
+
+   void HarX(const int i, XD(x)) const
+   {
+      double s6 = 0.0, s48 = 0.0, s480 = 0.0;
+      for(int k = 0; k < 480 && i - k >= 0; k++)
+      {
+         const double d = DsRange(i - k);
+         if(k < 6) s6 += d;
+         if(k < 48) s48 += d;
+         s480 += d;
+      }
+      const int c480 = XMinI(480, i + 1);
+      x[0] = 1.0; x[1] = MathLog(DsRange(i)); x[2] = MathLog(s6 / XMinI(6, i + 1)); x[3] = MathLog(s48 / XMinI(48, i + 1)); x[4] = MathLog(s480 / c480);
+   }
+
+   // HAR regression of the next bar's log de-seasonalised range, fitted on up to 20,000 closed bars
+   void FitHar(const int last_closed)
+   {
+      har_ok = false;
+      if(!cfg.fc_har) return;
+      const int from = XMaxI(cfg.warmup + 480, last_closed - 20000);
+      if(last_closed - from < 1000) return;
+      // rolling sums with prefix arrays
+      XDARR(cs);
+      ArrayResize(cs, last_closed + 2);
+      cs[0] = 0.0;
+      for(int i = 0; i <= last_closed; i++) cs[i + 1] = cs[i] + DsRange(i);
+      XDARR(m);
+      ArrayResize(m, 30);
+      ArrayInitialize(m, 0.0);
+      XDARR(x);
+      ArrayResize(x, 5);
+      for(int i = from; i < last_closed; i++)
+      {
+         x[0] = 1.0;
+         x[1] = MathLog(cs[i + 1] - cs[i]);
+         x[2] = MathLog((cs[i + 1] - cs[i - 5]) / 6.0);
+         x[3] = MathLog((cs[i + 1] - cs[i - 47]) / 48.0);
+         x[4] = MathLog((cs[i + 1] - cs[i - 479]) / 480.0);
+         XOlsAdd(m, x, 5, MathLog(cs[i + 2] - cs[i + 1]));
+      }
+      har_ok = XOlsSolve(m, 5, har_b);
+   }
+
+   // de-seasonalised size level expected after bar i (HAR), or 0 when not fitted
+   double HarLevel(const int i) const
+   {
+      if(!har_ok || i < 480) return 0.0;
+      XDARR(x);
+      ArrayResize(x, 5);
+      HarX(i, x);
+      double lp = 0.0;
+      for(int k = 0; k < 5; k++) lp += har_b[k] * x[k];
+      return MathExp(lp);
+   }
+
+   // expected high-low of the bar that opens at t_next, made after bar i closed
+   double NextRange(const int i, const datetime t_next) const
+   {
+      const double lv = HarLevel(i);
+      if(lv > 0.0) return lv * SeasonAt(t_next);
+      return m_atr[i] * SeasonAt(t_next) * fc_krange;
+   }
+
+   // hours since the trading day started (day_roll_hour GMT)
+   double DayHours(const int i) const
+   {
+      double h = m_hour[i] - cfg.day_roll_hour;
+      if(h < 0.0) h += 24.0;
+      return h;
+   }
+
+   // the day's final high-low from the 14-day mean and the range already made by this time of day:
+   // log(final) = b0 + b1 log(ADR) + b2 log(so far / ADR), fitted on about two years of past days at the time of
+   // day of last_closed
+   void FitDayRange(const int last_closed)
+   {
+      dr_ok = false;
+      if(!cfg.fc_dayfit || cfg.base_sec > 14400 || last_closed < cfg.warmup + 100) return;
+      const double now_h = DayHours(last_closed);
+      const int today = m_dkey[last_closed];
+      int i0 = last_closed;
+      const int lim = (cfg.fc_daybars > 0) ? XMaxI(cfg.warmup, last_closed - cfg.fc_daybars) : cfg.warmup;
+      while(i0 > lim && m_dkey[i0 - 1] >= today - 730) i0--;
+      XDARR(m);
+      ArrayResize(m, 12);
+      ArrayInitialize(m, 0.0);
+      XDARR(x);
+      ArrayResize(x, 3);
+      int rows = 0;
+      int cur = -1;
+      double hi = 0.0, lo = 0.0, sofar = -1.0, adr = 0.0;
+      for(int i = i0; i <= last_closed; i++)
+      {
+         if(m_dkey[i] != cur)
+         {
+            if(cur != -1 && sofar >= 0.0 && adr > 0.0 && hi - lo > 0.0)
+            {
+               x[0] = 1.0; x[1] = MathLog(adr); x[2] = MathLog(XMax(sofar, 0.05 * adr) / adr);
+               XOlsAdd(m, x, 3, MathLog(hi - lo));
+               rows++;
+            }
+            cur = m_dkey[i];
+            if(cur == today) break;                                     // today is not finished
+            hi = m_h[i]; lo = m_l[i]; sofar = -1.0; adr = 0.0;
+         }
+         hi = XMax(hi, m_h[i]); lo = XMin(lo, m_l[i]);
+         if(DayHours(i) <= now_h && m_adr[i] > 0.0) { sofar = m_adru[i] * m_adr[i]; adr = m_adr[i]; }
+      }
+      if(rows >= 30) dr_ok = XOlsSolve(m, 3, dr_b);
+   }
+
+   // expected final high-low of bar i's day (never less than what the day already made)
+   double DayRangeForecast(const int i) const
+   {
+      const double adr = m_adr[i];
+      if(adr <= 0.0) return 0.0;
+      const double sofar = m_adru[i] * adr;
+      if(!dr_ok) return XMax(adr, sofar);
+      const double p = MathExp(dr_b[0] + dr_b[1] * MathLog(adr) + dr_b[2] * MathLog(XMax(sofar, 0.05 * adr) / adr));
+      return XMax(p, sofar);
    }
 
    // Calibrated projection for `steps` bars after the live price: median path, 20-80% cone and expected
@@ -1696,6 +1876,7 @@ public:
       const int cnt = XMinI(steps, XA_H);
       ArrayResize(rg_t, cnt); ArrayResize(rg_mid, cnt); ArrayResize(rg_up, cnt); ArrayResize(rg_dn, cnt); ArrayResize(rg_size, cnt);
       const double a = m_atr[ref_i];
+      const double lv = HarLevel(ref_i);
       double pv = 0.0;
       for(int j = 0; j < cnt; j++)
       {
@@ -1707,7 +1888,7 @@ public:
          rg_mid[j] = price_now + fcz_md[j] * sc;
          rg_up[j] = price_now + fcz_hi[j] * sc;
          rg_dn[j] = price_now + fcz_lo[j] * sc;
-         rg_size[j] = a * se * fc_krange;
+         rg_size[j] = (lv > 0.0) ? lv * se : a * se * fc_krange;
       }
       rg_n = cnt;
    }
@@ -1953,7 +2134,7 @@ private:
       ArrayResize(m_sma5, n); ArrayResize(m_rsi2, n);
       ArrayResize(m_rsi, n);  ArrayResize(m_adx, n);  ArrayResize(m_pdi, n); ArrayResize(m_mdi, n);
       ArrayResize(m_bbw, n);  ArrayResize(m_bbp, n);  ArrayResize(m_donh, n); ArrayResize(m_donl, n);
-      ArrayResize(m_vavg, n); ArrayResize(m_vwap, n); ArrayResize(m_vsd, n);  ArrayResize(m_hour, n);
+      ArrayResize(m_vavg, n); ArrayResize(m_vwap, n); ArrayResize(m_vsd, n);  ArrayResize(m_hour, n);  ArrayResize(m_dkey, n);
       ArrayResize(m_daybars, n); ArrayResize(m_asiaok, n); ArrayResize(m_asiahi, n); ArrayResize(m_asialo, n);
       ArrayResize(m_pdh, n);  ArrayResize(m_pdl, n);  ArrayResize(m_adr, n);  ArrayResize(m_adru, n);  ArrayResize(m_er, n);
       ArrayResize(m_hmap, n); ArrayResize(m_bias, n); ArrayResize(m_hadx, n);
@@ -2069,6 +2250,7 @@ private:
          if(sec < 0) sec += 86400;
          const double hr = (double)sec / 3600.0;
          m_hour[i] = hr;
+         m_dkey[i] = (int)day;
 
          if(day != prev_day)
          {

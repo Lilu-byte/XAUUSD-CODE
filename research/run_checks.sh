@@ -32,7 +32,7 @@ export XAU_COST=0.35
 export XAU_SWAPL=0.50 XAU_SWAPS=0.20
 D1FILE=research/data/XAUUSD_D1.csv
 [ -e "$D1FILE" ] && export XAU_D1=$D1FILE
-for p in ideas meta drift forecast entries shortfc mechanisms; do g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/$p" research/sim/$p.cpp; done
+for p in ideas meta drift forecast entries shortfc mechanisms zones sizefc enginefc; do g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/$p" research/sim/$p.cpp; done
 for f in research/data/XAUUSD_*.csv; do
   [ -e "$f" ] || continue
   tf=$(basename "$f" .csv | sed 's/XAUUSD_//')
@@ -52,7 +52,7 @@ for f in research/data/XAUUSD_*.csv; do
   case "$tf" in
     H1) { echo; echo "== TREND MODE (Lab target 50%, all passing combinations, buys only in a daily uptrend) =="; XAU_TARGET=50 XAU_RANDCTRL=1 "$BIN/harness" real "$f" "$H" 2 1 25000 2>&1 | sed -n '/LIVE REPLAY/,$p'; } >> "$OUT/real_${tf}_results.txt" || true ;;
     H4) { echo; echo "== TREND MODE (Lab target 50%, all passing combinations, buys only in a daily uptrend) =="; XAU_TARGET=50 XAU_RANDCTRL=1 "$BIN/harness" real "$f" "$H" 2 1 6000 2>&1 | sed -n '/LIVE REPLAY/,$p';
-          echo "== TREND MODE, 10,000-bar Lab (the EA's AUTO window on H4: the H4 result depends on the window) =="; XAU_TARGET=50 "$BIN/harness" real "$f" "$H" 2 1 10000 2>&1 | sed -n '/LIVE REPLAY/,$p'; } >> "$OUT/real_${tf}_results.txt" || true ;;
+          echo "== TREND MODE, 10,000-bar Lab (the EA's AUTO window on H4) =="; XAU_TARGET=50 "$BIN/harness" real "$f" "$H" 2 1 10000 2>&1 | sed -n '/LIVE REPLAY/,$p'; } >> "$OUT/real_${tf}_results.txt" || true ;;
   esac
   unset XAU_D1MODE
   # research programs on the intraday files (older part vs newer part, walk-forward)
@@ -65,6 +65,10 @@ for f in research/data/XAUUSD_*.csv; do
       "$BIN/entries" "$f" "$H" > "$OUT/entries_${tf}.txt" 2>&1 || true
       "$BIN/shortfc" "$f" "$H" > "$OUT/shortfc_${tf}.txt" 2>&1 || true
       [ -e "$D1FILE" ] && "$BIN/mechanisms" "$f" "$H" "$D1FILE" 0.35 0.50 0.20 > "$OUT/mechanisms_${tf}.txt" 2>&1 || true
+      # round 11: supply/demand zones, size forecasts, and the engine's own forecast code (new vs old)
+      [ -e "$D1FILE" ] && "$BIN/zones" "$f" "$H" "$D1FILE" 0.35 > "$OUT/zones_${tf}.txt" 2>&1 || true
+      [ -e "$D1FILE" ] && "$BIN/sizefc" "$f" "$H" "$D1FILE" > "$OUT/sizefc_${tf}.txt" 2>&1 || true
+      [ -e "$D1FILE" ] && "$BIN/enginefc" "$f" "$H" "$D1FILE" > "$OUT/enginefc_${tf}.txt" 2>&1 || true
     ;; esac
   fi
   # M30 is built from the M15 file (the export has no M30); its higher timeframe is H4, as in MT5

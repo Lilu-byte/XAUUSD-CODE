@@ -533,7 +533,10 @@ static void run_lab_variants()
 // indicator), the pick is taken, and that day's signals of the pick are traded one at a time.
 // Signals come from one engine over the whole series (tested: identical to a shorter live window).
 //---------------------------------------------------------------------------
-struct ReplayOut { XStats live, demo, multi, rnd; XStats multi_y[40], live_y[40]; int days, days_traded; int picks[XLAB_CELLS]; };
+struct ReplayOut { XStats live, demo, multi, rnd; XStats multi_y[40], live_y[40]; XStats breadth[4], quoted[4]; int days, days_traded; int picks[XLAB_CELLS]; };
+static int g_d1def = -1;      // env XAU_D1DEF: what "daily trend up" means (engine cfg.d1_def; -1 = engine default)
+static int g_days = 0;        // env XAU_DAYS: 1 trade only while the daily trend is up, -1 only while it is not, 0 always
+static int g_diag = 0;        // env XAU_DIAG=1: MULTI results by Lab breadth and by the win-rate the Lab quoted
 static int g_rand_ctrl = 0;   // env XAU_RANDCTRL=1: control - random long entries (same exits) at the MULTI trade rate
 static int g_multi_cap = 3;   // MULTI: every combination that passes today trades, at most this many positions at once
 static double g_minstop = -1.0;   // cost-guard override for real-data runs (env XAU_MINSTOP; -1 = engine default)
@@ -550,6 +553,10 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
 {
    o.live.Reset(); o.demo.Reset(); o.multi.Reset(); o.rnd.Reset(); o.days = 0; o.days_traded = 0;
    for(int y = 0; y < 40; y++) { o.multi_y[y].Reset(); o.live_y[y].Reset(); }
+   for(int b = 0; b < 4; b++) { o.breadth[b].Reset(); o.quoted[b].Reset(); }
+   int npass = 0;
+   double quoted_win[XLAB_CELLS];
+   for(int c = 0; c < XLAB_CELLS; c++) quoted_win[c] = 0.0;
    unsigned rng = 12345u;
    int busy_rnd = -1;
    bool pass_today[XLAB_CELLS];
@@ -563,6 +570,7 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
    if(g_cost > 0.0) E.cfg.cost_price = g_cost;
    if(g_dip_lo > -2.0) { E.cfg.dip_gmt_lo = g_dip_lo; E.cfg.dip_gmt_hi = g_dip_hi; }
    if(g_d1mode >= 0) E.cfg.d1_mode = g_d1mode;
+   if(g_d1def >= 0) E.cfg.d1_def = g_d1def;
    E.cfg.swap_long = g_swapl; E.cfg.swap_short = g_swaps;
    if(!g_d1.empty()) E.SetDaily(g_d1, (int)g_d1.size());
    E.SetBase(base, N);
@@ -594,7 +602,8 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
          if(L.Compute())
          {
             L.RunLab(L.cfg.warmup, L.n - 1, target, (g_rp_min > 0) ? g_rp_min : min_trades, 5);
-            for(int c = 0; c < XLAB_CELLS; c++) pass_today[c] = L.lab[c].qualified;
+            npass = 0;
+            for(int c = 0; c < XLAB_CELLS; c++) { pass_today[c] = L.lab[c].qualified; quoted_win[c] = L.lab[c].all.WinRate(); if(pass_today[c]) npass++; }
             bool proven;
             const int c = L.LabActiveCell(min_trades, proven);
             pick_demo = c;
@@ -603,6 +612,8 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
       }
       XSignal sg;
       XTradeResult r;
+      // regime test: trade only on days of one kind (the Lab itself is unchanged)
+      if((g_days > 0 && E.m_dreg[i] <= 0) || (g_days < 0 && E.m_dreg[i] > 0)) continue;
       if(pick_live >= 0 && i > busy_live)
       {
          XExit x; XMakeExit(pick_live % XP_COUNT, E.cfg, x);
@@ -619,15 +630,27 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
             XExit x; XMakeExit(c % XP_COUNT, E.cfg, x);
             XSignal s2; XTradeResult r2;
             if(E.StrategySignal(c / XP_COUNT, i, x, s2) && E.SimulateTradeEx(i, s2.dir, s2.sl, N - 2, x, r2))
-            { busy_cell[c] = r2.exit_idx; open_now++; if(r2.closed) { o.multi.Add(r2); o.multi_y[XClampI(XYearOfDays(base[i].time / 86400) - 2000, 0, 39)].Add(r2); } }
+            {
+               busy_cell[c] = r2.exit_idx; open_now++;
+               if(r2.closed)
+               {
+                  o.multi.Add(r2); o.multi_y[XClampI(XYearOfDays(base[i].time / 86400) - 2000, 0, 39)].Add(r2);
+                  o.breadth[(npass <= 2) ? 0 : ((npass <= 5) ? 1 : ((npass <= 10) ? 2 : 3))].Add(r2);
+                  const double qw = quoted_win[c];
+                  o.quoted[(qw < 55.0) ? 0 : ((qw < 60.0) ? 1 : ((qw < 65.0) ? 2 : 3))].Add(r2);
+               }
+            }
          }
       }
-      // CONTROL: random long entries (daily trend filter applied the same way), the rider exit, ~1 per 2 days
+      // CONTROL: random long entries (daily trend filter applied the same way), the rider exit, ~1 per 2 days.
+      // XAU_RANDCTRL=2: the same, but deterministic: the first bar at or after 08:00 GMT (London open) each day
       if(g_rand_ctrl && i > busy_rnd && E.FilterReason(i) == XR_OK && (E.cfg.d1_mode == 0 || E.m_dreg[i] > 0))
       {
          rng = rng * 1103515245u + 12345u;
          const double per_bar = 0.5 / std::max(1.0, 86400.0 / base_sec);
-         if((rng >> 8) % 100000 < (unsigned)(per_bar * 100000))
+         const bool fire = (g_rand_ctrl == 2) ? (E.m_hour[i] >= 8.0 && (E.m_hour[i - 1] < 8.0 || E.m_hour[i - 1] > E.m_hour[i]))
+                                              : ((rng >> 8) % 100000 < (unsigned)(per_bar * 100000));
+         if(fire)
          {
             XExit x; XMakeExit(XP_RIDER, E.cfg, x);
             XSignal s3; s3.Reset();
@@ -665,6 +688,15 @@ static void print_replay(const char *label, const ReplayOut &o, double days_per_
       if(o.multi_y[y].n + o.live_y[y].n > 0)
          std::printf(" %d %+.2f(%d)/%+.2f(%d)", 2000 + y, o.multi_y[y].Expectancy(), o.multi_y[y].n, o.live_y[y].Expectancy(), o.live_y[y].n);
    std::printf("\n");
+   if(g_diag)
+   {
+      const char *bn[4] = {"1-2", "3-5", "6-10", "11+"}, *qn[4] = {"<55%", "55-60%", "60-65%", "65%+"};
+      std::printf("  %-10s MULTI by strategies passing that day:", "");
+      for(int b = 0; b < 4; b++) std::printf("  %s: %+.3fR (%d, %.0f%% won)", bn[b], o.breadth[b].Expectancy(), o.breadth[b].n, o.breadth[b].WinRate());
+      std::printf("\n  %-10s MULTI by win-rate the Lab quoted -> real win-rate:", "");
+      for(int b = 0; b < 4; b++) std::printf("  %s -> %.0f%% (%d, %+.3fR)", qn[b], o.quoted[b].WinRate(), o.quoted[b].n, o.quoted[b].Expectancy());
+      std::printf("\n");
+   }
    std::printf("  %-10s most used picks:", "");
    for(int k = 0; k < 3; k++)
    {
@@ -1324,20 +1356,61 @@ static void test_today_plan()
 {
    std::printf("\n== unit tests: today's plan line ==\n");
    bool go;
-   std::string s = XTodayPlan(XAU_MODE_TREND, 2, true, false, 2, 1, 40.0, 0.5, go);
-   CHECK(go && s.find("buys only") != std::string::npos && s.find("2 strategies armed") != std::string::npos && s.find("50% used") != std::string::npos,
-         "TREND, daily up: wait for a signal, buys only, 2 strategies armed, range used");
+   std::string s = XTodayPlan(XAU_MODE_TREND, 2, true, false, 2, 1, 40.0, 20.0, go);
+   CHECK(go && s.find("buys only") != std::string::npos && s.find("2 strategies armed") != std::string::npos && s.find("about 40 expected, 20 so far") != std::string::npos,
+         "TREND, daily up: wait for a signal, buys only, 2 strategies armed, expected range and so far");
    s = XTodayPlan(XAU_MODE_TREND, 2, true, false, 2, -1, 40.0, 0.5, go);
    CHECK(!go && s.find("daily trend is down") != std::string::npos, "daily trend down on a buys-only chart: stand aside");
-   s = XTodayPlan(XAU_MODE_STEADY, 0, false, false, 0, 0, 40.0, 1.2, go);
+   s = XTodayPlan(XAU_MODE_STEADY, 0, false, false, 0, 0, 40.0, 38.0, go);
    CHECK(!go && s.find("no strategy passed") != std::string::npos && s.find("most of today's move is done") != std::string::npos,
          "STEADY, nothing proven: stand aside, and a used-up day is flagged");
    s = XTodayPlan(XAU_MODE_STEADY, 0, true, true, 0, 0, 0.0, 0.0, go);
-   CHECK(!go && s.find("too big for the account") != std::string::npos && s.find("Usual day range") == std::string::npos,
+   CHECK(!go && s.find("too big for the account") != std::string::npos && s.find("Today's range") == std::string::npos,
          "account too small: watch only (no range on D1+)");
-   s = XTodayPlan(XAU_MODE_STEADY, 0, true, false, 0, 0, 40.0, 0.3, go);
+   s = XTodayPlan(XAU_MODE_STEADY, 0, true, false, 0, 0, 40.0, 12.0, go);
    CHECK(go && s.find("both directions") != std::string::npos, "STEADY, proven, no daily filter: both directions");
    CHECK(s.size() < 120, "fits in two panel lines");
+}
+
+static void test_size_forecasts()
+{
+   std::printf("\n== unit tests: HAR candle size and today's range (round 11) ==\n");
+   Series S = make_series(W_NULL, 30000, 9);
+   CXauEngine e;
+   load(e, S, (int)S.m15.size());
+   const int cal = e.n - 4000;
+   e.CalibrateForecast(cal, 3000);
+   CHECK(e.har_ok && e.har_b[1] + e.har_b[2] + e.har_b[3] + e.har_b[4] > 0.2, "HAR fit found: recent ranges carry over to the next bar");
+   const double nr = e.NextRange(cal, e.m_t[cal + 1]);
+   CHECK(nr > 0.2 * e.m_atr[cal] && nr < 5.0 * e.m_atr[cal], "next candle size is a sensible multiple of the ATR");
+   CHECK(e.dr_ok, "day-range model fitted on the past days");
+   const double dfc = e.DayRangeForecast(cal), sofar = e.m_adru[cal] * e.m_adr[cal];
+   CHECK(dfc >= sofar - 1e-9 && dfc > 0.0, "today's expected range is never less than what the day already made");
+   // no look-ahead: change every bar after `cal` and refit at `cal`; the forecasts must not move
+   Series S2 = S;
+   for(size_t i = (size_t)cal + 1; i < S2.m15.size(); i++) { S2.m15[i].high += 7.0; S2.m15[i].low -= 7.0; }
+   // (the hour-of-day profile is built from every loaded bar, which live are never future ones: hold it fixed here)
+   CXauEngine e2;
+   load(e2, S2, (int)S2.m15.size());
+   for(int h = 0; h < 24; h++) e2.season[h] = e.season[h];
+   e2.CalibrateForecast(cal, 3000);
+   CHECK(near(e2.NextRange(cal, e2.m_t[cal + 1]), nr, 1e-9) && near(e2.DayRangeForecast(cal), dfc, 1e-9), "forecasts made at a bar ignore every later bar");
+}
+
+static void test_panel_helpers()
+{
+   std::printf("\n== unit tests: check row, drawdown chance, live-vs-tested alarm (round 11) ==\n");
+   const std::string row = XCheckRow(true, true, true, true, true, false, true);
+   CHECK(row.find("Size NO") != std::string::npos && row.find("Lab ok") != std::string::npos && row.find("Limits ok") != std::string::npos, "check row names the failing check");
+   const double lo = XDrawdownChance(0.5, 0.5, 1.0, 1.0, 1.0, 100, 20.0, 4000);
+   const double hi = XDrawdownChance(0.5, 0.5, 1.0, 1.0, 5.0, 100, 20.0, 4000);
+   std::printf("  coin flip at 1R:1R, 100 trades: 20%% drawdown chance %.1f%% at 1%% risk, %.1f%% at 5%% risk\n", 100.0 * lo, 100.0 * hi);
+   CHECK(lo > 0.01 && lo < 0.08 && hi > 0.9, "coin flip: about 4-6% at 1% risk (theory for a random walk), over 90% at 5%");
+   CHECK(XDrawdownChance(1.0, 0.0, 1.0, 1.0, 5.0, 100, 20.0, 1000) == 0.0, "no losses, no drawdown");
+   CHECK(XDrawdownChance(0.5, 0.5, 1.0, 1.0, 2.0, 100, 20.0, 1000) == XDrawdownChance(0.5, 0.5, 1.0, 1.0, 2.0, 100, 20.0, 1000), "same inputs, same answer");
+   CHECK(XLiveDrift(20, 5, 60.0) == "", "no alarm before 30 live trades");
+   CHECK(XLiveDrift(50, 28, 60.0) == "", "56% live vs 60% tested over 50 trades: within luck");
+   CHECK(XLiveDrift(50, 18, 60.0) != "", "36% live vs 60% tested over 50 trades: alarm");
 }
 
 static void test_cost_guard()
@@ -1754,6 +1827,9 @@ int main(int argc, char **argv)
    if(std::getenv("XAU_TARGET")) g_target = std::atof(std::getenv("XAU_TARGET"));
    if(std::getenv("XAU_COST")) g_cost = std::atof(std::getenv("XAU_COST"));
    if(std::getenv("XAU_D1MODE")) g_d1mode = std::atoi(std::getenv("XAU_D1MODE"));
+   if(std::getenv("XAU_D1DEF")) g_d1def = std::atoi(std::getenv("XAU_D1DEF"));
+   if(std::getenv("XAU_DAYS")) g_days = std::atoi(std::getenv("XAU_DAYS"));
+   if(std::getenv("XAU_DIAG")) g_diag = std::atoi(std::getenv("XAU_DIAG"));
    if(std::getenv("XAU_RANDCTRL")) g_rand_ctrl = std::atoi(std::getenv("XAU_RANDCTRL"));
    if(std::getenv("XAU_MULTICAP")) g_multi_cap = std::atoi(std::getenv("XAU_MULTICAP"));
    if(std::getenv("XAU_SWAPL")) g_swapl = std::atof(std::getenv("XAU_SWAPL"));
@@ -1766,7 +1842,7 @@ int main(int argc, char **argv)
       else if(std::sscanf(w, "%lf-%lf", &g_dip_lo, &g_dip_hi) != 2) { g_dip_lo = -2.0; }
    }
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); test_entry_at(); test_today_plan(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); test_entry_at(); test_today_plan(); test_size_forecasts(); test_panel_helpers(); }
    if(all || !std::strcmp(mode, "calib"))   run_calibration();
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); test_strategy_windows(); test_resolve(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);

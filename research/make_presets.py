@@ -47,7 +47,7 @@ PRESETS = {
         {"InpMagic": "20261060", "InpComment": "XAUS60"}),
     "XAU_Sniper_Multi_H4": ("Run together with Multi_M15 and Multi_H1: XAUUSD H4 chart. AUTO = TREND mode here: buys only while the daily trend is up, multi-day exits.",
         {"InpMagic": "20261240", "InpComment": "XAUS240"}),
-    "XAU_Sniper_Trend": ("TREND mode on any chart (best on XAUUSD H1): every strategy that passes a 50% Lab target trades, up to 3 positions, multi-day trend-riding exits, H1+ buys only in a daily uptrend. Real-data replay H1 Oct 2020 - Sep 2026: +0.11R per trade over 676 trades, 57% winners, mostly earned in 2025 (a trend follower). Positions are held for days and pay swap.",
+    "XAU_Sniper_Trend": ("TREND mode on any chart (best on XAUUSD H1): every strategy that passes a 50% Lab target trades, up to 3 positions, multi-day trend-riding exits, H1+ buys only in a daily uptrend. Real-data replay H1 Oct 2020 - Sep 2026 (rising 200-day mean filter): +0.12R per trade over 722 trades, 57% winners, mostly earned in 2024-2025 (a trend follower). Positions are held for days and pay swap.",
         {"InpMode": "1"}),
     "XAU_Sniper_Steady": ("STEADY mode on any chart: one strategy with 60%+ winners (high win-rate, about break-even on real gold).",
         {"InpMode": "0"}),

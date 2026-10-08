@@ -61,3 +61,12 @@ Everything else (about 250 ideas) was a tweak: no measurable effect, or an effec
 | Size of US data surprises (actual vs forecast) | Documented drift after surprises | The export's calendar file |
 | FX pairs or a cent account | Lot granularity: a $100 account can risk 1-2% per trade | Broker details and data |
 | Volatility-targeted sizing, equity-curve pauses | Smoother account curve (does not add edge) | Can be built now |
+
+## 6. Round 11 addendum
+* **Moved the needle:** size forecasts (HAR candle size 2-10% better; today's range 12-43% better once the day is under way)
+  and a stricter definition of the daily uptrend (200-day mean must be rising): TREND mode H4 went from +0.01R to +0.10R at
+  the EA's Lab window, H1 from +0.11R to +0.12R.
+* **Did not:** supply/demand zones (three entry styles), the volume-profile point of control, a self-correcting cone, a cone
+  leaning with the trend, a regime switch to STEADY in non-uptrends, Lab breadth as confidence.
+* **What the controls say:** buying every London open while the trend is up, with the same exit, made +0.01 to +0.06R; the
+  Lab's picks +0.10 to +0.12R. Most of the edge is the trend plus the exit; the Lab adds a little on top.

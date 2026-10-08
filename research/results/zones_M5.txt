@@ -1,0 +1,15 @@
+== SUPPLY/DEMAND ZONES and POC: research/data/XAUUSD_M5.csv (100147 bars of 300 s), cost 0.35 ==
+   older 2025.04.24 18:00 .. 2026.03.02 13:45 | newer .. 2026.09.30 13:10
+   columns: trades, won (net), fill = trades per zone, gross R per trade (before cost), net R per trade (se)
+
+  ZONES: 2969 found (older 1803, newer 1166; with the daily trend 924 / 273)
+    entry                              | older                                                        | newer                                                       
+    LIMIT at the zone                  |  1503   31% fill  83% gross -0.098 net -0.221 (0.039) |   957   31% fill  82% gross -0.096 net -0.169 (0.046)
+      same, with the daily trend only  |   745   31% fill  81% gross -0.068 net -0.196 (0.051) |   217   27% fill  79% gross -0.185 net -0.253 (0.091)
+    ENGULFING confirmation             |   347   35% fill  19% gross +0.029 net -0.036 (0.073) |   295   33% fill  25% gross -0.114 net -0.157 (0.078)
+      same, with the daily trend only  |   175   42% fill  19% gross +0.184 net +0.120 (0.107) |    54   28% fill  20% gross -0.180 net -0.222 (0.169)
+    RETEST after a break of structure  |   249   42% fill  14% gross +0.115 net +0.070 (0.078) |   157   46% fill  13% gross +0.143 net +0.118 (0.096)
+      same, with the daily trend only  |   123   48% fill  13% gross +0.230 net +0.186 (0.109) |    28   36% fill  10% gross -0.074 net -0.099 (0.220)
+
+  POC: trade back to yesterday's point of control (1:1, first chance of the day, 227 days)
+    toward yesterday's POC             |   142   51% fill   0% gross -0.005 net -0.021 (0.074) |    85   54% fill   0% gross +0.126 net +0.117 (0.094)

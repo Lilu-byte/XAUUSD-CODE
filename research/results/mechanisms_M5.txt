@@ -21,8 +21,8 @@
       by year ($/trade): 2025 -1.45 2026 +1.57
     SHORT New York 16:30-22:00 (US cash session)               |   218  41.7%  +0.354 (2.238) Sh +0.17 |   151  52.3%  +2.699 (3.044) Sh +1.15 DD    363
       by year ($/trade): 2025 -0.55 2026 +3.03
-    SHORT New York 16:30-22:00, daily trend down only          |     0   0.0%  +0.000 (0.000) Sh +0.00 |    75  45.3%  +0.424 (3.304) Sh +0.23 DD    262
-      by year ($/trade): 2026 +0.42
+    SHORT New York 16:30-22:00, daily trend down only          |     0   0.0%  +0.000 (0.000) Sh +0.00 |     0   0.0%  +0.000 (0.000) Sh +0.00 DD      0
+      by year ($/trade):
     SHORT London 10:00-15:00                                   |   219  45.2%  -0.903 (1.760) Sh -0.55 |   150  45.3%  +0.169 (2.983) Sh +0.07 DD    467
       by year ($/trade): 2025 -0.59 2026 -0.36
     LONG London 10:00-15:00                                    |   219  50.2%  -0.101 (1.875) Sh -0.06 |   150  54.7%  -0.668 (2.852) Sh -0.30 DD    351
