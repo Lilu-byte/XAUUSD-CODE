@@ -129,3 +129,8 @@ Numbers: [REAL_DATA.md section 11](REAL_DATA.md#11-round-11-supplydemand-zones-s
 | 89 | EA panel: risk check (chance of a 20% drawdown in the next 100 trades at your risk) and a live-vs-tested alarm | DONE | Shows what a risk setting really means; flags broker differences early |
 | 90 | Research: `zones.cpp`, `sizefc.cpp`, `enginefc.cpp`; replay options `XAU_D1DEF`, `XAU_DAYS`, `XAU_DIAG`, `XAU_RANDCTRL=2` | DONE | |
 | 91 | Unit tests: HAR and day range (no look-ahead), check row, drawdown chance, live alarm, TODAY line | DONE | |
+
+## Round 12
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 92 | Engine: adaptive Supertrend (`ComputeSupertrend`, `st_trail`, `st_filter`), off by default and not an input; `research/sim/supertrend.cpp`; replay options `XAU_STTRAIL`, `XAU_STFILTER`; unit tests | DONE (research only) | The user's TradingView indicator, tested before adopting: it did not improve anything everywhere, so the EA and indicator are unchanged |

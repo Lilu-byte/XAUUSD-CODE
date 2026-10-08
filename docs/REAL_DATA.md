@@ -405,3 +405,31 @@ Other structure tests (H1, 25,000-bar Lab unless noted):
 * TREND mode's edge is mostly **being long gold while its 200-day mean is rising, and letting winners run for days**.
   The stricter definition of "rising" made it steadier (H1 +0.12R, H4 +0.10R, either Lab window). It is still a trend
   follower that earns in years like 2024-2025 and stands aside or loses a little in years like 2022-2023.
+
+## 12. Round 12: the "Adaptive ST [FXC]" Supertrend indicator
+The TradingView indicator from the user's screenshot, rebuilt from its panel: line = (high + low) / 2 -+ factor x ATR(10),
+factor = 1.5 + 3.5 x the ATR's percentile rank over the last 100 bars (volatility 98 -> factor 4.93); flips on a close through
+the line. Programs: `research/sim/supertrend.cpp` (traded on its own) and the EA replay with `XAU_STTRAIL` / `XAU_STFILTER`.
+Rules fixed before the runs; cost 0.35, swap charged; older 60% / newer 40%.
+
+### Traded on its own (R per trade, older / newer)
+| Way of trading it | M5 | M15 | H1 | H4 |
+|---|---|---|---|---|
+| Buy and Sell labels, always in (stop and reverse) | +0.02 / -0.00 | -0.12 / +0.06 | -0.09 / -0.04 | -0.06 / -0.05 |
+| Buy labels only | +0.16 / -0.11 | -0.04 / +0.16 | -0.05 / +0.14 | +0.00 / +0.17 |
+| Buy labels only, daily uptrend (the EA's filter) | +0.16 / -0.23 | -0.02 / +0.18 | +0.06 / +0.10 (0.21 trades a day) | +0.05 / +0.11 |
+| Classic Supertrend (10, 3), buys in a daily uptrend | +0.05 / -0.17 | +0.02 / +0.20 | +0.12 / +0.15 (0.16 a day) | -0.12 / +0.48 |
+Flipping long and short as the labels suggest loses on H1 and H4 and is flat on M5. Buys only earn in the newer half (the
+2025-26 bull market) and lose in the older half: the market's rise, not the indicator. The adaptive factor is no better than
+the classic fixed one. TREND mode on H1 makes +0.12R at 0.47 trades a day, more than any of these.
+
+### Inside the EA (TREND mode replay, 50% target, rising-mean filter)
+| | H1 25,000 / 10,000-bar Lab | H4 10,000 / 6,000-bar Lab | M15 STEADY |
+|---|---|---|---|
+| Current EA | +0.122 (722) / +0.119 (684) | +0.097 (714) / +0.105 (815) | +0.009 (545) |
+| Rider exit trails on the Supertrend line instead of 3 ATR | +0.116 (726) / +0.105 (700) | +0.050 (686) / +0.101 (808) | |
+| Entries only while the line points the trade's way | +0.123 (487) | +0.139 (500) | -0.076 (226) |
+As a trailing stop it is worse on every chart. As a filter it keeps the per-trade result on H1 with a third fewer trades
+(2024 and 2026 turned negative), lifts H4 per trade with the same total profit, and hurts M15. **Not adopted**: nothing
+improved everywhere. The code stays in the engine switched off (`st_trail`, `st_filter`), not exposed as an input, so the
+test can be re-run.

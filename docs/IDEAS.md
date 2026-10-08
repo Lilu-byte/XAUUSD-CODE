@@ -465,3 +465,13 @@ Numbers: [REAL_DATA.md section 11](REAL_DATA.md#11-round-11-supplydemand-zones-s
 
 Refused on purpose: martingale, grid and averaging down. They lift the win-rate to 80-95% by hiding losses until one
 move wipes out the account; on gold's $50-100 daily ranges that happens within months.
+
+## Round 12: the Adaptive Supertrend indicator
+Numbers: [REAL_DATA.md section 12](REAL_DATA.md#12-round-12-the-adaptive-st-fxc-supertrend-indicator).
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 323 | Adaptive Supertrend, Buy/Sell labels, always in | TESTED - rejected | Loses on H1/H4, flat on M5 |
+| 324 | Adaptive Supertrend, buys only (with and without the daily trend) | TESTED - rejected | Earns only in the 2025-26 bull market; less than TREND mode |
+| 325 | Adaptive factor (1.5-5 by volatility) vs the classic factor 3 | TESTED - rejected | The adaptive factor is no better |
+| 326 | Supertrend line as the Rider exit's trailing stop | TESTED - rejected | Worse on H1 and H4, both Lab windows |
+| 327 | Supertrend direction as an entry filter | TESTED - rejected | Same or less total profit on H1/H4, worse on M15 |

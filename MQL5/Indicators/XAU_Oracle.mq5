@@ -386,6 +386,10 @@ struct XConfig
    int    d1_mode;           // daily trend filter: 0 off, 1 trade only in the daily trend's direction, 2 buys only while the daily trend is up
    int    d1_def;            // what "daily trend up" means: 0 close above its 200-day mean, 1 and that mean rising (20 days),
                               // 2 close above the close of 252 days ago (12-month momentum), 3 both 0 and 2 agree
+   // adaptive Supertrend (research, round 12): ATR(st_atr) line whose factor slides from st_fmin to st_fmax with the ATR's
+   // percentile rank over st_look bars. st_trail = 1: Rider exits trail on the line; st_filter = 1: entries only with it
+   int    st_atr, st_look, st_trail, st_filter;
+   double st_fmin, st_fmax;
    int    d1_sma;            // daily trend = last completed daily close above / below its d1_sma-day mean
    int    path_mode;         // 1 = a bar that touches stop and target is resolved by its likely path (O-L-H-C / O-H-L-C); 0 = always the stop
 
@@ -424,6 +428,7 @@ struct XConfig
       cost_price = 0.30;  path_mode = 1;  min_stop_cost = 20.0;
       dip_gmt_lo = -1.0;  dip_gmt_hi = 24.0;
       d1_mode = 0;  d1_sma = 200;  d1_def = 1;
+      st_atr = 10;  st_fmin = 1.5;  st_fmax = 5.0;  st_look = 100;  st_trail = 0;  st_filter = 0;
       swap_long = 0.0;  swap_short = 0.0;  swap_triple_dow = 3;
 
       fc_drift = 0.10;  fc_decay = 0.93;  fc_mr = 0.03;
@@ -447,6 +452,7 @@ struct XExit
    double trail_atr;   // ATR trail on the rest after the first target (0 = off)
    int    mr_exit;     // 1 = close when a candle closes back across the 5-bar mean
    int    max_hold;    // bars (0 = the configured time stop)
+   int    trail_st;    // 1 = after the first target the stop follows the adaptive Supertrend line (research)
    double sl_min_atr, sl_max_atr;
 };
 
@@ -483,7 +489,7 @@ void XMakeExit(const int p, const XConfig &c, XExit &x)
 {
    x.id = p;
    x.tp1_r = c.tp1_r; x.part = c.partial_pct; x.tp2_r = c.tp2_r; x.be_lock_r = 0.0; x.trail_atr = c.trail_atr;
-   x.mr_exit = 0; x.max_hold = 0; x.sl_min_atr = c.sl_atr_min; x.sl_max_atr = c.sl_atr_max;
+   x.mr_exit = 0; x.max_hold = 0; x.trail_st = 0; x.sl_min_atr = c.sl_atr_min; x.sl_max_atr = c.sl_atr_max;
    if(p == XP_HIGHHIT) { x.tp1_r = 0.5; x.part = 0.7; x.tp2_r = 1.5; x.trail_atr = 1.5; }
    else if(p == XP_QUICK) { x.tp1_r = 0.6; x.part = 1.0; x.tp2_r = 0.0; x.trail_atr = 0.0; }
    else if(p == XP_MEANREV)
@@ -495,7 +501,7 @@ void XMakeExit(const int p, const XConfig &c, XExit &x)
    {
       // multi-day holds (round 10): the time stop is counted in days, whatever the chart
       const int bs = (c.base_sec > 0) ? c.base_sec : 900;
-      if(p == XP_RIDER) { x.tp1_r = 1.0; x.part = 0.33; x.tp2_r = 0.0; x.trail_atr = 3.0; x.max_hold = XMaxI(8, 5 * 86400 / bs); }
+      if(p == XP_RIDER) { x.tp1_r = 1.0; x.part = 0.33; x.tp2_r = 0.0; x.trail_atr = 3.0; x.max_hold = XMaxI(8, 5 * 86400 / bs); x.trail_st = (c.st_trail > 0) ? 1 : 0; }
       else               x.max_hold = XMaxI(8, 3 * 86400 / bs);
    }
 }
@@ -863,6 +869,7 @@ public:
    // daily series (for the daily trend filter)
    int     d1n;
    XTARR(m_dt); XDARR(m_dc); XIARR(m_dreg);
+   XDARR(m_stl); XIARR(m_std);     // adaptive Supertrend line and direction (+1 up, -1 down) after each closed bar
    // intermarket proxy
    XTARR(m_it); XDARR(m_ic); XDARR(m_iema1); XDARR(m_iema2); XIARR(m_idir0); XIARR(m_imap); XIARR(m_inter);
    // votes and scores
@@ -991,6 +998,7 @@ public:
       ComputeSessionLevels();
       ComputeHTF();
       ComputeDaily();
+      if(cfg.st_trail > 0 || cfg.st_filter > 0) ComputeSupertrend(m_stl, m_std, cfg.st_atr, cfg.st_fmin, cfg.st_fmax, cfg.st_look);
       ComputeOrb();
       ComputeVotes();
       ComputeScores();
@@ -1275,7 +1283,12 @@ public:
          if(stage == 1)
          {
             if(fhi > ext) ext = fhi;
-            if(x.trail_atr > 0.0)
+            if(x.trail_st > 0 && j < ArraySize(m_stl) && m_std[j] == dir)
+            {
+               const double tr = dir * (m_stl[j] - entry);
+               if(tr > stopf) stopf = tr;
+            }
+            else if(x.trail_st == 0 && x.trail_atr > 0.0)
             {
                const double tr = ext - x.trail_atr * a;
                if(tr > stopf) stopf = tr;
@@ -1390,6 +1403,47 @@ public:
 
    // Daily trend for every base bar: +1 / -1 when the last daily bar COMPLETED by the close of bar i closed above /
    // below its d1_sma-day mean, 0 when unknown (not enough daily history).
+   // Adaptive Supertrend (TradingView "Adaptive ST"): factor = fmin + (fmax - fmin) x percentile rank of ATR(atr_len)
+   // among the previous `look` bars; bands from (high + low) / 2 +- factor x ATR, ratcheting; flips on a close through
+   // the band. fmin = fmax gives the classic Supertrend. Uses only bars up to each bar's close.
+   void ComputeSupertrend(XD(line), XI(dirv), const int atr_len, const double fmin, const double fmax, const int look) const
+   {
+      ArrayResize(line, n); ArrayResize(dirv, n);
+      XDARR(at);
+      ArrayResize(at, n);
+      for(int i = 0; i < n; i++)
+      {
+         const double tr = (i == 0) ? (m_h[i] - m_l[i]) : XMax(m_h[i], m_c[i - 1]) - XMin(m_l[i], m_c[i - 1]);
+         at[i] = (i == 0) ? tr : at[i - 1] + (tr - at[i - 1]) / atr_len;     // Wilder's RMA, like ta.atr
+      }
+      double lb = 0.0, ub = 0.0;
+      int d = 1;
+      for(int i = 0; i < n; i++)
+      {
+         double pr = 0.5;
+         if(look > 0 && i >= look)
+         {
+            int c = 0;
+            for(int k = i - look; k < i; k++) if(at[k] <= at[i]) c++;
+            pr = (double)c / look;
+         }
+         const double f = fmin + (fmax - fmin) * pr;
+         const double mid = 0.5 * (m_h[i] + m_l[i]);
+         const double up = mid - f * at[i], dn = mid + f * at[i];
+         if(i == 0) { lb = up; ub = dn; d = 1; }
+         else
+         {
+            const double nlb = (up > lb || m_c[i - 1] < lb) ? up : lb;
+            const double nub = (dn < ub || m_c[i - 1] > ub) ? dn : ub;
+            if(d < 0 && m_c[i] > ub) d = 1;
+            else if(d > 0 && m_c[i] < lb) d = -1;
+            lb = nlb; ub = nub;
+         }
+         line[i] = (d > 0) ? lb : ub;
+         dirv[i] = d;
+      }
+   }
+
    void ComputeDaily()
    {
       ArrayResize(m_dreg, n);
@@ -1443,6 +1497,7 @@ public:
          if(cfg.d1_mode == 1 && r != d) return 0;
          if(cfg.d1_mode == 2 && !(d > 0 && r > 0)) return 0;
       }
+      if(cfg.st_filter > 0 && i < ArraySize(m_std) && m_std[i] != d) return 0;
       return d;
    }
 

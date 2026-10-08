@@ -534,6 +534,7 @@ static void run_lab_variants()
 // Signals come from one engine over the whole series (tested: identical to a shorter live window).
 //---------------------------------------------------------------------------
 struct ReplayOut { XStats live, demo, multi, rnd; XStats multi_y[40], live_y[40]; XStats breadth[4], quoted[4]; int days, days_traded; int picks[XLAB_CELLS]; };
+static int g_sttrail = 0, g_stfilter = 0;   // env XAU_STTRAIL / XAU_STFILTER: adaptive Supertrend as the Rider trail / as an entry filter
 static int g_d1def = -1;      // env XAU_D1DEF: what "daily trend up" means (engine cfg.d1_def; -1 = engine default)
 static int g_days = 0;        // env XAU_DAYS: 1 trade only while the daily trend is up, -1 only while it is not, 0 always
 static int g_diag = 0;        // env XAU_DIAG=1: MULTI results by Lab breadth and by the win-rate the Lab quoted
@@ -571,6 +572,7 @@ static void live_replay(const std::vector<MqlRates> &base, const std::vector<Mql
    if(g_dip_lo > -2.0) { E.cfg.dip_gmt_lo = g_dip_lo; E.cfg.dip_gmt_hi = g_dip_hi; }
    if(g_d1mode >= 0) E.cfg.d1_mode = g_d1mode;
    if(g_d1def >= 0) E.cfg.d1_def = g_d1def;
+   E.cfg.st_trail = g_sttrail; E.cfg.st_filter = g_stfilter;
    E.cfg.swap_long = g_swapl; E.cfg.swap_short = g_swaps;
    if(!g_d1.empty()) E.SetDaily(g_d1, (int)g_d1.size());
    E.SetBase(base, N);
@@ -1413,6 +1415,35 @@ static void test_panel_helpers()
    CHECK(XLiveDrift(50, 18, 60.0) != "", "36% live vs 60% tested over 50 trades: alarm");
 }
 
+static void test_supertrend()
+{
+   std::printf("\n== unit tests: adaptive Supertrend (round 12 research) ==\n");
+   Series S = make_series(W_TREND, 6000, 21);
+   CXauEngine e;
+   load(e, S, (int)S.m15.size());
+   XVecD l1, l2; XVecI d1, d2;
+   e.ComputeSupertrend(l1, d1, 10, 3.0, 3.0, 100);
+   e.ComputeSupertrend(l2, d2, 10, 3.0, 3.0, 0);
+   bool same = true;
+   for(int i = 0; i < e.n; i++) if(l1[i] != l2[i] || d1[i] != d2[i]) { same = false; break; }
+   CHECK(same, "with a fixed factor the adaptive line is the classic Supertrend");
+   int flips = 0, ups = 0;
+   for(int i = 1; i < e.n; i++) { if(d1[i] != d1[i - 1]) flips++; if(d1[i] > 0) ups++; }
+   CHECK(flips > 20 && ups > e.n / 4 && ups < e.n * 3 / 4 + e.n / 5, "it flips and spends time both up and down");
+   const int cut = e.n - 1500;
+   XVecD la; XVecI da;
+   e.ComputeSupertrend(la, da, 10, 1.5, 5.0, 100);
+   Series S2 = S;
+   for(size_t i = (size_t)cut + 1; i < S2.m15.size(); i++) { S2.m15[i].high += 9.0; S2.m15[i].low -= 9.0; S2.m15[i].close += 4.0; }
+   CXauEngine e2;
+   load(e2, S2, (int)S2.m15.size());
+   XVecD lb; XVecI db;
+   e2.ComputeSupertrend(lb, db, 10, 1.5, 5.0, 100);
+   bool causal = true;
+   for(int i = 0; i <= cut; i++) if(la[i] != lb[i] || da[i] != db[i]) { causal = false; break; }
+   CHECK(causal, "the line at a bar ignores every later bar");
+}
+
 static void test_cost_guard()
 {
    std::printf("\n== unit tests: cost guard (stop must be >= 20 round-trip costs) ==\n");
@@ -1827,6 +1858,8 @@ int main(int argc, char **argv)
    if(std::getenv("XAU_TARGET")) g_target = std::atof(std::getenv("XAU_TARGET"));
    if(std::getenv("XAU_COST")) g_cost = std::atof(std::getenv("XAU_COST"));
    if(std::getenv("XAU_D1MODE")) g_d1mode = std::atoi(std::getenv("XAU_D1MODE"));
+   if(std::getenv("XAU_STTRAIL")) g_sttrail = std::atoi(std::getenv("XAU_STTRAIL"));
+   if(std::getenv("XAU_STFILTER")) g_stfilter = std::atoi(std::getenv("XAU_STFILTER"));
    if(std::getenv("XAU_D1DEF")) g_d1def = std::atoi(std::getenv("XAU_D1DEF"));
    if(std::getenv("XAU_DAYS")) g_days = std::atoi(std::getenv("XAU_DAYS"));
    if(std::getenv("XAU_DIAG")) g_diag = std::atoi(std::getenv("XAU_DIAG"));
@@ -1842,7 +1875,7 @@ int main(int argc, char **argv)
       else if(std::sscanf(w, "%lf-%lf", &g_dip_lo, &g_dip_hi) != 2) { g_dip_lo = -2.0; }
    }
    const bool all = !std::strcmp(mode, "all");
-   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); test_entry_at(); test_today_plan(); test_size_forecasts(); test_panel_helpers(); }
+   if(all || !std::strcmp(mode, "units"))   { test_units(); test_exits(); test_platform(); test_time_and_filters(); test_orb(); test_csv_roundtrip(); test_cost_guard(); test_daily_filter(); test_forecast_calibration(); test_entry_at(); test_today_plan(); test_size_forecasts(); test_panel_helpers(); test_supertrend(); }
    if(all || !std::strcmp(mode, "calib"))   run_calibration();
    if(all || !std::strcmp(mode, "causal"))  { test_causality(); test_window_consistency(); test_strategy_windows(); test_resolve(); }
    if(all || !std::strcmp(mode, "null"))    run_world(W_NULL,    "NULL - random walk, no edge exists", 6, 40000);

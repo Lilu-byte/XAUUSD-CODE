@@ -32,7 +32,7 @@ export XAU_COST=0.35
 export XAU_SWAPL=0.50 XAU_SWAPS=0.20
 D1FILE=research/data/XAUUSD_D1.csv
 [ -e "$D1FILE" ] && export XAU_D1=$D1FILE
-for p in ideas meta drift forecast entries shortfc mechanisms zones sizefc enginefc; do g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/$p" research/sim/$p.cpp; done
+for p in ideas meta drift forecast entries shortfc mechanisms zones sizefc enginefc supertrend; do g++ -std=c++17 -O2 -Wall -Wextra -o "$BIN/$p" research/sim/$p.cpp; done
 for f in research/data/XAUUSD_*.csv; do
   [ -e "$f" ] || continue
   tf=$(basename "$f" .csv | sed 's/XAUUSD_//')
@@ -69,6 +69,8 @@ for f in research/data/XAUUSD_*.csv; do
       [ -e "$D1FILE" ] && "$BIN/zones" "$f" "$H" "$D1FILE" 0.35 > "$OUT/zones_${tf}.txt" 2>&1 || true
       [ -e "$D1FILE" ] && "$BIN/sizefc" "$f" "$H" "$D1FILE" > "$OUT/sizefc_${tf}.txt" 2>&1 || true
       [ -e "$D1FILE" ] && "$BIN/enginefc" "$f" "$H" "$D1FILE" > "$OUT/enginefc_${tf}.txt" 2>&1 || true
+      # round 12: the Adaptive Supertrend indicator traded on its own (rejected; kept as a check)
+      [ -e "$D1FILE" ] && "$BIN/supertrend" "$f" "$H" "$D1FILE" > "$OUT/supertrend_${tf}.txt" 2>&1 || true
     ;; esac
   fi
   # M30 is built from the M15 file (the export has no M30); its higher timeframe is H4, as in MT5

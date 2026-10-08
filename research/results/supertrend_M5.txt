@@ -1,0 +1,18 @@
+== ADAPTIVE SUPERTREND traded on its own: research/data/XAUUSD_M5.csv (100147 bars of 300 s), older .. 2026.03.02 13:45 | newer .. 2026.09.30 13:10 ==
+   per trade: n, won, $ per 0.01 lot, R (se)  | older half | newer half | trades per trading day
+
+  Adaptive ST (10, 1.5-5, 100)
+    BOTH (stop and reverse)          |  1855  32%   -0.22$ +0.016R (0.048) |  1189  34%   +0.21$ -0.003R (0.057) | 8.14/day
+      by year (R/trade): 2025 +0.036(1504) 2026 -0.018(1540)
+    LONG only                        |   927  36%   +0.82$ +0.161R (0.072) |   595  34%   -0.77$ -0.110R (0.064) | 4.07/day
+      by year (R/trade): 2025 +0.160(752) 2026 -0.048(770)
+    LONG + daily trend (EA filter)   |   927  36%   +0.82$ +0.161R (0.072) |   296  31%   -1.62$ -0.225R (0.075) | 3.27/day
+      by year (R/trade): 2025 +0.160(752) 2026 -0.080(471)
+
+  Classic ST (10, 3)
+    BOTH (stop and reverse)          |  1637  32%   -0.78$ -0.052R (0.035) |  1051  35%   -0.59$ -0.045R (0.044) | 7.18/day
+      by year (R/trade): 2025 -0.053(1347) 2026 -0.045(1341)
+    LONG only                        |   818  35%   +0.44$ +0.052R (0.053) |   526  35%   -1.78$ -0.105R (0.053) | 3.59/day
+      by year (R/trade): 2025 +0.031(673) 2026 -0.049(671)
+    LONG + daily trend (EA filter)   |   818  35%   +0.44$ +0.052R (0.053) |   263  33%   -2.75$ -0.168R (0.073) | 2.89/day
+      by year (R/trade): 2025 +0.031(673) 2026 -0.054(408)
