@@ -684,10 +684,9 @@ void ManagePositions()
       // --- first target: bank the planned share, stop to break-even (or the profile's lock)
       if(g_st_stage[k] == 0 && x.tp1_r > 0.0 && x.part > 0.0 && fav >= x.tp1_r * r0)
       {
-         const double vc = MathFloor(g_st_vol0[k] * x.part / vstep + 1e-9) * vstep;
-         const bool close_all = (x.part >= 0.999) || (vc > 0.0 && (vol - vc) < vmin - 1e-9);
-         if(close_all) { ClosePart(ticket, 0.0); continue; }
-         if(vc >= vmin - 1e-9)
+         const double vc = XPartialLots(XMin(g_st_vol0[k], vol), x.part, vmin, vstep);
+         if(vc >= vol - 1e-9) { ClosePart(ticket, 0.0); continue; }
+         if(vc > 0.0)
          {
             if(!ClosePart(ticket, vc)) continue;
          }

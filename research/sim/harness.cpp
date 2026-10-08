@@ -1416,6 +1416,13 @@ static void test_panel_helpers()
    CHECK(XLiveDrift(50, 28, 60.0) == "", "56% live vs 60% tested over 50 trades: within luck");
    CHECK(XLiveDrift(50, 18, 60.0) != "", "36% live vs 60% tested over 50 trades: alarm");
    CHECK(XOpenTradeLine("XAUUSD", 4122.14, 1) == "", "no manual position: no own-trade line");
+   // partial close at the first target in whole 0.01 steps (Rider banks a third, Classic half, High-hit 70%)
+   CHECK(near(XPartialLots(0.02, 0.33, 0.01, 0.01), 0.01) && near(XPartialLots(0.03, 0.33, 0.01, 0.01), 0.01), "Rider: a third of 0.02 / 0.03 lot closes 0.01 (rounding down closed nothing)");
+   CHECK(near(XPartialLots(0.07, 0.33, 0.01, 0.01), 0.02) && near(XPartialLots(0.10, 0.33, 0.01, 0.01), 0.03), "Rider: 0.07 -> 0.02, 0.10 -> 0.03");
+   CHECK(XPartialLots(0.01, 0.33, 0.01, 0.01) == 0.0, "0.01 lot cannot be split: nothing closed, the stop still moves to entry");
+   CHECK(XPartialLots(0.01, 0.5, 0.01, 0.01) == 0.0 && near(XPartialLots(0.03, 0.5, 0.01, 0.01), 0.01), "Classic half: a tie keeps the runner");
+   CHECK(near(XPartialLots(0.01, 0.7, 0.01, 0.01), 0.01) && near(XPartialLots(0.02, 0.7, 0.01, 0.01), 0.01), "High-hit 70%: 0.01 lot closes all, 0.02 closes 0.01");
+   CHECK(near(XPartialLots(0.05, 1.0, 0.01, 0.01), 0.05), "Quick exit closes everything");
 }
 
 static void test_supertrend()

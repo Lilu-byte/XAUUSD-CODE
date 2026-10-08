@@ -3085,6 +3085,21 @@ int XResolveMode(const int input_mode, const ENUM_TIMEFRAMES tf)
    return (ps == 3600 || ps == 14400) ? XAU_MODE_TREND : XAU_MODE_STEADY;
 }
 
+// Lots to close at a first target that should bank `part` of a position of `vol` lots, in whole volume steps.
+// Nearest step (a tie keeps the smaller close, so the runner survives), because rounding down skipped the partial
+// entirely on small positions: a third of 0.02 or 0.03 lot rounded down to 0. Returns vol to close everything
+// (the rest would be below the minimum lot), 0 when no split is possible.
+double XPartialLots(const double vol, const double part, const double vmin, const double vstep)
+{
+   if(vol <= 0.0 || part <= 0.0 || vstep <= 0.0) return 0.0;
+   if(part >= 0.999) return vol;
+   const double steps = vol * part / vstep;
+   double vc = MathFloor(steps + 0.5 - 1e-9) * vstep;
+   if(vc < vmin - 1e-9) return 0.0;
+   if(vol - vc < vmin - 1e-9) return vol;
+   return vc;
+}
+
 // "Today's plan" in one line for both panels: trade or stand aside, which direction, and today's expected range
 // (CXauEngine::DayRangeForecast) against what the day has already made. go = true when the tools may trade today.
 string XTodayPlan(const int mode, const int npass, const bool proven, const bool too_small, const int d1_mode, const int dreg,
