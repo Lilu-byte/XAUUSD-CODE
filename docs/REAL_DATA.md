@@ -433,3 +433,18 @@ As a trailing stop it is worse on every chart. As a filter it keeps the per-trad
 (2024 and 2026 turned negative), lifts H4 per trade with the same total profit, and hurts M15. **Not adopted**: nothing
 improved everywhere. The code stays in the engine switched off (`st_trail`, `st_filter`), not exposed as an input, so the
 test can be re-run.
+
+## 13. Round 14: "give the stop a couple more pips"
+Program: `research/sim/stopbuf.cpp`. Every signal of all 48 strategy/exit combinations, stop moved further away by 0.1, 0.25 and
+0.5 ATR, either keeping the target prices (what a trader does when moving only the stop) or scaling the targets with the new
+risk. Dollars per trade per 0.01 lot after cost, older / newer:
+| Stop moved further, same targets | M5 | M15 | H1 | H4 |
+|---|---|---|---|---|
+| as now | -0.23 / -0.05 (58% won) | -0.03 / +0.22 (57%) | -0.16 / +0.14 (55%) | -0.75 / -0.15 (54%) |
+| +0.10 ATR | -0.25 / +0.05 | -0.01 / +0.21 | -0.22 / +0.11 | -0.77 / -0.14 |
+| +0.25 ATR | -0.25 / +0.29 | -0.04 / +0.25 | -0.14 / +0.10 | -0.94 / -0.38 |
+| +0.50 ATR | -0.37 / +0.29 (64% won) | -0.12 / +0.29 | -0.13 / +0.15 | -0.95 / -0.25 (59%) |
+A wider stop **wins more often** (M5 58% -> 64-66%): fewer trades are stopped out just before turning, as in the screenshot of
+8 Oct 2026. It does **not** pay more: losses get bigger by about as much as the extra wins add. H4 loses more in both halves, M5 and
+M15 lose more in the older half; scaling the targets with the stop is no better. Not adopted. One trade that was saved by a wider stop
+is the visible half of this; the trades where the wider stop only made the loss bigger are the other half.

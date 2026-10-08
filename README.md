@@ -16,6 +16,15 @@ every day a **Strategy Lab** tests 8 strategies x 6 exit styles on your chart's 
   (the EA's default *Demo mode = Rehearsal*), and judge it after 100+ trades, not after 3.
 * **"Double every month" needs about 10% risk per trade** and fails most months even with a strong edge ([docs/RISK_MATH.md](docs/RISK_MATH.md)). The EA caps risk at 5% per trade.
 
+## What changed in rounds 12-14 (your screenshots of 8 Oct 2026)
+* **The EA collects data on a demo by default**: it trades every signal it finds (proven or not), with no loss limits, and writes
+  every trade and skipped signal to `MQL5/Files/XAU_Export/XAU_Sniper_journal_XAUUSD.csv`. For a real account load
+  `XAU_Sniper_Balanced.set` (or Conservative): those switch the protections back on.
+* **The indicator only says BUY NOW / SELL NOW for a tested setup that fits your account**; anything else reads NO TRADE or
+  WATCH ONLY. The last setup stays on the chart with its outcome, including "target reached later" after a stop.
+* Tested and not adopted: the Adaptive Supertrend indicator (section 12) and stops a few pips wider (section 13: more winners,
+  not more profit).
+
 ## What changed in round 11 (20 more ideas, sharper predictions)
 * **Sharper size predictions** (the part of the market that *is* predictable): the next candle's size now comes from a HAR
   model (2-10% more accurate, every year, every chart) and the TODAY line forecasts **today's full range** from what the day

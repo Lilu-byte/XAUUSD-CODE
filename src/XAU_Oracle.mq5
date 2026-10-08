@@ -732,6 +732,56 @@ double MeanTrigger()
    return g_eng.m_sma5[g_n - 2];
 }
 
+// hh:mm of a bar time
+string HHMM(const datetime t)
+{
+   return StringSubstr(TimeToString(t, TIME_DATE | TIME_MINUTES), 11, 5);
+}
+
+bool TradeActive();
+
+// The last setup stays on the chart (faded) for 24 bars after it ended, so its outcome can be checked.
+bool PastSetupVisible()
+{
+   if(!g_ready || g_sig_i < 0 || g_act_s < 0 || !g_live_ok || !g_live.closed) return false;
+   return (g_n - 1 - g_live.exit_idx) <= 24 && !TradeActive();
+}
+
+// bar where price reached the setup's target after the setup had already ended another way (-1 = not reached)
+int TargetLaterBar()
+{
+   if(!g_live_ok || !g_live.closed || g_live.exit_kind == XE_TP2 || g_live.exit_kind == XE_TP1_FULL) return -1;
+   const double tgt = TargetPrice();
+   for(int j = g_live.exit_idx + 1; j < g_n; j++)
+      if((g_sig.dir > 0 && g_eng.m_h[j] >= tgt) || (g_sig.dir < 0 && g_eng.m_l[j] <= tgt)) return j;
+   return -1;
+}
+
+// "stop touched at 17:10 (-1.0R)"
+string OutcomeText()
+{
+   string how = "closed";
+   if(g_live.exit_kind == XE_STOP)                                    how = "stop touched";
+   else if(g_live.exit_kind == XE_TP2 || g_live.exit_kind == XE_TP1_FULL) how = "target hit";
+   else if(g_live.exit_kind == XE_TRAIL)                              how = "trailing stop hit";
+   else if(g_live.exit_kind == XE_MR)                                 how = "mean exit";
+   else if(g_live.exit_kind == XE_TIME)                               how = "time exit";
+   return how + " at " + HHMM(g_eng.m_t[g_live.exit_idx]) + " (" + StringFormat("%+.1fR", g_live.r_net) + ")";
+}
+
+// panel line for the setup that just ended
+string PastSetupLine()
+{
+   if(!PastSetupVisible()) return "";
+   const string side = (g_sig.dir > 0) ? "buy " : "sell ";
+   string s = "Last setup: " + side + Px(g_sig.entry) + " - " + OutcomeText();
+   const int lt = TargetLaterBar();
+   if(lt >= 0) s += "; its target " + Px(TargetPrice()) + " was reached later at " + HHMM(g_eng.m_t[lt]) + ", after the plan had closed";
+   return s;
+}
+
+void DrawPastSetup();
+
 bool TradeActive()
 {
    if(!g_ready || g_sig_i < 0 || g_act_s < 0) return false;
@@ -743,7 +793,14 @@ void DrawTradeBox()
    const string nm[12] = {"XO_BX_R", "XO_BX_G1", "XO_BX_G2", "XO_BX_E", "XO_BX_TR", "XO_BX_T0", "XO_BX_T1", "XO_BX_T2", "XO_BX_T3", "XO_BX_T4",
                           "XO_BX_MR", "XO_BX_T5"};
    for(int k = 0; k < 12; k++) XObjDelete(nm[k]);
-   if(!InpShowTradeBox || !TradeActive()) return;
+   if(!InpShowTradeBox) return;
+   if(!TradeActive())
+   {
+      if(PastSetupVisible()) DrawPastSetup();
+      else { XObjDelete("XO_BX_P0"); XObjDelete("XO_BX_P1"); XObjDelete("XO_BX_P2"); XObjDelete("XO_BX_P3"); XObjDelete("XO_BX_P4"); }
+      return;
+   }
+   XObjDelete("XO_BX_P0"); XObjDelete("XO_BX_P1"); XObjDelete("XO_BX_P2"); XObjDelete("XO_BX_P3"); XObjDelete("XO_BX_P4");
    const int period = g_eng.cfg.base_sec;
    const datetime t0 = g_eng.m_t[g_sig_i + 1];
    const int hold = (g_act_x.max_hold > 0) ? g_act_x.max_hold : g_eng.MaxHold();
@@ -792,6 +849,27 @@ void DrawTradeBox()
    }
    else XObjText("XO_BX_T2", tl, tgt, "TARGET " + Px(tgt), XRGB(90, 230, 160), 9);
    XObjText("XO_BX_T4", t0, g_sig.sl, "close by " + CloseByText(t0 + (datetime)(hold * period), hold), XRGB(255, 200, 64), 8);
+}
+
+// The setup that just ended: faded outlines up to its exit, the outcome at the exit, and a note if the target was
+// reached after the plan had closed (so a stopped-out setup that later "worked" is visible, and so is why it counted
+// as a loss).
+void DrawPastSetup()
+{
+   const int period = g_eng.cfg.base_sec;
+   const datetime t0 = g_eng.m_t[g_sig_i + 1];
+   const datetime tx = g_eng.m_t[g_live.exit_idx] + (datetime)period;
+   const double tgt = TargetPrice();
+   const color fr = XRGB(150, 90, 95), fg = XRGB(90, 140, 115);
+   XObjRect("XO_BX_P0", t0, g_sig.entry, tx, g_sig.sl, fr, false);
+   XObjRect("XO_BX_P1", t0, g_sig.entry, tx, tgt, fg, false);
+   const bool won = (g_live.r_net > 0.05);
+   XObjText("XO_BX_P2", tx, won ? tgt : g_sig.sl, OutcomeText(), won ? XRGB(90, 230, 160) : XRGB(255, 120, 120), 8);
+   const string side = (g_sig.dir > 0) ? "buy " : "sell ";
+   XObjText("XO_BX_P3", t0, g_sig.entry, side + Px(g_sig.entry), XRGB(170, 175, 190), 8);
+   const int lt = TargetLaterBar();
+   if(lt >= 0) XObjText("XO_BX_P4", g_eng.m_t[lt], tgt, "target reached later " + HHMM(g_eng.m_t[lt]), XRGB(255, 200, 64), 8);
+   else XObjDelete("XO_BX_P4");
 }
 
 //+------------------------------------------------------------------+
@@ -940,6 +1018,8 @@ void DrawMainPanel()
    g_pm.Line("XAU ORACLE  " + XTfName((ENUM_TIMEFRAMES)_Period) + "   " + Px(bid), ClrGold());
    g_pm.Line(status, sc, 4);
    g_pm.Line(sub, ClrDim());
+   const string past = PastSetupLine();
+   if(StringLen(past) > 0) g_pm.Line(past, (g_live.r_net > 0.05) ? ClrGreen() : ClrGold());
    {
       bool go;
       const bool intraday = PeriodSeconds((ENUM_TIMEFRAMES)_Period) < 86400;

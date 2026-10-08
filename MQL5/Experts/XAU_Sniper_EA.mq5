@@ -3856,9 +3856,9 @@ input double InpMarginUsePct    = 50.0;   // Max % of free margin one trade may 
 input double InpMaxRiskOverrun  = 1.5;    // Refuse trade if min lot risks more than this x requested
 
 input group "=== Demo accounts ==="
-input ENUM_XAU_DEMO InpDemoMode = XAU_DEMO_REHEARSAL;  // REHEARSAL = real-account rules (recommended); FREE RUN = warnings only. Ignored on real accounts
-input bool   InpDemoUnproven    = false;  // Free run only: also trade the closest strategy when none passed the lab (lost on real data)
-input double InpDemoMaxRiskPct  = 10.0;   // Free run only: skip a trade when even the smallest lot risks more than this % of equity
+input ENUM_XAU_DEMO InpDemoMode = XAU_DEMO_FREE;  // FREE RUN = trade every signal for data (default since round 14); REHEARSAL = real-account rules. Ignored on real accounts
+input bool   InpDemoUnproven    = true;   // Free run only: also trade the closest strategy when none passed the lab (lost on real data; on for data collection)
+input double InpDemoMaxRiskPct  = 50.0;   // Free run only: skip a trade when even the smallest lot risks more than this % of equity
 input int    InpDemoMaxPositions = 5;     // Free run only: simultaneous EA trades
 
 input group "=== Your own trades ==="
@@ -3866,17 +3866,17 @@ input bool   InpProtectManual   = false;  // Add a stop to ANY position on this 
 input double InpProtectPct      = 5.0;    // ...placed where that position would lose this % of equity (from now if it is already losing)
 
 input group "=== Account protection ==="
-input double InpDailyLossPct    = 3.0;    // Stop for the day at this equity loss (0 = off)
-input double InpWeeklyLossPct   = 6.0;    // Stop for the week at this equity loss (0 = off)
-input double InpMaxDDPct        = 15.0;   // Kill-switch: drawdown from peak equity (0 = off)
+input double InpDailyLossPct    = 0.0;    // Stop for the day at this equity loss (0 = off; off by default since round 14, set 3 for a real account)
+input double InpWeeklyLossPct   = 0.0;    // Stop for the week at this equity loss (0 = off; set 6 for a real account)
+input double InpMaxDDPct        = 0.0;    // Kill-switch: drawdown from peak equity (0 = off; set 15 for a real account)
 input bool   InpKillFlatten     = true;   // Kill-switch also closes open EA positions
 input bool   InpResetKill       = false;  // Set true for one start to clear a kill-switch / reset peak
 input bool   InpLimitsOwnTradesOnly = false; // Loss limits count only this EA's trades (your manual trades on the account do not stop it)
-input int    InpMaxConsecLosses = 3;      // Pause after N losses in a row (until tomorrow or until paper trades recover)
+input int    InpMaxConsecLosses = 0;      // Pause after N losses in a row (0 = off; set 3 for a real account)
 input bool   InpPaperResume     = true;   // During that pause, paper-trade the signals and resume as soon as they recover
-input int    InpMaxTradesPerDay = 6;      // Entries per day
+input int    InpMaxTradesPerDay = 0;      // Entries per day (0 = no limit)
 input int    InpMaxPositions    = 1;      // Simultaneous EA positions
-input int    InpCooldownBars    = 2;      // Bars to wait after a losing trade
+input int    InpCooldownBars    = 0;      // Bars to wait after a losing trade (0 = none)
 input bool   InpOneTradePerSymbol = false;// true = never open while ANY position (manual trades too) exists on this symbol
 input bool   InpDailyLossRealized = false;// Daily limit counts closed trades only (default: equity incl. floating)
 
@@ -3925,6 +3925,9 @@ input string InpComment       = "XAUS";
 input group "=== Phone notifications (set your MetaQuotes ID in Tools > Options > Notifications) ==="
 input bool   InpPushTrades    = false;    // Push every trade the EA opens and closes to your phone
 input bool   InpPushDaily     = false;    // Push a short summary when the server day ends
+
+input group "=== Data for improving the EA ==="
+input bool   InpJournal       = true;     // Write every trade and every skipped signal to MQL5/Files/XAU_Export/XAU_Sniper_journal_<symbol>.csv
 
 input group "=== Display ==="
 input bool   InpShowPanel     = true;
@@ -4001,6 +4004,8 @@ string   g_news_note = "";
 bool     g_news_blocked = false;
 
 void DrawPanel();
+void Journal(const string event, const ulong pos_id, const int st, const int pr, const int dir, const double lots, const double price,
+             const double sl, const double tp, const double risk_pct, const double atr, const double pl, const int proven, const string note);
 
 //+------------------------------------------------------------------+
 string GvName(const string tag)
@@ -4907,13 +4912,20 @@ bool TryEnterCell(const int st, const int pr, const bool proven)
    {
       g_skip_note = "signal skipped: no strategy has passed the Strategy Lab on this chart";
       Print("XAU Sniper: ", g_skip_note);
+      Journal("SKIP", 0, st, pr, s.dir, 0.0, g_eng.m_c[i], s.sl, 0.0, 0.0, s.atr, 0.0, 0, "unproven");
       return false;
    }
    // while a loss-streak pause is active, follow the signals on paper so we know when to resume
    if(!DemoFree() && InpPaperResume && StreakPauseActive()) g_paper.Add(g_eng.m_t[i], s.dir, s.sl);
 
    const string blocked = EntryBlocked(s);
-   if(StringLen(blocked) > 0) { g_skip_note = "signal skipped: " + blocked; Print("XAU Sniper: ", g_skip_note); return false; }
+   if(StringLen(blocked) > 0)
+   {
+      g_skip_note = "signal skipped: " + blocked;
+      Print("XAU Sniper: ", g_skip_note);
+      Journal("SKIP", 0, st, pr, s.dir, 0.0, g_eng.m_c[i], s.sl, 0.0, 0.0, s.atr, 0.0, proven ? 1 : 0, blocked);
+      return false;
+   }
 
    MqlTick tk;
    if(!SymbolInfoTick(_Symbol, tk)) return false;
@@ -4961,6 +4973,7 @@ bool TryEnterCell(const int st, const int pr, const bool proven)
          g_small_note = g_skip_note;
       }
       Print("XAU Sniper: ", g_skip_note);
+      Journal("SKIP", 0, st, pr, s.dir, 0.0, entry, s.sl, 0.0, lp.risk_pct, s.atr, 0.0, proven ? 1 : 0, lp.note);
       return false;
    }
    if(StringLen(lp.src_note) > 0) Print("XAU Sniper: sizing note - ", lp.src_note);
@@ -4978,6 +4991,7 @@ bool TryEnterCell(const int st, const int pr, const bool proven)
       if(ord > 0) { GlobalVariableSet(GvPos(ord, "X"), (double)pr); GlobalVariableSet(GvPos(ord, "C"), (double)(st * XP_COUNT + pr)); }
       if(demo && lp.risk_pct > risk * 1.5)
          Print("XAU Sniper: DEMO note - minimum lot risks ", DoubleToString(lp.risk_pct, 1), "% (target ", DoubleToString(risk, 2), "%). A live account would have refused this trade.");
+      Journal("OPEN", ord, st, pr, s.dir, lp.lots, entry, sl, tp, lp.risk_pct, s.atr, 0.0, proven ? 1 : 0, "");
       if(InpPushTrades)
          SendNotification("XAU Sniper " + XTfName((ENUM_TIMEFRAMES)_Period) + ": " + (buy ? "BUY " : "SELL ") + DoubleToString(lp.lots, 2) + " at " +
                           DoubleToString(entry, _Digits) + ", stop " + DoubleToString(sl, _Digits) + ", risk " + DoubleToString(lp.risk_pct, 1) + "% [" +
@@ -5079,13 +5093,18 @@ void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest 
 {
    if(trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
    g_stats_dirty = true;
-   if(!InpPushTrades || !HistoryDealSelect(trans.deal)) return;
+   if((!InpPushTrades && !InpJournal) || !HistoryDealSelect(trans.deal)) return;
    if(HistoryDealGetInteger(trans.deal, DEAL_MAGIC) != InpMagic || HistoryDealGetString(trans.deal, DEAL_SYMBOL) != _Symbol) return;
    const long entry = HistoryDealGetInteger(trans.deal, DEAL_ENTRY);
    if(entry != DEAL_ENTRY_OUT && entry != DEAL_ENTRY_OUT_BY && entry != DEAL_ENTRY_INOUT) return;
    const double pl = HistoryDealGetDouble(trans.deal, DEAL_PROFIT) + HistoryDealGetDouble(trans.deal, DEAL_SWAP) + HistoryDealGetDouble(trans.deal, DEAL_COMMISSION);
    // the closing deal of a buy is a sell
    const bool was_buy = (HistoryDealGetInteger(trans.deal, DEAL_TYPE) == DEAL_TYPE_SELL);
+   const ulong pos_id = (ulong)HistoryDealGetInteger(trans.deal, DEAL_POSITION_ID);
+   const int cell = GlobalVariableCheck(GvPos(pos_id, "C")) ? (int)GlobalVariableGet(GvPos(pos_id, "C")) : -1;
+   Journal("CLOSE", pos_id, (cell >= 0) ? cell / XP_COUNT : -1, (cell >= 0) ? cell % XP_COUNT : -1, was_buy ? 1 : -1,
+           HistoryDealGetDouble(trans.deal, DEAL_VOLUME), HistoryDealGetDouble(trans.deal, DEAL_PRICE), 0.0, 0.0, 0.0, 0.0, pl, -1, "");
+   if(!InpPushTrades) return;
    SendNotification("XAU Sniper " + XTfName((ENUM_TIMEFRAMES)_Period) + ": closed " + (was_buy ? "BUY " : "SELL ") +
                     DoubleToString(HistoryDealGetDouble(trans.deal, DEAL_VOLUME), 2) + " at " + DoubleToString(HistoryDealGetDouble(trans.deal, DEAL_PRICE), _Digits) +
                     ", P/L " + StringFormat("%+.2f ", pl) + AccountInfoString(ACCOUNT_CURRENCY) + ", equity " + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2));
@@ -5103,6 +5122,35 @@ double OnTester()
    const double np = TesterStatistics(STAT_PROFIT);
    if(np <= 0.0) return np;
    return rf * XMin(pf, 3.0) * MathSqrt(trades);
+}
+
+// One row in the EA's journal (MQL5/Files/XAU_Export/XAU_Sniper_journal_<symbol>.csv): OPEN, CLOSE and SKIP events
+// with everything needed to compare live trading with the tests. Send that file for analysis.
+void Journal(const string event, const ulong pos_id, const int st, const int pr, const int dir, const double lots, const double price,
+             const double sl, const double tp, const double risk_pct, const double atr, const double pl, const int proven, const string note)
+{
+   if(!InpJournal) return;
+   const string fn = "XAU_Export\\XAU_Sniper_journal_" + _Symbol + ".csv";
+   const int h = FileOpen(fn, FILE_READ | FILE_WRITE | FILE_CSV | FILE_ANSI | FILE_SHARE_READ, ',');
+   if(h == INVALID_HANDLE) return;
+   if(FileSize(h) == 0)
+      FileWrite(h, "event", "server_time", "position", "symbol", "timeframe", "mode", "demo_mode", "strategy", "exit", "dir", "lots", "price", "stop",
+                "target", "risk_pct", "atr", "spread", "daily_trend", "proven", "result_money", "equity", "balance", "note");
+   FileSeek(h, 0, SEEK_END);
+   MqlTick tk;
+   const double spread = SymbolInfoTick(_Symbol, tk) ? tk.ask - tk.bid : 0.0;
+   const int n = g_eng.n;
+   const int dr = (n > 0 && g_eng.d1n > 0) ? g_eng.m_dreg[n - 1] : 0;
+   string demo = "live";
+   if(IsDemo()) demo = DemoFree() ? "demo_free" : "demo_rehearsal";
+   FileWrite(h, event, TimeToString(TimeTradeServer(), TIME_DATE | TIME_SECONDS), IntegerToString((long)pos_id), _Symbol,
+             XTfName((ENUM_TIMEFRAMES)_Period), (g_mode == XAU_MODE_TREND) ? "TREND" : "STEADY", demo,
+             (st >= 0) ? XStratName(st) : "", (pr >= 0) ? XExitShort(pr) : "", (dir > 0) ? "buy" : ((dir < 0) ? "sell" : ""),
+             DoubleToString(lots, 2), DoubleToString(price, _Digits), DoubleToString(sl, _Digits), DoubleToString(tp, _Digits),
+             DoubleToString(risk_pct, 2), DoubleToString(atr, _Digits), DoubleToString(spread, _Digits), IntegerToString(dr),
+             (proven < 0) ? "" : IntegerToString(proven), DoubleToString(pl, 2), DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2),
+             DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2), note);
+   FileClose(h);
 }
 
 // Win-rate the Lab measured for what the EA trades now (TREND: all passing combinations together).

@@ -1,0 +1,14 @@
+== WIDER STOPS: research/data/XAUUSD_M15.csv (99999 bars of 900 s), every signal of all 48 combinations, cost 0.35 ==
+   older .. 2025.01.14 09:30 | newer .. 2026.09.30 13:00   ($ per trade per 0.01 lot after cost, winners)
+
+  SAME TARGET PRICES (only the stop moves)
+    stop +0.00 ATR | older   2755  57.2% won  -0.025$ (0.133) | newer  31899  57.9% won  +0.221$ (0.083)
+    stop +0.10 ATR | older   2755  57.9% won  -0.013$ (0.136) | newer  31899  59.6% won  +0.208$ (0.085)
+    stop +0.25 ATR | older   2755  58.6% won  -0.037$ (0.140) | newer  31899  61.9% won  +0.254$ (0.089)
+    stop +0.50 ATR | older   2755  59.4% won  -0.115$ (0.147) | newer  31902  65.1% won  +0.289$ (0.094)
+
+  TARGETS SCALED WITH THE NEW RISK
+    stop +0.00 ATR | older   2755  57.2% won  -0.025$ (0.133) | newer  31899  57.9% won  +0.221$ (0.083)
+    stop +0.10 ATR | older   2755  56.8% won  -0.049$ (0.139) | newer  31899  58.1% won  +0.197$ (0.088)
+    stop +0.25 ATR | older   2755  56.5% won  -0.069$ (0.147) | newer  31899  58.2% won  +0.168$ (0.096)
+    stop +0.50 ATR | older   2755  56.1% won  -0.101$ (0.161) | newer  31902  58.3% won  +0.201$ (0.109)

@@ -363,12 +363,18 @@ enum { STAT_PROFIT = 1, STAT_TRADES, STAT_PROFIT_FACTOR, STAT_RECOVERY_FACTOR };
 inline double TesterStatistics(int) { return 0.0; }
 
 // ---- files / terminal (data export script) -------------------------------------
-enum { FILE_WRITE = 2, FILE_CSV = 8, FILE_ANSI = 32, FILE_TXT = 16, INVALID_HANDLE = -1 };
+enum { FILE_READ = 1, FILE_WRITE = 2, FILE_CSV = 8, FILE_ANSI = 32, FILE_TXT = 16, FILE_SHARE_READ = 128, INVALID_HANDLE = -1 };
+enum { SEEK_SET_ = 0 };
+#ifndef SEEK_END
+#define SEEK_END 2
+#endif
 enum { TERMINAL_DATA_PATH = 1 };
 inline int FileOpen(const string &, int, int = 0) { return 1; }
 inline int FileOpen(const string &, int, char) { return 1; }
 template<typename... A> inline unsigned FileWrite(int, A...) { return 0; }
 inline void FileClose(int) {}
+inline bool FileSeek(int, long, int) { return true; }
+inline unsigned long FileSize(int) { return 0; }
 inline string TerminalInfoString(int) { return "C:\\data"; }
 inline int GetLastError() { return 0; }
 template<typename... A> inline void Alert(A...) {}

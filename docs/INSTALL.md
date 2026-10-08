@@ -71,10 +71,18 @@ needs a connected terminal). Run it with the terminal online.
 
 ## Demo accounts
 *Demo accounts > Demo mode*:
-* **Rehearsal** (default): the demo runs exactly the rules of a real account, so what you see is what a real account would do.
-* **Free run** (also set by `XAU_Sniper_DemoTurbo.set`): every protection only warns (no kill-switch, no daily limits), up to 5 EA trades at once,
-  and the smallest lot is allowed even above your risk, up to *InpDemoMaxRiskPct* (10%) of equity per trade. With *InpDemoUnproven* it also
-  trades the closest strategy when none passed the Lab (marked UNPROVEN). Not a preview of a real account.
+* **Free run** (default since round 14, and `XAU_Sniper_DataCollect.set`): the EA trades every signal it finds so there is data to
+  improve it: no loss limits, up to 5 EA trades at once, the closest strategy when none passed the Lab (*InpDemoUnproven*), and the
+  smallest lot even above your risk, up to *InpDemoMaxRiskPct* (50%) of equity per trade. Not a preview of a real account.
+* **Rehearsal** (`XAU_Sniper_Balanced.set` and the other live presets): the demo runs exactly the rules of a real account.
+
+**Loss limits are off by default since round 14** (daily, weekly, drawdown kill-switch, pause after losses, trades per day,
+cooldown), so a demo collects as much data as possible. The presets Balanced, Conservative, HighWin, Growth and Aggressive switch them
+back on. **Load one of those before using a real account.**
+
+**The EA's journal** (*InpJournal*, on): every trade it opens (OPEN), closes (CLOSE, with the money result) and every signal it skipped
+(SKIP, with the reason) goes to `MQL5/Files/XAU_Export/XAU_Sniper_journal_XAUUSD.csv` (File > Open Data Folder). Zip and send it
+together with the export script's files: that is how the live behaviour is compared with the tests.
 
 On a real account the demo inputs are ignored. In every mode the EA will not enter while free margin is <= 0, the margin level is below 300%,
 or the spread is above 1.5x the tested cost (*InpCostPrice*, 0.35). 0.01 lot of gold needs roughly 42 USD of margin at 1:100 and 4,200 USD price.

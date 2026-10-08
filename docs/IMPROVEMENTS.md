@@ -147,3 +147,12 @@ Numbers: [REAL_DATA.md section 11](REAL_DATA.md#11-round-11-supplydemand-zones-s
 | 99 | EA: *InpLimitsOwnTradesOnly* (loss limits count only the EA's trades); STOPPED / PAUSED messages give the numbers and say that manual trades count | DONE | The EA was stopped by drawdowns from manual trades on the same account |
 | 100 | EA: risk check and the Checks row use the risk the smallest lot really takes when it is above your setting | DONE | "about 0% at 1% risk" was true only for an account big enough to trade 1% |
 | 101 | Alerts (pop-up, phone, e-mail) only for tradable signals; the plan line of a skipped setup reads "Setup (not a trade): buy ..."; the mean-revert exit rule says when its level is already past the entry | DONE | Same rule everywhere: nothing that is not a trade may look like one |
+
+## Round 14 ("it hit the TP", "remove the loss limits", "keep the predictions longer")
+| # | Change | Status | Why |
+|--:|---|---|---|
+| 102 | EA defaults: demo free run, unproven strategies allowed, smallest lot up to 50% of equity, no daily / weekly / drawdown / loss-streak / trades-per-day / cooldown limits | DONE | Collect as many trades as possible on the demo |
+| 103 | Live presets (Balanced, Conservative, HighWin, Growth, Aggressive) carry the account protection explicitly; new `XAU_Sniper_DataCollect.set` | DONE | Defaults are now for data, presets for real money |
+| 104 | EA journal: OPEN / CLOSE / SKIP rows with strategy, exit, prices, risk, ATR, spread, daily trend, proven flag, result, equity, reason | DONE | Send the file for analysis |
+| 105 | Indicator: the last setup stays (faded) for 24 bars after it ended with its outcome ("stop touched at 17:10 (-1.0R)"), a "target reached later" mark, and a "Last setup" panel line | DONE | The box disappeared right after the stop was touched, so the later run to the target could not be seen on the chart |
+| 106 | Wider stops tested (`research/sim/stopbuf.cpp`), not adopted | DONE (research) | REAL_DATA section 13 |

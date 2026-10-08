@@ -1,5 +1,5 @@
 ; XAU_Sniper_Balanced
-; Default. Trades the strategy that passed the Strategy Lab (>= 60% wins with profit, walk-forward). 1% risk, 3% daily / 6% weekly stop, 15% drawdown kill-switch.
+; For a real account (or a demo rehearsal of one): trades only what passed the Strategy Lab, 1% risk, 3% daily / 6% weekly stop, 15% drawdown kill-switch, pause after 3 losses in a row.
 ; Load via the EA inputs dialog: Load. Symbol XAUUSD (M15 or H1).
 InpMode=-1
 InpTrendWinTarget=50.0
@@ -22,7 +22,7 @@ InpMarginUsePct=50.0
 InpMaxRiskOverrun=1.5
 InpDemoMode=0
 InpDemoUnproven=false
-InpDemoMaxRiskPct=10.0
+InpDemoMaxRiskPct=50.0
 InpDemoMaxPositions=5
 InpProtectManual=false
 InpProtectPct=5.0
@@ -77,6 +77,7 @@ InpSlippagePts=50
 InpComment=XAUS
 InpPushTrades=false
 InpPushDaily=false
+InpJournal=true
 InpShowPanel=true
 InpPanelPos=1
 InpFontSize=10

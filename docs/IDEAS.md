@@ -475,3 +475,11 @@ Numbers: [REAL_DATA.md section 12](REAL_DATA.md#12-round-12-the-adaptive-st-fxc-
 | 325 | Adaptive factor (1.5-5 by volatility) vs the classic factor 3 | TESTED - rejected | The adaptive factor is no better |
 | 326 | Supertrend line as the Rider exit's trailing stop | TESTED - rejected | Worse on H1 and H4, both Lab windows |
 | 327 | Supertrend direction as an entry filter | TESTED - rejected | Same or less total profit on H1/H4, worse on M15 |
+
+## Round 14
+| # | Idea | Status | Note |
+|--:|---|---|---|
+| 328 | Stop a few pips further away (0.1 / 0.25 / 0.5 ATR), same targets or scaled | TESTED - rejected | Higher win-rate, not more profit; worse on H4 (REAL_DATA section 13) |
+| 329 | EA journal of every trade and skipped signal (CSV) | BUILT | The data to compare live trading with the tests |
+| 330 | Last setup stays on the chart with its outcome, and "target reached later" | BUILT | Shows what happened after a stop instead of erasing it |
+| 331 | Demo data-collection defaults: free run, unproven allowed, no loss limits | BUILT | The user's request; live presets keep the limits |

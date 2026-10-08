@@ -28,16 +28,28 @@ def ea_inputs():
         items.append((name, val))
     return items
 
+# Since round 14 the EA's defaults collect data on a demo (free run, no loss limits). The presets meant for a real
+# account carry the account protection explicitly.
+LIVE = {"InpDemoMode": "0", "InpDemoUnproven": "false", "InpDailyLossPct": "3.0", "InpWeeklyLossPct": "6.0", "InpMaxDDPct": "15.0",
+        "InpMaxConsecLosses": "3", "InpMaxTradesPerDay": "6", "InpCooldownBars": "2"}
+
+def live(over):
+    d = dict(LIVE)
+    d.update(over)
+    return d
+
 PRESETS = {
-    "XAU_Sniper_Balanced": ("Default. Trades the strategy that passed the Strategy Lab (>= 60% wins with profit, walk-forward). 1% risk, 3% daily / 6% weekly stop, 15% drawdown kill-switch.", {}),
+    "XAU_Sniper_Balanced": ("For a real account (or a demo rehearsal of one): trades only what passed the Strategy Lab, 1% risk, 3% daily / 6% weekly stop, 15% drawdown kill-switch, pause after 3 losses in a row.", live({})),
+    "XAU_Sniper_DataCollect": ("DEMO DATA COLLECTION: trades every signal the strategies find (proven or not), all day, up to 5 positions, no loss limits, and writes every trade and skipped signal to MQL5/Files/XAU_Export/XAU_Sniper_journal_<symbol>.csv. Send that file for analysis. Not a preview of a real account.",
+        {"InpDemoMode": "1", "InpDemoUnproven": "true", "InpSessionFilter": "false", "InpDemoMaxPositions": "5", "InpJournal": "true"}),
     "XAU_Sniper_Conservative": ("Capital preservation: 0.5% risk, tighter limits, and the lab must see 65% winning trades.",
-        {"InpRiskPct": "0.5", "InpDailyLossPct": "2.0", "InpWeeklyLossPct": "4.0", "InpMaxDDPct": "10.0", "InpWinTarget": "65.0", "InpMaxTradesPerDay": "4"}),
+        live({"InpRiskPct": "0.5", "InpDailyLossPct": "2.0", "InpWeeklyLossPct": "4.0", "InpMaxDDPct": "10.0", "InpWinTarget": "65.0", "InpMaxTradesPerDay": "4"})),
     "XAU_Sniper_HighWin": ("Highest share of winners: the lab must see 65% wins and every trade uses the High-hit exit (70% closed at 0.5R). Smaller average win; judge it by profit, not win-rate alone.",
-        {"InpWinTarget": "65.0", "InpExit": "1"}),
+        live({"InpWinTarget": "65.0", "InpExit": "1"})),
     "XAU_Sniper_Growth": ("Faster compounding: 2% risk. Only after the Balanced set has passed your own tests.",
-        {"InpRiskPct": "2.0", "InpDailyLossPct": "4.0", "InpWeeklyLossPct": "8.0", "InpMaxDDPct": "20.0"}),
+        live({"InpRiskPct": "2.0", "InpDailyLossPct": "4.0", "InpWeeklyLossPct": "8.0", "InpMaxDDPct": "20.0"})),
     "XAU_Sniper_Aggressive": ("HIGH RISK: 4% per trade, the closest to a 'double it' attempt. Expect large drawdowns; read docs/RISK_MATH.md first. Demo only until proven.",
-        {"InpRiskPct": "4.0", "InpDailyLossPct": "6.0", "InpWeeklyLossPct": "12.0", "InpMaxDDPct": "30.0"}),
+        live({"InpRiskPct": "4.0", "InpDailyLossPct": "6.0", "InpWeeklyLossPct": "12.0", "InpMaxDDPct": "30.0"})),
     "XAU_Sniper_DemoTurbo": ("DEMO WATCHING (free run): trades all day (no session filter), several positions, protections only warn, and trades the closest strategy even when none passed the lab (demo accounts only). Many more trades, lower quality, NOT a preview of a real account.",
         {"InpDemoMode": "1", "InpSessionFilter": "false", "InpMaxTradesPerDay": "50", "InpCooldownBars": "0", "InpDemoMaxPositions": "5", "InpDemoUnproven": "true", "InpWinTarget": "55.0"}),
     # one EA per chart, three charts at once: more trades from independent daily Labs (different magic numbers)
