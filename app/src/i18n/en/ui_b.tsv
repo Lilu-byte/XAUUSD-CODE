@@ -1,0 +1,170 @@
+160	{0}Valuation lab
+161	Move price, earnings, growth and the Akhza (treasury bill) rate, and watch P/E, expected return, payback and value change.
+162	{0}FIS calculator
+163	His channel’s analysis template for a manufacturing company, the P/80%NAV check for holdings, and the fundamental stop-loss check, with your own Codal numbers.
+164	Open
+165	{0}Glossary
+166	{0} terms from every hall, searchable.
+167	Strength of each hall
+168	Share of exercises that are not yet due for review.
+169	No lessons finished yet.
+170	(next in {0} min)
+171	{0}Energy: {1} of {2}
+172	Each mistake in a lesson costs 1 energy. 1 energy comes back every 30 minutes
+173	. Reviews, Blitz and tests don’t use energy.
+174	Refill
+175	{0} coins
+176	{0}Streak shield: {1} of {2}
+177	If you skip a day, a shield keeps your streak alive automatically.
+178	Buy
+179	Coins come from lessons, chests, the daily gift, quests, hitting your daily goal and mastery tests. Balance: {0}.
+180	S
+181	M
+182	T
+183	W
+184	T
+185	F
+186	S
+187	Your progress is saved to your claude.ai account and continues on any device where you open it with the same account.
+188	Your progress is saved in this browser only.
+189	; next rank “{0}” at level {1}
+190	%
+191	{0} Certificate of completion
+192	You passed the “Independent Analyst” final exam on {0}. Next step: real work on Codal in the “Real work” tab.
+193	Simple or full version
+194	Dark
+195	Light
+196	Match device
+197	Off
+198	Are you sure? Tap again to erase all progress
+199	Erase all progress
+200	{0} of {1} XP to level {2}
+201	Total XP
+202	Day streak
+203	Best {0}
+204	Stars of {0}
+205	Accuracy
+206	Blitz record
+207	XP over the last 7 days
+208	Chart of XP over the last seven days
+209	Goal
+210	{0}Card collection
+211	{0} of {1} cards
+212	{0} foil. Every finished lesson is a card; a three-star lesson turns its card foil.
+213	Badges
+214	Daily goal
+215	{0}Appearance
+216	Dark is the app’s main look; light is for daytime and bright light.
+217	Sound
+218	Sounds for answers, chests and level-ups
+219	Saving progress
+220	Educational, not investment advice. No method guarantees a profit.
+221	Reward collected
+222	+{0} XP
+223	+{0} coins
+224	Real work on Codal
+225	Lessons build the skill; these tasks you do yourself on Codal and in a spreadsheet. Each task gives XP and coins the first time and also counts toward “My week”. The app can’t check them, so tick them honestly. {0} of {1} done.
+226	Stages and signs of readiness
+227	Only move to the next stage once you show the readiness sign for the current one.
+228	Practice: {0}
+229	Sign of readiness: {0}
+230	You should be able to: {0}
+231	I did this week’s routine (resets every week)
+232	The “Independent Analyst” final exam in the real world
+233	With no source other than Codal and tsetmc.
+234	The 30-minute weekly routine
+235	Every week at a fixed time: open your list’s new announcements on Codal, enter the numbers in your spreadsheet, update the sustainable EPS, and only then look at the price on tsetmc. Write every decision and its reason in your journal.
+236	Sources
+237	Hall {0} guide
+238	Key points
+239	Common mistakes
+240	Lessons
+241	Close
+242	This hall is still locked. Finish its prerequisites or take the jump test.
+243	Finish the previous lesson first.
+244	Finish it without mistakes to earn {0} stars and a foil card.
+245	You already have three stars and the foil card.
+246	Flawless = 3 stars and a foil card.
+247	Practice again<i class='sep'></i>+5 XP
+248	Start<i class='sep'></i>+10 XP
+249	{0} {0|card|cards} and {1} {1|exercise|exercises}.
+250	Each mistake costs 1 energy, and a missed exercise comes back at the end of the lesson.
+251	The mastery test opens once every lesson in this hall is finished.
+252	You already passed; this time is for practice.
+253	Needed to unlock the next halls.
+254	10 questions from every lesson in this hall. 8 correct answers are needed to pass. No energy is used and you get feedback after each answer. Passing earns a golden chest.
+255	Later
+256	, 
+257	Jump test
+258	Jump to “{0}”
+259	If you already know this material, prove it with this test: {0} questions from {1} {1|hall|halls} ({2}). You need {3} correct answers to pass. Passing marks all of these halls as finished.
+260	Start the jump test
+261	This lesson can’t continue with zero energy.
+262	You need energy to start a new lesson.
+263	; next in {0} min
+264	Leave the lesson
+265	{0} Out of energy
+266	{0} Do a short review to get 1 energy back, or wait (1 energy every 30 minutes
+267	). The 60-second Blitz needs no energy.
+268	Review to earn energy
+269	Refill energy
+270	{0} coins (balance {1})
+271	Day {0}
+272	 and a golden hour
+273	{0} Today’s gift
+274	The gift grows every day you visit. Day seven is a chest with a golden hour.
+275	Collect {0} coins{1}
+276	Nothing to review yet. Finish a lesson first.
+277	Final exam
+278	The Blitz unlocks after you finish your first lesson.
+279	True
+280	False
+281	The correct pairs stay on screen.
+282	Look at the red rows; the right group is written under each one.
+283	{0} in a row!
+284	Practice again
+285	Flawless!
+286	Very good!
+287	Lesson complete!
+288	Every lesson in this hall is done. The mastery test gate is open.
+289	Do it again without mistakes for 3 stars and a foil card.
+290	Review
+291	Review complete!
+292	1 energy restored.
+293	Case solved
+294	Case closed without a mistake!
+295	Case solved!
+296	{0} of {1} case files solved.
+297	Do it again without mistakes for 3 stars.
+298	Blitz
+299	New record!
+300	Blitz over
+301	; your record is {0}
+302	{0} correct {0|answer|answers}
+303	{0} of {1} correct; {2} needed.
+304	Independent Analyst!
+305	Jump passed!
+306	Hall mastered!
+307	Unlocked: {0}
+308	Effort
+309	Not this time
+310	Review these lessons and try again: {0}
+311	Answers in a row
+312	Golden hour ×2
+313	{0}{1} in a row
+314	Well done!
+315	That’s right!
+316	Excellent!
+317	Precise!
+318	That’s it!
+319	Exactly right!
+320	End Blitz
+321	Score
+322	Energy
+323	{0}Documents
+324	Exit
+325	In Dr. Khosravani’s words (translated)
+326	Document {0}
+327	Case file
+328	Card
+329	<i class='sep'></i>Simple

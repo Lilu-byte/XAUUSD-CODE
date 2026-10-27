@@ -1,0 +1,160 @@
+0	aria-label="{0} of 3 stars"
+1	Streak shield covered {0} missed {0|day|days}. Your {1}-day streak is safe.
+2	Newcomer
+3	Market Curious
+4	Report Reader
+5	Codal Reader
+6	Statement Sleuth
+7	Analyst
+8	Valuer
+9	Patient Investor
+10	Codal Master
+11	Earn {0} XP today
+12	Finish 2 lessons or reviews
+13	Give 15 correct answers
+14	First Step
+15	Finish your first lesson
+16	File Builder
+17	Finish 10 lessons
+18	Every Lesson
+19	Finish all {0} lessons
+20	Three in a Row
+21	Practice 3 days in a row
+22	A Full Week
+23	Practice 7 days in a row
+24	Lasting Habit
+25	Practice 30 days in a row
+26	500 XP
+27	Collect 500 XP
+28	2,000 XP
+29	Collect 2,000 XP
+30	Level 10
+31	Reach level 10
+32	Flawless
+33	5 lessons without a single mistake
+34	Perfect Ten
+35	Give 10 correct answers in a row
+36	Star Collector
+37	Collect 30 stars
+38	Foil Collection
+39	Own 10 foil cards
+40	Blitz 200
+41	Score 200 in a Blitz
+42	Steady Reviewer
+43	10 review sessions
+44	Pass the “Codal 3” mastery test
+45	Pass the valuation mastery test
+46	Calm Mind
+47	Pass the FLM mastery test
+48	Independent Analyst
+49	Pass the final exam
+50	Detective
+51	Solve your first case file
+52	All Cases Closed
+53	Solve all {0} case files
+54	In My Own Words
+55	Write 5 complete written answers
+56	Hands on Codal
+57	Do 5 real tasks
+58	Weekly Routine
+59	Do the 30-minute routine for 4 weeks
+60	Better Than Me
+61	Finish a week with more XP than the week before
+62	, next energy in {0} min
+63	 (no practice yet today)
+64	Golden hour: double XP
+65	Level {0}, {1}
+66	Level {0}
+67	Day streak{0}
+68	Coins
+69	Energy{0}
+70	Map
+71	Practice
+72	My week
+73	Real work
+74	Profile
+75	Sections
+76	Simple
+77	Full
+78	Simple: every point in everyday words with an example from daily life. Full: all the details, tables and numbers. You can also switch any single card to the other version.
+79	Easy
+80	Regular
+81	Serious
+82	Intense
+83	{0} XP
+84	How should things be explained?
+85	Fundamental investing in Iran’s stock market with Codal, using Dr. Bardia Khosravani’s FIS method, plus investor psychology and personal finance (FLM), in short lessons and daily practice.
+86	{0} {0|hall|halls}
+87	{0} {0|lesson|lessons}
+88	{0} {0|exercise|exercises}
+89	A mastery test for every hall
+90	Each lesson takes a few minutes. Finish it without mistakes to earn 3 stars and a foil card.
+91	Correct answers in a row give bonus XP and raise your level.
+92	After each lesson you open a chest; sometimes it holds a “Golden hour” with double XP.
+93	“60-second Blitz”: every correct answer adds time. Beat your own record.
+94	This app is educational and is not investment advice. No method guarantees a profit. Company names in the examples are made up; where details of a rule or of Codal’s menus are uncertain, they are marked “(please check)”. Dr. Khosravani did not make or endorse this app; the “In Dr. Khosravani’s words” boxes are his public statements, translated from Persian, with their sources.
+95	What should your daily goal be?
+96	Each lesson is worth about 10 to 20 XP. You can change this later in Profile.
+97	{0}Start the journey
+98	Continue the journey
+99	First lesson
+100	Hall {0}
+101	Lesson {0} of {1}
+102	{0} {0|card|cards}
+103	Gate
+104	Mastery test: {0}
+105	10 questions; 8 correct answers open the next halls and win a golden chest.
+106	{0}Start the test
+107	All halls conquered
+108	Independent Analyst final exam
+109	20 questions from all halls; 16 correct answers needed.
+110	{0}Start the final exam
+111	All lessons and tests are done
+112	Fill in missing stars, make your cards foil, or beat your Blitz record.
+113	{0}60-second Blitz
+114	Today
+115	of {0}
+116	Today’s quests
+117	10 coins each
+118	Best {0}
+119	Set a record
+120	After your first lesson
+121	{0} {0|exercise|exercises} due
+122	Weaker exercises
+123	60-second Blitz
+124	Smart review
+125	Needs review
+126	{0} mastery
+127	Hall {0} of {1}
+128	{0} of {1} stars
+129	Lessons
+130	{0}Guide
+131	 and 
+132	Requires: {0}
+133	Jump test into this hall
+134	Practice this hall
+135	Continue
+136	Start
+137	 (done)
+138	 (locked)
+139	Test
+140	Mastery test
+141	Unlocks after you master every hall.
+142	 You passed.
+143	Try again
+144	Start the final exam
+145	Educational, not investment advice. The content comes from this project’s FIS and FLM self-study program, slides and valuation spreadsheet.
+146	Start Blitz
+147	Unlocks after your first lesson
+148	{0} {0|exercise is|exercises are} due for review.
+149	Nothing is due today; your weakest exercises come up.
+150	Unlocks after your first lesson.
+151	{0} {0|exercise|exercises} you got wrong last time.
+152	No mistakes to replay right now.
+153	Spaced review: every exercise you answer correctly comes back later (1, 3, 7, 16 and 35 days); every mistake comes back the same day.
+154	Quick questions from lessons you have finished. Each correct answer adds 2 seconds and each mistake takes away 3. Answers in a row earn ×2, ×3 and ×4 multipliers. No energy is used.
+155	Best
+156	Runs
+157	{0}Smart review
+158	Each review gives back 1 energy.
+159	My mistakes

@@ -1,0 +1,65 @@
+0	Use the valuation tool that suits each kind of company.
+1	An established company with steady profit: the same E/P and “how many years until I get my money back” is enough.
+2	A company with a big project on the way, or whose profit is changing: you need to count future years’ money separately (DCF).
+3	Holding: the value of its assets (NAV). Banks and insurers: with caution, using book value and lasting profit.
+4	For the price of a finished flat, you look at its rent; for land where a building is going to go up, you have to work out what it will be worth once built.
+5	Each company, its own tool
+6	Free cash flow means the money that’s really left over after all the costs and necessary investment.
+7	You bring future years’ money back to today’s value and add it up; you subtract debt to leave the value of the shares.
+8	In Iran, count the cost of replacing machines at today’s prices, not the old book price; and dollar debt at today’s dollar.
+9	The money left in your account each month after rent, loan payments, household costs and car repairs is your free cash flow.
+10	Money that’s really left over
+11	In textbooks, the return needed on shares is worked out with a formula called CAPM and a number called “beta”.
+12	On the Tehran exchange beta isn’t reliable; queues, price limits and ticker halts separate the daily price from value.
+13	A simpler, more honest way is to build the rate piece by piece.
+14	Instead of guessing how risky a house is with a complicated formula, you ask piece by piece: the area, its age, the deed, the neighbours.
+15	Start from the risk-free return: the return on 2 to 3-year government bonds (Akhza).
+16	Add a few percent for stock risk, usually 5 to 10 points, the same for every company.
+17	Add 0 to 10 more points for each company’s own risk: thin trading, dependence on government decisions, heavy dollar debt, weak management.
+18	Work out the company’s cost of borrowing from finance costs divided by loans.
+19	Like working out a lorry’s fare: the base fare, plus extra for a dirt road, plus extra for fragile goods.
+20	Build the discount rate piece by piece
+21	The most common mistake is to work out inflated numbers with a rate without inflation, or the other way round.
+22	Either do everything with inflated prices and an inflated rate, or everything with today’s prices and a real rate.
+23	To start, the today’s-prices way is simpler: a rate of 38% with 30% inflation means a real rate of about 6.2%.
+24	In this method, don’t forget the cost of replacing machines and the money inflation swallows in receivables and inventory.
+25	If you count your salary in this year’s tomans, you must count your costs in this year’s tomans too; not one this year and one five years from now.
+26	After a few years of forecasts, the rest of the company’s life is summed up in one number: the “terminal value”.
+27	Usually 70 to 85% of the total value comes from this one number; so be very careful with it.
+28	Don’t take long-term real growth above 2%, and always write down what percentage of the value came from this number.
+29	When you price an orchard, the first few years’ fruit is only a small part; most of the value comes from the long years after, which are harder to guess.
+30	“Company C” is a made-up example. With this card’s assumptions, each share is worth about 3,049 rials.
+31	About 75% of this value came from the “terminal value”.
+32	If the discount rate changes by just 1 point, the value moves 15 to 25%. So write a range instead of one number.
+33	If someone asks what your house is worth, the most honest answer is “between 4 and 5 billion”, not “4 billion 312 million”.
+34	In Iran the main driver of value is usually the dollar rate, raw-material prices or government-set prices, not the details of the discount rate.
+35	So build three cases: bad, normal and good, and give each a probability.
+36	The weighted average is about 3,006 rials; but more important is that the value lies between 2,015 and 3,912.
+37	Like a travel plan: if the weather is good, normal, or it snows; you have a separate plan and budget for each.
+38	Another method: compare the company with similar companies.
+39	Find 4 to 6 companies in the same group, compare normal profits for the same period, take the middle number (median) and explain the differences.
+40	Be careful: a past P/E with one-off profit misleads, and P/B in Iran has old book numbers.
+41	For a flat’s price, you ask the prices of 5 similar flats in the same street and compare by size and floor.
+42	Put the three methods side by side to see the value range.
+43	The market price is 2,200; so the market has roughly priced in the bad case.
+44	This is a “margin of safety”, not an instruction to buy: you still need to check the warning bells, profit quality and the comparison with Akhza.
+45	If a car worth between 450 and 700 million is sold for 490, its price is near the lowest value; it’s a good opportunity, but you still need to have it inspected.
+46	A ready-made Excel file that links the three financial statements for the next five years and works out the value per share. Its example is a made-up company.
+47	Sheets: guide, historical (fill from Codal), assumptions, model, and valuation.
+48	Colours: blue means your input, black a formula, green a link from another sheet. Only change the blue ones.
+49	Like a ready-made loan calculator: you just enter the amount and rate, and it works out the rest.
+50	Net profit is added to shareholders’ equity and dividends are taken out of it.
+51	If money owed by customers and inventory grow, cash goes down.
+52	Fixed assets = last year + new purchases − wear and tear.
+53	At the end, assets must equal debts plus shareholders’ equity; if they don’t, there’s a mistake somewhere.
+54	Like the monthly household accounts: start-of-month balance + income − spending = end-of-month balance. If it doesn’t match the bank account, you wrote something down wrong.
+55	The risk is one-sided: in the bad case, if each year the selling price rises just 1% less than inflation and raw materials 1% more, the value falls 54%.
+56	Inflation makes profit look bigger on paper, but the real cost of replacing machines takes it back.
+57	Real cash is less than profit because inflation makes receivables and inventory bigger. And from year three the tax exemption ends.
+58	If two valuation methods are far apart, find the reason; taking the average isn’t the answer.
+59	If two experts give very different prices for a house, you don’t take the average; you ask what one saw that the other didn’t.
+60	Enter two years of a real company’s audited financial statements on the “historical” sheet.
+61	If the latest report covers only some months, build the last 12 months’ profit: last year + this year’s months − the same months last year.
+62	Enter dollar debt at today’s dollar and today’s Akhza return, run the three cases and note the result with the date.
+63	This model is for a single-product company; judge a holding by the value of its assets.
+64	For income over the last 12 months to the end of Khordad: last year’s total income + this year’s first three months − last year’s first three months.

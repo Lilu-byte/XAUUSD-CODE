@@ -1,0 +1,37 @@
+0	The goal: find the profit that will repeat next year too.
+1	Set aside gains from selling land or shares, or gains from the dollar going up; these won’t repeat.
+2	If the company pays no tax for now because of a temporary exemption, count the normal tax (25%).
+3	If raw materials or government royalties got dearer but it isn’t in the profit yet, count the full year’s cost.
+4	If this year, besides your salary, you also sold your old car, you don’t count next year’s income with the money from that car.
+5	Profit that repeats
+6	Compare the cash that came from the company’s work with its profit. Over 3 years, above 80% of profit is good; below 50% means look more closely.
+7	If sales grew 30% but money owed by customers grew 90%, the profit is low quality.
+8	If the warehouse fills faster than sales grow, demand may have fallen.
+9	With inflation, machines cost more to replace than the recorded wear and tear; part of the profit must be set aside to replace them.
+10	A colleague who says “I make 50 million a month” but hasn’t collected 40 million of it from customers yet really has 10 million in cash.
+11	Build next year’s profit step by step:
+12	1. How much it sells: the average of the last 12 months, allowing for new capacity. 2. At what price: the latest monthly price, not last year’s average.
+13	3. Work out the cost of making things from the materials-to-sales ratio. 4. Raise admin costs with inflation. 5. Subtract loan interest and tax.
+14	6. Divide the result by the number of shares, counting the latest capital increase.
+15	To guess a taxi’s income next year: passengers a day (volume) × the new fare (price) minus petrol, repairs and insurance (costs).
+16	Compare profit per unit of sales (margin) with the average of the past 5 years. If it’s much higher, you’re probably at the peak of the industry’s good times.
+17	Companies that sell commodities like steel and petrochemicals have good years and bad years; price them on average profit, not the best year’s profit.
+18	A farmer who sold their crop at a high price this year shouldn’t think every year will be the same; they work out the average of several years.
+19	E/P means earnings per share divided by price; that is, if you buy the share, what percentage of your money turns into profit each year.
+20	When government bonds (Akhza) pay a high return, a low P/E alone doesn’t mean cheap.
+21	A share’s expected return must beat the Akhza return plus a few extra percent for risk (say 5 to 10 points).
+22	A simple calculation: (E/P × the share of profit that’s paid out) + profit growth.
+23	If a shop costs 1 billion and makes 200 million a year, its E/P is 20%. If the bank pays 30% with no hassle, this shop is only worth it if its profit grows.
+24	Move the sliders and see how the P/E, expected return and years to get your money back change.
+25	The same tool is also on the “Practice” tab.
+26	Like a bank’s loan calculator: you change the amount and interest and see the instalment.
+27	The question: how many years until the profit adds up to the price you pay today?
+28	Price 100, first-year profit 20 and growth of 25% a year: after 3 years 76 has added up, and after 4 years 115. So about 3.6 years.
+29	In FIS, less than about 4 to 5 years with lasting profit is preferred. Adjust this number to the current bank rate.
+30	If you buy a car-wash machine for 100 million and it makes 25 million a year, you get your money back in 4 years.
+31	How many years until you get your money back?
+32	Two companies with the same P/E aren’t worth the same. A company that makes real cash, has little debt and can sell at higher prices is worth more.
+33	Pay a lower P/E for low-quality profit.
+34	For asset-heavy companies such as cement and mining, the cost of building the factory again is a good floor.
+35	But being cheap against building cost isn’t a reason to buy by itself if the factory doesn’t make a profit.
+36	A factory that would cost 100 billion to build but makes a loss isn’t cheap even at 50 billion.

@@ -1,0 +1,235 @@
+0	Further Valuation and the Excel Model
+1	DCF, an Iranian discount rate, nominal and real, terminal value, multiples, the three-statement model
+2	Sections 4.8 and 4.9 and the Excel file
+3	DCF is needed when growth, investment or debt changes for years
+4	FCFF = NOPAT + depreciation − CAPEX − increase in working capital
+5	Discount rate = Akhza yield + equity risk premium + specific risk premium
+6	Nominal with nominal, real with real; real terminal growth at most 2%
+7	Terminal value is usually 70 to 85 percent of the total; always measure it
+8	EV = market value of equity + net debt; check multiples against real peers
+9	The three statements are linked; the balance check must be zero
+10	Output: a value range with three scenarios, not one number
+11	Nominal cash flow with a real rate (or the reverse)
+12	A beta calculated from Tehran Stock Exchange prices
+13	Book depreciation instead of maintenance CAPEX at today’s prices
+14	Foreign-currency debt at the book rate
+15	6 or 9-month figures instead of the last 12 months
+16	One number instead of a range
+17	Changing the black formulas instead of the blue inputs
+18	When DCF? And Free Cash Flow
+19	The Right Tool for Each Company
+20	Situation
+21	Main tool
+22	Mature, sustainable profit, little investment
+23	E/P and payback
+24	This year’s profit is a good proxy
+25	A large expansion project on the way
+26	Future profit differs fundamentally from today’s
+27	Changing margin (feedstock, set prices)
+28	DCF with scenarios
+29	Each scenario’s effect is seen separately
+30	Loss-making or restructuring
+31	DCF and EV/Sales
+32	A negative E/P means nothing
+33	Holdings and investment companies
+34	The value is in the portfolio
+35	Banks and insurers
+36	P/B with caution, plus sustainable profit
+37	FCF has no clear definition for a bank
+38	FCFF and FCFE
+39	Discount FCFF at the WACC → enterprise value (EV) → minus net debt = equity value.
+40	Discount FCFE at the cost of equity → equity value directly. Both routes should come out close; otherwise the debt or rate assumptions are inconsistent.
+41	Iranian note: depreciation is at historical cost; take maintenance CAPEX at today’s prices. In inflation, working capital swallows cash every year. Foreign-currency debt at today’s rate.
+42	FCFF = operating profit × (1 − effective tax rate) + depreciation − CAPEX − increase in working capital\nFCFE = FCFF − finance costs × (1 − tax rate) + net new borrowing
+43	Match each situation to its main tool.
+44	A mature, stable company
+45	Holding company
+46	A loss-making company being restructured
+47	The company’s situation decides the tool.
+48	Operating profit 1,000, effective tax 25%, depreciation 200, CAPEX 300, increase in working capital 100. FCFF?
+49	At what rate do you discount FCFF, and what do you get?
+50	The WACC; enterprise value (EV)
+51	The cost of equity; equity value directly
+52	The inflation rate; net profit
+53	Then you subtract net debt.
+54	In an Iranian model, take maintenance CAPEX as equal to book depreciation.
+55	Depreciation is at historical cost; take maintenance CAPEX at today’s replacement price.
+56	Why don’t you value banks with a free-cash-flow DCF?
+57	Free cash flow has no clear definition for a bank
+58	Banks have no operating profit and lose money
+59	Exchange rules forbid valuing banks with DCF
+60	P/B with caution, plus sustainable profit.
+61	The Discount Rate in Iranian Conditions
+62	Why Not CAPM and Beta?
+63	In textbooks: cost of equity = risk-free rate + beta × market risk premium.
+64	On the Tehran Stock Exchange beta isn’t reliable: price limits, queues, trading halts and low float separate the daily price from value.
+65	The build-up method is more honest.
+66	The Build-up Method
+67	Nominal risk-free rate: the yield to maturity of 2 to 3-year Akhza.
+68	Equity risk premium: usually 5 to 10 percentage points; a judgement. Keep it the same for all companies.
+69	Specific risk premium: 0 to 10 points for low liquidity, dependence on a government decision, heavy foreign-currency debt, weak governance.
+70	Cost of debt = finance costs ÷ average borrowings. The tax shield only at the real effective rate.
+71	WACC = equity weight × cost of equity + debt weight × cost of debt × (1 − tax rate)
+72	Akhza 30%, equity risk premium 7, specific risk premium 3 points. Cost of equity?
+73	Equity 80% at a cost of 40%, debt 20% at a cost of 30%, tax 25%. WACC?
+74	Why isn’t a beta calculated from Tehran Stock Exchange prices reliable?
+75	Price limits, queues, trading halts and low float separate price from value
+76	The Tehran Stock Exchange has no overall index and beta can only be calculated from the dollar price
+77	Beta only makes sense for bonds, not for stocks
+78	That’s why the build-up method.
+79	Which factor raises a company’s specific risk premium?
+80	Profit that depends on a government decision
+81	A record of publishing reports on time
+82	Zero debt
+83	Also low liquidity, heavy foreign-currency debt and weak governance.
+84	A company with a tax exemption gets the same tax shield from debt as a normal company.
+85	The tax shield on debt is only as large as the real effective tax rate.
+86	Nominal, Real and Terminal Value
+87	Consistency Matters More than Precision
+88	The most common error: nominal cash flow with a real rate, or the reverse.
+89	Nominal: forecast with inflated prices and exchange rates, discount at a nominal rate (say 38%), terminal growth about long-term inflation.
+90	Real (suggested to start): forecast at today’s prices, discount at a real rate. 38% nominal and 30% inflation → about 6.2%. Real terminal growth 0 to 2%.
+91	The real method needs two adjustments: maintenance CAPEX at today’s prices, and the working-capital “inflation tax” ≈ inflation × (receivables − payables).
+92	Terminal Value
+93	In most models 70 to 85% of the total value comes from this one line.
+94	Don’t take real terminal growth above 2%.
+95	Convert the terminal value into an implied multiple (÷ last-year EBITDA) and compare it with peers.
+96	Always write the terminal value’s share of the total next to the result.
+97	Terminal value = cash flow in the year after the forecast period ÷ (discount rate − terminal growth)
+98	Nominal discount rate 38% and inflation 30%. The real rate?
+99	Cash flow in the year after the forecast period 102, discount rate 8% and terminal growth 2%. Terminal value?
+100	You forecast cash flow at today’s prices. At what rate do you discount it?
+101	The real rate
+102	The 38% nominal rate
+103	It makes no difference
+104	Real with real, nominal with nominal.
+105	At most, what real terminal growth should you use?
+106	Equal to inflation
+107	High long-term real growth makes the value unrealistically large.
+108	If terminal value is 90% of the total, the model’s result depends heavily on distant assumptions.
+109	Always write the terminal value’s share next to the result.
+110	The implied terminal multiple (TV ÷ last-year EBITDA) is far above peers. Meaning?
+111	The model’s assumptions are probably optimistic
+112	The company is surely cheaper than its peers
+113	Peers don’t matter in this comparison
+114	This is a simple sanity check.
+115	Explain why nominal cash flow shouldn’t be discounted at a real discount rate.
+116	Nominal and real must be consistent. Nominal cash flow contains inflation; if it’s discounted at a real rate without inflation, the value comes out far too high. Nominal with nominal, real with real.
+117	Nominal with nominal, real with real (consistency)
+118	Inflation is in the cash flow but not in the rate; the value is overstated
+119	Consistency matters more than precision.
+120	Company C Example, Multiples and the Range
+121	Company C (hypothetical, billion rials, today’s prices)
+122	First-year FCFF 1,000, real growth 2% for 5 years, real WACC 7%, terminal growth 1%, net debt 2,000, 5,000 million shares.
+123	Present value of 5 years ≈ 4,256. Terminal value ≈ 18,221, its present value ≈ 12,991.
+124	EV ≈ 17,247; terminal value’s share ≈ 75%. Equity value = 15,247 → per share ≈ 3,049 rials.
+125	A one-point change in the discount rate moves the value by 15 to 25%; so write a range.
+126	Real WACC
+127	Terminal growth 0%
+128	Scenarios
+129	In Iran the main driver is usually the available exchange rate, the feedstock price or the set price, not tenths of a percent of WACC.
+130	Weighted value ≈ 3,006 rials; more important is the range of 2,015 to 3,912.
+131	Scenario
+132	Assumption
+133	First-year FCFF
+134	Value per share
+135	Probability
+136	Bad
+137	Feedstock price rises
+138	Current situation
+139	Better export exchange rate
+140	Relative Multiples
+141	EV = market value of equity + bank debt (foreign-currency at today’s rate) − free cash − non-operating investments + non-controlling interests (in consolidated). EBITDA = operating profit + depreciation.
+142	5 steps: 4 to 6 similar peers; normalised profit and the same date; the median, not the mean; explain the differences; build a range.
+143	Example: normalised EBITDA 4,000, multiples 3.5 to 5.5 (median 4.5) → 2,400 / 3,200 / 4,000 rials.
+144	Trailing P/E misleads with one-off profit; P/B in Iran is at historical cost; PEG almost nowhere (nominal growth is just inflation); P/NAV with a permanent discount and no catalyst.
+145	The Value Range Table
+146	Market price 2,200 → the market has roughly priced in the bad scenario. This is a margin of safety, not a buy order: red flags, profit quality and the comparison with Akhza are still needed.
+147	Method
+148	Low
+149	DCF, three scenarios
+150	DCF sensitivity
+151	Peer EV/EBITDA
+152	Scenario values 2,015 (25%), 3,049 (50%), 3,912 (25%). The weighted value per share?
+153	EV 17,247 and net debt 2,000 billion rials, 5,000 million shares. Value per share?
+154	(17,247 − 2,000) billion ÷ 5,000 million shares ≈ 3,049 rials.
+155	EBITDA 4,000, multiple 3.5, net debt 2,000, 5,000 million shares. Value per share?
+156	4,000 × 3.5 = 14,000; minus 2,000 = 12,000 billion ÷ 5,000 million = 2,400 rials.
+157	Why the median, not the mean, when comparing with peers?
+158	One odd peer spoils the mean
+159	The median is always larger than the mean
+160	Exchange rules require the median
+161	The median isn’t sensitive to outliers.
+162	Match each multiple to where it misleads in Iran.
+163	Trailing P/E
+164	One-off profit or a commodity peak year
+165	Assets are at historical cost
+166	Nominal growth is just inflation
+167	A permanent discount with no catalyst
+168	Each multiple has its place.
+169	According to the sensitivity table, what value do a real WACC of 8% and terminal growth of 0% give?
+170	A higher rate and lower growth = a lower value.
+171	Market price 2,200 against a range of 2,015 to 3,912. The right takeaway?
+172	The market has roughly priced in the bad scenario; there is a margin of safety, but it isn’t a buy order
+173	Definitely buy; the price is below all three scenarios and the margin of safety is over 50%, so there’s no risk
+174	The stock is expensive because the price is above the middle of the range
+175	Still check red flags, profit quality and Akhza.
+176	In Iran the exchange rate, feedstock price or set price usually moves value more than tenths of a percent of WACC.
+177	So build scenarios.
+178	An Integrated Financial Model in Excel
+179	The FIS-valuation-model.xlsx File
+180	The three financial statements for the next five years are linked, and the value per share comes out of that forecast. A hypothetical “Company D”, 200 thousand tonnes of sales. Amounts in million rials.
+181	Sheets: Guide, Historical (fill in from Codal), Assumptions (scenario, inflation, tax, days, discount rate, multiples), Model (read only; balance check zero), Valuation (FCFF, WACC, TV, sensitivity, EV/EBITDA, range).
+182	Colours: blue = input, black = formula, green = link from another sheet. Only change the blue ones.
+183	How the Statements Connect
+184	Net profit is added to equity and dividends are subtracted.
+185	Receivables, inventory and payables are built from days; their increase is subtracted from cash.
+186	Fixed assets = last year + CAPEX − depreciation.
+187	The net change in cash builds the balance sheet cash; negative cash = a warning of a loan or capital increase.
+188	Balance check = assets − (liabilities + equity); if it isn’t zero, something is wrong.
+189	Five Lessons from Company D
+190	Asymmetric risk: in the bad scenario (selling price 1% below inflation, feedstock 1% above inflation) the margin falls from 30 to 26% and value drops 54%.
+191	Inflationary profit: the base margin rises from 30 to 35% because depreciation is historical; maintenance CAPEX at today’s prices (337,500 against depreciation of 250,000) takes it back.
+192	Working-capital drag: CFO/NI is about 0.83 because inflation inflates receivables and inventory.
+193	The tax exemption ends from year three: 15% to 25%.
+194	Base DCF 2,984 against the median multiple’s 2,344; implied TV multiple 6.7×. Whenever two methods are far apart, find the reason; averaging is not a reason.
+195	Steps for a Real Company
+196	Enter two years of audited annual statements in “Historical”; costs as positive numbers.
+197	If the latest report is an interim one: TTM = last fiscal year + this year’s interim period − last year’s interim period.
+198	The variable cost share from the cost-of-sales note; maintenance CAPEX from the fixed-assets note.
+199	Foreign-currency debt at today’s rate; the day’s Akhza; a specific risk premium.
+200	Scenarios 1, 2, 3 and record each result; compare the range with the price, and note it with the date.
+201	Limits: single product; holdings need NAV; no minority interests or currency translation.
+202	Match each cell colour to its meaning.
+203	Blue
+204	Your input
+205	Black
+206	Formula
+207	Green
+208	Link from another sheet
+209	Only change the blue ones; changing the black ones breaks the links between statements.
+210	Last fiscal year’s profit 1,000, this year’s 6-month profit 600, last year’s 6-month profit 450. Profit for the last 12 months (TTM)?
+211	The “balance check” row shows 12,000. Meaning?
+212	Something in the inputs or formulas is wrong
+213	The company has 12,000 of extra profit not yet distributed
+214	No problem; it’s a rounding difference
+215	The balance check must be zero.
+216	In the base scenario, although real prices are constant, gross margin rises from 30 to 35%. Why?
+217	Depreciation is based on historical cost and doesn’t rise with inflation
+218	The company’s real sales rose in the base scenario and fixed costs were spread out
+219	A low tax rate was assumed for later years
+220	This profit is on paper; maintenance CAPEX at today’s prices takes it back.
+221	Enter costs in the “Historical” sheet as negative numbers.
+222	Enter them as positive; the model subtracts them itself.
+223	Base DCF is 2,984 and the median-multiple value is 2,344. The most correct step?
+224	Find the reason for the gap (say optimistic terminal growth or cheap peers)
+225	Take the average of the two and call it the final value; the errors cancel each other out
+226	Throw away the median multiple and trust only the DCF
+227	Averaging is not a reason.
+228	Enter a 9-month report’s figures directly in the model in place of the full year.
+229	Build the last 12 months (TTM).
+230	For a holding company, is this single-product model enough?
+231	No; a holding needs NAV
+232	Yes, completely; just add up the revenue
+233	Only if it’s loss-making
+234	One of the model’s deliberate limits.

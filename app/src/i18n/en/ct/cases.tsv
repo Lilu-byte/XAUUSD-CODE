@@ -1,0 +1,431 @@
+0	The Rahimi Family
+1	A made-up family
+2	Mr Rahimi wants to put all the family’s savings into the stock market and take broker credit too. You need to sort the family’s money into buckets.
+3	The family’s finances
+4	Total savings: 900 million tomans
+5	Living costs: 30 million tomans a month
+6	Goal: a home down payment, 400 million tomans, 2 years from now
+7	Mr Rahimi: “Let’s put it all into the market; we’ll take broker credit too so we get rich faster.”
+8	1 month of costs
+9	At least 6 months of costs
+10	1 to 3-year goal
+11	The whole goal amount
+12	Whatever is left
+13	With the minimum rule (6 months of costs), how many million tomans is the emergency fund?
+14	6 × 30 = 180 million tomans, outside stocks.
+15	After setting aside 1 month of current costs, a 6-month emergency fund and the home money, how much is left for stocks?
+16	900 − 30 − 180 − 400 = 290 million tomans; only this money has a 5-year horizon.
+17	Put each pot of the family’s money in its right place.
+18	Fixed income or Akhza
+19	30 million for this month’s costs
+20	180 million emergency fund
+21	400 million home down payment
+22	290 million long-term
+23	Current costs in a bank account; the emergency fund and the 2-year goal in fixed income or Akhza; only long-term money in stocks.
+24	Where does the broker-credit proposal sit in the family’s investment statement?
+25	On the “never” list; leverage is banned
+26	Allowed, if the market is rising
+27	Allowed, up to half the capital
+28	Leverage, buying on signals and borrowed money are the statement’s three “nevers”.
+29	Because stocks return more over the long run, it’s better to put the home money into the market too.
+30	2-year money has a short horizon; a 40% fall within a year is possible and the home purchase would be delayed.
+31	Explain to Mr Rahimi in 2 to 4 sentences why only 290 million tomans goes into stocks.
+32	This month’s costs and the emergency fund must stay within reach so we aren’t forced to sell in a market fall. We need the home money in 2 years, and a short horizon doesn’t fit stock swings; it belongs in fixed income or Akhza. Only money we won’t need for 5 years or more, that is 290 million, goes into stocks.
+33	Current costs and the emergency fund must stay outside stocks and within reach
+34	The home money has a short horizon and shouldn’t be in stocks
+35	Only long-term money (5 years and up) goes into stocks
+36	Each pot of money goes where its horizon allows.
+37	Mr Kazemi’s 40 Percent Gain
+38	A made-up investor
+39	Mr Kazemi tells everyone he made 40% last year. You need to work out whether he really got richer, and what kind of reason he bought for.
+40	The claim and last year’s numbers
+41	Mr Kazemi: “Last year my portfolio grew 40%. I saw a buy queue and retail money coming in, and I bought.”
+42	Last year’s nominal return
+43	Mr Kazemi’s stock portfolio
+44	Gold coin
+45	Yearly inflation
+46	What is the real return of Mr Kazemi’s portfolio, in percent? (one decimal place)
+47	1.40 ÷ 1.45 − 1 ≈ minus 3.4%; his purchasing power went down.
+48	What is the real return of the fixed-income fund, in percent? (one decimal place)
+49	1.28 ÷ 1.45 − 1 ≈ minus 11.7%
+50	Which asset kept its purchasing power last year?
+51	1.50 ÷ 1.45 − 1 ≈ plus 3.4%; only the gold coin beat inflation.
+52	What kind of reason is Mr Kazemi’s reason for buying (“a buy queue and retail money coming in”)?
+53	Price behaviour and money flow, not the value of the business
+54	Fundamental analysis with Codal reports and financial statements
+55	Valuation on the company’s sustainable profit
+56	Queues and retail money are trading-board data. In FIS, stocks are chosen with Codal and the Golden Three, and board data is only for timing.
+57	A 40% nominal gain means Mr Kazemi’s wealth has grown.
+58	With 45% inflation, his money buys less today than it did last year.
+59	In 2 to 4 sentences, tell Mr Kazemi why his 40% wasn’t a real gain and what he should compare returns with next time.
+60	His real return is about minus 3.4%, because 45% inflation was higher than his 40% return; so his purchasing power went down. Every return must be compared with inflation and with other options such as Akhza, fixed-income funds and gold coins. And the reason for buying should be the value of the business, not a buy queue.
+61	45% inflation is higher than the 40% return; the real return is negative
+62	It must be compared with inflation and other options (Akhza, gold coins, fixed income)
+63	The reason for buying must be fundamental, not queues or money flow
+64	Nominal fools you; always work out the real return.
+65	Firuzeh Tile
+66	A made-up company
+67	Firuzeh Tile’s audited annual financial statements are out. You need to work out where the profit came from, how much turned into cash, and what the auditor said.
+68	Annual income statement (billion rials)
+69	1,000 million shares. Note 28: of the 600 billion of other income, 550 billion is a gain on selling the old factory’s land.
+70	Amount
+71	Operating income
+72	Cash flow and the auditor’s report
+73	Cash from operations (CFO): 1,530 billion rials
+74	Auditor’s opinion: qualified. The qualification: the auditor wasn’t present at the year-end stock count and couldn’t confirm inventory of 900 billion rials.
+75	What is the gross profit margin, in percent?
+76	What is the operating profit margin, in percent?
+77	Which item is one-off and doesn’t go into sustainable profit?
+78	The gain on selling the old factory’s land
+79	Selling and admin costs
+80	Selling land doesn’t repeat; 550 billion of the 600 billion of other income is one-off.
+81	What is the ratio of operating cash to net profit (CFO/NI)? (two decimal places)
+82	1,530 ÷ 1,700 = 0.9; above 0.8, profit has turned into cash.
+83	What does a “qualified” opinion about inventory mean?
+84	An important but limited problem; estimate the qualification’s effect
+85	The statements as a whole are misleading and the company is off the list
+86	Everything was confirmed with no problems
+87	Qualified opinions are common in Iran; what matters is the amount. 900 billion of inventory against 1,700 billion of profit isn’t small.
+88	Sum up Firuzeh Tile in 2 to 4 sentences: does its main business make profit? Is its profit high quality? What should be followed up?
+89	The main business makes profit: a gross margin of 30% and an operating margin of 20%. But 550 billion of the 1,700 billion net profit comes from selling land and won’t repeat. Profit turned into cash well (CFO/NI 0.9), but the auditor’s qualification about 900 billion of inventory must be followed up.
+90	The main business makes profit (gross margin 30%, operating 20%)
+91	Part of net profit is one-off (the land sale)
+92	Profit turned into cash (CFO/NI 0.9), but the inventory qualification must be followed up
+93	Three questions every time: from the main business? Turned into cash? What did the auditor say?
+94	Shafagh Petrochemical
+95	Shafagh Petrochemical’s autumn monthly reports show sales revenue growing, and then a fire announcement came out. You need to pull the numbers apart.
+96	Sales volume (tonnes)
+97	Price (million rials per tonne)
+98	Mehr
+99	Aban
+100	Azar
+101	Material information, 10 Dey
+102	“Because of a fire in one of the units, about 20% of production capacity will be stopped from Dey to the end of Bahman (2 months). The equipment is insured.”
+103	By how many percent did Azar’s sales revenue grow over Mehr’s?
+104	By how many percent did Azar’s selling price grow over Mehr’s?
+105	Where did the growth in sales revenue come from?
+106	Only from price; sales volume fell 10%
+107	From volume and price, both together
+108	Only from volume; the price stayed the same
+109	Volume went from 20,000 to 18,000 tonnes (minus 10%). Rising revenue with falling volume is a warning pattern.
+110	If the stop removes 20% of Azar’s monthly sales revenue for 2 months, how many billion rials is the drop in sales?
+111	9,000 × 20% × 2 = 3,600; about 3% of yearly sales, which at Azar’s price are about 108 thousand billion.
+112	What does this announcement mean for sustainable profit?
+113	Its effect is temporary; this year’s profit falls but sustainable profit doesn’t
+114	It cuts sustainable profit by 20% for good because capacity is lost
+115	It has no effect at all because there is insurance
+116	A 2-month stop is temporary. How much the insurance covers will become clear in later announcements.
+117	A capital increase from retained earnings brings new money into the company.
+118	No new money comes in; it’s the same as not paying out profit, in favour of a project.
+119	In 2 to 4 sentences, write what you’ll look for in Shafagh Petrochemical’s Dey and Bahman monthly reports, and why.
+120	First sales and production volume: whether the fall in volume continues and how big the effect of the 20% stop is. Then the selling price: whether the price growth lasts. And whether capacity returns after 2 months and how much insurance covers, to know whether the effect is temporary.
+121	Sales and production volume (whether the volume fall continues, and the stop’s effect)
+122	The selling price and whether its growth lasts
+123	Capacity returning after 2 months, or insurance cover (whether the effect is temporary)
+124	Monthly reports are the best place to see whether an event is temporary or permanent.
+125	Sina Mehr Pharma
+126	Sina Mehr’s 6-month net profit grew 47% and the channels are excited. Read the report page line by line.
+127	6-month interim income statement, unaudited (billion rials)
+128	Note 25, other non-operating income: 400 billion rials of currency translation gains.
+129	This year’s 6 months
+130	Last year’s 6 months
+131	Previous financial year (audited)
+132	Balance sheet (billion rials)
+133	End of the 6-month period
+134	End of the previous financial year
+135	Trade receivables
+136	Which column do you compare this year’s 6-month profit with?
+137	Previous financial year
+138	Neither
+139	Compare periods of the same length; don’t measure 6 months against 12.
+140	By how many percent did 6-month net profit grow over last year’s 6 months? (one decimal place)
+141	By how many percent did operating profit grow over the same period? (one decimal place)
+142	960 ÷ 880 − 1 ≈ 9.1%; most of the net profit growth comes from the 400-billion translation gain.
+143	What does “(80)” on the finance costs line mean?
+144	A negative number; it is subtracted from profit
+145	An 80 percent change on last year
+146	An unaudited, provisional number
+147	Brackets in financial statements mean negative.
+148	By how many percent did trade receivables grow from the end of last year to the end of the period?
+149	3,600 ÷ 2,400 − 1 = 50%, while 6-month sales grew 20%.
+150	What does 50% receivables growth against 20% sales growth signal?
+151	Credit sales have grown; profit quality needs checking
+152	A sign of complete health and customer growth; more sales means more receivables
+153	It has nothing to do with profit; it’s only the balance sheet
+154	Profit was recorded but a bigger part of it hasn’t turned into money yet; look at the receivables and related-party notes.
+155	In 2 to 4 sentences, explain why Sina Mehr’s 47% net profit growth isn’t as good as it looks.
+156	Most of the growth is from a 400-billion currency translation gain, which is non-operating and probably one-off; operating profit grew only about 9%. Receivables also grew 50%, much faster than sales, so part of the profit hasn’t turned into cash yet.
+157	Most of the growth is from a currency translation gain (non-operating, one-off)
+158	Operating profit grew only about 9%
+159	Receivables grew much faster than sales (profit quality)
+160	Always ask which line the profit growth came from.
+161	Kuhsar Cement
+162	A channel wrote: “Kuhsar Cement’s P/E is only 4.4! The cheapest cement stock on the market.” You need to build sustainable profit and judge the price.
+163	Last year’s numbers and today’s
+164	Reported EPS: 1,500 rials
+165	Of which: a land-sale gain of 300 rials and a currency translation gain of 100 rials per share (both one-off)
+166	Today’s price: 6,600 rials
+167	Usual payout ratio: 80%; expected sustainable nominal profit growth: 25% a year
+168	Akhza return: 30%; risk premium: 5 to 10 percentage points
+169	Expected return ≈ E/P × payout ratio + growth
+170	What is sustainable EPS, without one-off items, in rials?
+171	1,500 − 300 − 100 = 1,100 rials
+172	What is the P/E with sustainable EPS?
+173	6,600 ÷ 1,100 = 6; not the 4.4 the channel said.
+174	What is E/P with sustainable EPS, in percent? (one decimal place)
+175	What is the expected return, in percent? (one decimal place)
+176	Compare the 38.3% return with Akhza at 30% and a risk premium of 5 to 10 points.
+177	It’s between 35 and 40%; slightly above the minimum, with a small margin of safety
+178	It’s very cheap; it beats Akhza, and any return above Akhza is attractive
+179	It’s below Akhza and has no appeal
+180	The required level is 35 to 40%. The price is close to value, not an obvious opportunity.
+181	What is the payback with EPS of 1,100 and 25% growth, in years? (one decimal place)
+182	1,100 + 1,375 + 1,719 + 2,148 = 6,342 by year 4; the remaining 258 out of year five’s 2,686 ≈ 0.1, so about 4.1 years.
+183	In 2 to 4 sentences, answer the channel’s author: why doesn’t a P/E of 4.4 show that Kuhsar Cement is cheap?
+184	The EPS of 1,500 includes one-off items; with sustainable profit of 1,100 rials, the P/E is 6. The expected return is about 38%, which against Akhza at 30% plus a risk premium of 5 to 10 points is only slightly above the minimum. A payback of about 4 years is reasonable, but it isn’t obviously cheap.
+185	With sustainable profit of 1,100 rials, the P/E is 6, not 4.4
+186	A return of about 38% against Akhza + risk premium has a small margin
+187	Payback of about 4 years; reasonable but not obviously cheap
+188	Sustainable profit first, then any ratio.
+189	Alborz Steel
+190	Alborz Steel’s board has proposed a 100% capital increase from cash contributions. You’re a shareholder and must vote at the extraordinary meeting.
+191	The capital-increase justification report
+192	Current capital: 2,000 billion rials (2 billion shares)
+193	Sustainable net profit: 600 billion rials (EPS 300 rials)
+194	Share price: 2,000 rials (E/P 15%)
+195	Proposal: a 100% increase from contributions (2,000 billion rials) for a rolling-mill project with forecast yearly profit of 200 billion rials
+196	The profit structure and your portfolio
+197	Sales 10,000, cost of sales 9,000, gross profit 1,000 billion rials (a 10% margin).
+198	Your portfolio: 500 million tomans in 8 stocks; steel industry weight: 35%.
+199	The adjusted price after a 100% increase from contributions? (P = 2,000, a = 1, b = 0)
+200	(2,000 + 1,000 × 1) ÷ (1 + 1 + 0) = 1,500 rials
+201	What is the project’s return on the new money, in percent?
+202	The project’s return is 10% and the current E/P 15%. The result for shareholders?
+203	Dilutive; E/P on the adjusted price comes to about 13.3%
+204	Value-creating; E/P after the project comes to about 17%
+205	No effect; E/P stays at the same 15%
+206	New profit of 800 billion on 4 billion shares = EPS 200; 200 ÷ 1,500 ≈ 13.3%, below the earlier 15%.
+207	If the steel price falls 5% and cost of sales stays the same, by how many percent does gross profit fall?
+208	Sales 9,500 − 9,000 = 500 against 1,000, that is half. A thin margin means high sensitivity.
+209	In a 500-million-toman portfolio, what is a 15% cap per stock, in million tomans?
+210	Steel’s weight in your portfolio is 35%. Following the portfolio rules, what do you do?
+211	It’s above the industry cap (25 to 30%); I don’t add more, or I cut the weight
+212	No problem; the weight cap is only for one stock, not for a whole industry in the portfolio
+213	I raise the weight to 50% because steel is cheap
+214	One government decision or world price can hit a whole industry.
+215	Write your vote at Alborz Steel’s extraordinary meeting in 2 to 4 sentences, with a numerical reason.
+216	I vote against. The project’s return is 10%, which is below the current E/P of 15% and the risk-free rate. After the capital increase, EPS falls to 200 rials and E/P on the adjusted price to about 13.3%; that is, dilution.
+217	The project’s return (10%) is below the current E/P (15%)
+218	It’s dilutive: EPS falls to 200 and E/P to about 13.3%
+219	Conclusion: vote against, or demand a higher return for the project
+220	New money only creates value when it earns more than the current situation.
+221	Dasht Dairy
+222	Dasht Dairy pays out most of its profit every year. You need to see whether it passes the Golden Three formula, what it means for a financial freedom plan, and work out a few FIS score variables from its latest reports.
+223	5-year record (rials)
+224	Average inflation over these years: about 35%. Operating profit positive in all 5 years; little bank debt.
+225	Today’s price: 5,500 rials
+226	5 (latest)
+227	This year’s latest reports
+228	EPS for the first 6 months of this year: 650 rials.
+229	6-month sales: 4,800 billion rials; last year’s 6 months: 3,600 billion rials.
+230	Trade receivables: 1,200 billion rials; total sales last year: 7,300 billion rials.
+231	What is the payout ratio in the latest year, in percent?
+232	What is the dividend yield at today’s price and the latest year’s DPS, in percent?
+233	Compare year-on-year EPS growth with 35% inflation.
+234	All 4 years were above 35% (about 37 to 40%)
+235	Only the first year was above inflation (about 40%)
+236	No year was above inflation (about 30%)
+237	Does Dasht Dairy pass the Golden Three formula?
+238	Yes; sustainable profit, a 90% payout and growth above inflation
+239	No; the payout is low, below 60% of each year’s net profit
+240	No; it has no sustainable profit and it swings
+241	All three conditions hold in the numbers. Next step: also weigh the price, operating cash and price-control risk.
+242	What is the theoretical price on the reopening day after the meeting, in rials? (price 5,500, DPS 990)
+243	5,500 − 990 = 4,510; the money moves from one pocket to another.
+244	With monthly costs of 45 million tomans and a dividend yield of 18%, how many million tomans of capital do you need for financial freedom?
+245	45 × 12 ÷ 0.18 = 3,000 million tomans (3 billion).
+246	What is the forward P/E by the FIS paper’s method (6-month profit × 2) at a price of 5,500 rials?
+247	What is the cumulative 6-month sales growth, in percent?
+248	How many days is the receivables collection period? (365-day year)
+249	1,200 ÷ 7,300 × 365 = 60 days
+250	With the paper’s example (Akhza about 40%, a buy range of P/E 3.5 to 4), is a price of 5,500 rials in the buy range?
+251	No; the forward P/E is about 4.2, and the buy ceiling at a P/E of 4 is a price of 5,200 rials
+252	Yes; any P/E below 5 is in the buy range of the paper’s example, and 4.2 is below 5, so buying is right
+253	Yes; because the company passes the Golden Three and the price doesn’t matter
+254	Good quality isn’t enough; the price must also be in range. This is the paper’s example, not a fixed rule.
+255	Write a short profile of Dasht Dairy in 2 to 4 sentences: the Golden Three, the dividend yield and one risk.
+256	It passes the Golden Three: operating profit positive for 5 years, a 90% payout and EPS growth of about 38% against 35% inflation. The dividend yield at a price of 5,500 is about 18%. Risk: government price controls on dairy, or profit growth slowing below inflation.
+257	All three conditions hold (sustainable profit, a 90% payout, growth above inflation)
+258	A dividend yield of about 18%
+259	One specific risk (e.g. price controls, growth below inflation, or payouts funded by loans)
+260	This is analysis, not a buy recommendation.
+261	Sepid Wind Power
+262	Sepid Wind Power has a big project, and this year’s profit doesn’t represent the future, so a DCF is needed. The assumptions are on the table.
+263	Assumptions (billion rials, in today’s prices)
+264	Akhza 28% + equity risk premium 7 points → nominal rate 35%; expected long-term inflation 25%
+265	Real free cash flow: year 1: 540, year 2: 570, year 3: 588, year 4: 600, and after that with 2% real growth
+266	2 billion shares
+267	What is the real discount rate, in percent?
+268	The present value of year 1’s cash flow (540) at 8%?
+269	The terminal value at the end of year 3 (with year 4’s flow and 2% growth)?
+270	The present value of the first three years is 1,455 and the present value of the terminal value is 7,938. What share of the total is the terminal value, in percent? (one decimal place)
+271	7,938 ÷ 9,393 ≈ 84.5%; within the usual 70 to 85% range, so always write it next to the result.
+272	What is the value per share, in rials? (total value 9,393 billion rials, 2 billion shares; whole number)
+273	9,393 ÷ 2 ≈ 4,697 rials
+274	An analyst discounted the nominal cash flow at the same 8% rate. The result?
+275	The value comes out far higher than it really is; nominal and real don’t match
+276	It’s correct; the 8% rate suits any flow, nominal or real makes no difference
+277	The value comes out lower than it really is because the rate is low
+278	Inflation is in the numerator but not in the denominator.
+279	Why is P/B misleading for this power plant?
+280	The assets are recorded at historical cost
+281	Because the company has no profit and makes losses
+282	Because P/B for a power plant is always zero
+283	With inflation, book value is far below replacement value.
+284	In 2 to 4 sentences, say how much you trust the DCF result for Sepid Power and why.
+285	The value per share comes out at about 4,700 rials, but about 85% of it comes from the terminal value, so the result is very sensitive to the 8% rate and 2% growth. Sensitivity should be worked out with other rates and growth, and the result checked against peers’ multiples.
+286	Most of the value (about 85%) comes from the terminal value
+287	The result is sensitive to the discount rate and terminal growth; sensitivity analysis is needed
+288	It should be compared with another method (peer multiples)
+289	A DCF number with no sensitivity is a guess that looks precise.
+290	Arya Parts
+291	Arya Parts’ profit grew 25%, but something in the notes doesn’t look right. Fill in the profit-quality report card.
+292	The last two years (billion rials)
+293	Previous year
+294	Latest year
+295	Cash from operations (CFO)
+296	Trade receivables
+297	Bank loans
+298	Notes and other numbers
+299	Average total assets in the latest year: 5,000
+300	NOPAT in the latest year: 900; capital employed: 6,000 (net fixed assets 3,000 + receivables 2,600 + inventory 1,400 − payables 1,000)
+301	The depreciation method changed from declining-balance to straight-line in the latest year.
+302	Main customer: a big carmaker that pays late.
+303	Approved dividend: 10% of net profit.
+304	Peers’ real WACC: about 8%.
+305	What is the ratio of CFO to net profit in the latest year? (one decimal place)
+306	200 ÷ 1,000 = 0.2; below 0.5 means a close look.
+307	What is the accruals ratio in the latest year, in percent?
+308	(1,000 − 200) ÷ 5,000 = 16%; most of the profit hasn’t turned into cash.
+309	By how many percent did trade receivables grow? (one decimal place)
+310	Which items are signs of earnings management?
+311	Warning sign
+312	Profit grew but operating cash fell
+313	A change in the depreciation method in the latest year
+314	A low payout alongside growing borrowing
+315	Publishing reports on time
+316	The auditor is the same as last year’s
+317	The first three are among the seven signs of earnings management.
+318	What is the ROIC in the latest year, in percent?
+319	ROIC of 15% against a real WACC of 8%. The right reading?
+320	ROIC is nominal and at historical cost; both must be made real before comparing
+321	It definitely creates value because ROIC is nearly twice WACC and the gap is wide
+322	It definitely destroys value because WACC is real
+323	The denominator is at historical cost, and nominal ROIC in Iran is higher than the real figure.
+324	Write Arya Parts’ profit-quality report card in 2 to 4 sentences.
+325	Profit hasn’t turned into cash: CFO to profit is 0.2 and accruals are 16%. Receivables from the carmaker grew 73% and carry collection risk. The change in depreciation method and the low payout alongside more borrowing are signs of earnings management; I don’t believe the 25% profit growth.
+326	Profit not turned into cash (CFO/NI 0.2, accruals 16%)
+327	Receivables from the carmaker grew 73% (collection risk)
+328	Signs of earnings management: the depreciation change, a low payout with borrowing
+329	Read profit that doesn’t turn into cash with caution.
+330	Sara in a Falling Market
+331	The market has been falling for three months and Sara is tempted to sell everything. Read her notebook and help her write rules.
+332	Sara’s notebook
+333	“I bought Stock A 4 months ago at 10,000 rials; now it’s 6,000. I won’t sell until it gets back to my buying price.”
+334	“Everyone in the Telegram group is selling; I should sell too.”
+335	“I only read analyses that say Stock B will go up.”
+336	“Last year I had 3 winning stocks; this time too I know which one will go up.”
+337	Portfolio: 200 million tomans; Stock B: 80 million; she has taken 30 million of broker credit.
+338	Link each sentence in Sara’s notebook to its bias.
+339	I won’t sell until it gets back to my buying price
+340	Loss aversion
+341	Everyone’s selling, so am I
+342	I only read the analyses that agree with me
+343	This time too I know which one will go up
+344	Antidotes: “If I didn’t own it today, would I buy it?”, the Codal file, writing the best opposing argument, and scoring your forecasts.
+345	What percent of Sara’s portfolio is Stock B?
+346	80 ÷ 200 = 40%; several times the 10 to 15% cap.
+347	Stock A has fallen 40%. What percent rise is needed to get back to the buying price? (one decimal place)
+348	10,000 ÷ 6,000 − 1 ≈ 66.7%; a big loss is hard to make up.
+349	Which of Sara’s actions creates the biggest risk of ruin?
+350	Broker credit (leverage)
+351	Reading analyses
+352	Keeping a trade journal
+353	With leverage and daily price limits, she may get stuck in a sell queue and be forced to sell.
+354	The right rule for Stock A after a 40% fall?
+355	Check whether the reason for buying (sustainable profit) still holds; if it does, hold, otherwise sell
+356	Wait until it gets back to the buying price, then decide; selling at a loss locks the loss in
+357	Sell everything because the market is falling and the fall will continue
+358	The buying price doesn’t matter to the market; the reason for buying does.
+359	Write Sara a 2 to 4-sentence rule for the market’s next fall.
+360	In a fall, I only check each stock’s reason for buying: if sustainable profit is still there I hold, and if not I sell, not because of my buying price or the Telegram group. No stock goes above 15% of the portfolio, and I don’t use leverage. I write every decision in my notebook before acting.
+361	Decisions based on the reason for buying and sustainable profit, not the buying price or the crowd
+362	A cap per stock (10 to 15%) and no leverage
+363	Writing the decision in the notebook before acting
+364	The antidote to fear isn’t recklessness; it’s a plan.
+365	Kavir Minerals
+366	9 months of the year have passed and you want to analyse Kavir Minerals in one go, from the monthly report to the decision.
+367	Data
+368	Cumulative 9-month sales this year: 18,000 billion rials; last year’s 9 months: 15,000; all of last year: 20,000 (the last quarter’s share is usually the same as last year’s)
+369	Historical sustainable net profit margin: 20%; 4 billion shares
+370	Price: 7,500 rials; Akhza 30%; payout ratio 70%; sustainable growth 20%
+371	Disclosure quality: the last two monthly reports came out 12 days after the deadline, and the reason for the Aban correction wasn’t explained.
+372	Estimated yearly sales, assuming the last quarter’s share is the same as last year’s?
+373	Last year 9 months = 15,000 of 20,000 (75%); 18,000 ÷ 0.75 = 24,000
+374	Net profit at a 20% margin?
+375	What is the estimated EPS, in rials?
+376	4,800 billion ÷ 4 billion shares = 1,200
+377	A 31.2% return against Akhza at 30% and the risk premium?
+378	Below the required level (35 to 40%); not attractive at this price
+379	Very attractive because it beats Akhza, and the risk premium doesn’t matter
+380	It equals Akhza, so it’s risk-free and excellent
+381	Only 1.2 points above Akhza; you aren’t paid for the equity risk.
+382	What do the late monthly reports and the unexplained correction tell you?
+383	Disclosure quality is poor; demand a higher company-specific risk premium
+384	It doesn’t matter; only the final number counts
+385	It means profit is higher than estimated and good news is on the way
+386	A company that reports late and vaguely carries more uncertainty.
+387	Put the 7 update steps for the next monthly report in order.
+388	Compare with your own forecast
+389	The rial effect on yearly profit
+390	Writing in the notebook always comes before any action.
+391	Write a 2 to 4-sentence decision note on Kavir Minerals for your notebook.
+392	Estimated EPS is about 1,200 rials and the expected return about 31%, which is less than Akhza at 30% plus the risk premium; so I won’t buy at 7,500. Disclosure quality is also poor and calls for a bigger risk premium. I’ll check again with the next monthly report and the 7 steps.
+393	EPS about 1,200 and an expected return of about 31%
+394	Less than Akhza + risk premium; not at this price
+395	Poor disclosure quality creates more risk
+396	From the monthly report to the decision, all on one page.
+397	Ofogh Holding
+398	Ofogh Holding has traded below NAV for years, and one of its subsidiaries is in trouble. Weigh the value and the risk.
+399	Portfolio and balance sheet (billion rials)
+400	4 billion shares; price 2,100 rials. For simplicity, take the tax on a hypothetical sale as zero.
+401	History: traded at a 30 to 40% discount to NAV for 5 years; dividend: 5% of net profit.
+402	Subsidiary “Ofogh Construction”: capital 800, accumulated losses 500.
+403	Market value of listed shares
+404	Unlisted, at cost
+405	Unlisted, estimated value
+406	Cash and other assets
+407	Liabilities
+408	Total NAV with the unlisted holdings at estimated value?
+409	What is NAV per share, in rials?
+410	12,000 billion ÷ 4 billion shares = 3,000
+411	The ratio of price to NAV (P/NAV)?
+412	2,100 ÷ 3,000 = 0.7; a 30% discount.
+413	Is a 30% discount to NAV an opportunity?
+414	Only with a trigger such as a high dividend; with 5 years of discount and a 5% payout it’s probably a trap
+415	It’s definitely an opportunity; every discount closes eventually and patience is enough, even with no dividend
+416	It means the company is bankrupt and should be avoided
+417	A discount with no trigger can last for ever.
+418	With capital of 800 and accumulated losses of 500, what applies to Ofogh Construction?
+419	Article 141: accumulated losses above half the capital
+420	No article; the losses are less than the capital
+421	Only an auditor’s warning in the going-concern paragraph
+422	500 is more than 400; an extraordinary meeting must decide on dissolving or continuing.
+423	In NAV, we always count unlisted holdings at their book cost.
+424	Historical cost is low under inflation; use a cautious estimated value and write down its assumption.
+425	Write your view of Ofogh Holding in 2 to 4 sentences.
+426	NAV per share is about 3,000 rials and the price 2,100, a 30% discount. But 5 years of discount and a payout of only 5% show there is no trigger for this value to reach shareholders. The subsidiary under Article 141 is also a risk; until I see a trigger, I don’t count the discount as an opportunity.
+427	NAV per share about 3,000 and a 30% discount
+428	A lasting discount and a low payout; a trigger is needed
+429	The subsidiary under Article 141 is a risk
+430	Until value reaches the shareholder, it exists only on paper.

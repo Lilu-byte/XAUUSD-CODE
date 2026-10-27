@@ -1,0 +1,21 @@
+{0} ستاره	{0} {0|star|stars}
+درس#1	Lesson
+آزمون#q	test
+پرونده#q	case
+درس#q	lesson
+همه برنامه، از درس‌ها تا واژه‌نامه، به هر دو زبان است. با عوض کردن زبان صفحه دوباره باز می‌شود و پیشرفت سر جایش می‌ماند.	The whole app, from lessons to glossary, is in both languages. Switching reloads the page; your progress stays where it is.
+روشن#on	On
+امتیاز#xp	XP
+سؤال‌های سریع از درس‌هایی که تمام کرده‌اید. هر پاسخ درست ۲ ثانیه وقت اضافه می‌دهد و هر اشتباه ۳ ثانیه کم می‌کند. پاسخ‌های پیاپی ضریب ۲، ۳ و ۴ می‌گیرند.	Quick questions from lessons you have finished. Each correct answer adds 2 seconds and each mistake takes away 3. Answers in a row earn ×2, ×3 and ×4 multipliers.
+تمرین اشتباه در پایان درس دوباره می‌آید تا درستش کنید.	A question you miss comes back at the end of the lesson so you can get it right.
+۱۰ سؤال از همه درس‌های این تالار. برای قبولی ۸ پاسخ درست لازم است. بازخورد بعد از هر پاسخ می‌آید. قبولی صندوقچه طلایی دارد.	10 questions from every lesson in this hall. 8 correct answers are needed to pass. You get feedback after each answer. Passing earns a golden chest.
+تمرین‌هایی که مرور کردید دیرتر دوباره می‌آیند؛ یعنی بهتر یادتان مانده.	The questions you reviewed will come back later, because you now remember them better.
+نکته‌های جاافتاده و پاسخ نمونه را بالا ببینید.	See the missed points and the model answer above.
+مهم معنی است، نه املا. {0}	Meaning matters, not spelling. {0}
+اسناد را هر وقت خواستید با دکمه «اسناد» بالای صفحه دوباره ببینید.	Look at the documents again any time with the “Documents” button at the top.
+پیشرفت همین جلسه از بین می‌رود.	This session’s progress will be lost.
+جزئیات بیشتر	More detail
+بستن جزئیات	Hide detail
+نکته {0} از {1}	Card {0} of {1}
+برگشت به سؤال	Back to the question
+{0}دیدن دوباره نکته	{0}See the card again

@@ -1,0 +1,175 @@
+0	FIS 1: Sustainable Profit and Simple Valuation
+1	Normalisation, sustainable profit, E/P against Akhza, payback
+2	Sections 4.1 to 4.3
+3	Normalisation: remove asset sales, currency translation, reversed provisions
+4	Sustainable profit = normal volume × current price − real costs
+5	CFO/NI above 0.8 = quality profit
+6	Expected return ≈ E/P × payout + growth; must beat Akhza + a risk premium
+7	Payback under 4 to 5 years
+8	Value commodity companies on the cycle average
+9	Low P/E meaning cheap
+10	Valuing commodity companies on peak-year profit
+11	Forgetting the new share count after a capital increase
+12	Calling a price below replacement value cheap when there’s no profit
+13	Normalising Profit
+14	The Goal: Profit That Repeats Next Year
+15	Item
+16	Action
+17	Where on Codal
+18	Gain on selling assets or land
+19	Remove entirely
+20	Other income
+21	Gain on selling shares (except for an investment company)
+22	Remove
+23	Currency translation gain
+24	Remove from sustainable profit; review exporters separately
+25	Other income/expenses
+26	Reversal of prior-year provisions
+27	Provisions note
+28	Bank deposit interest
+29	Keep only if the surplus cash is lasting
+30	Temporary tax exemption
+31	Recalculate tax at 25%
+32	Tax note
+33	Too-low tax provision
+34	Correct it using the history of final assessments
+35	Tax note, auditor’s qualification
+36	Delay in recognising a price increase (feedstock, government royalties)
+37	Add the full year’s cost
+38	Interpretive report, material announcement
+39	The Profit Quality Test
+40	CFO ÷ NI over 3 years: above 0.8 is good, below 0.5 needs a close look.
+41	Receivables growth against sales: sales up 30% and receivables up 90% = low-quality profit.
+42	Inventory growth against sales: building inventory can precede a write-down or falling demand.
+43	Maintenance CAPEX against depreciation: with inflation, historical depreciation is far below replacement cost; part of the profit must be set aside for replacement.
+44	What do you do with each item when normalising?
+45	Remove from sustainable profit
+46	Keep
+47	Gain on selling land
+48	Gain on selling shares at a manufacturer
+49	Sales of the main product
+50	Deposit interest that comes from lasting surplus cash
+51	Only what repeats is sustainable profit.
+52	Operating cash flow 600 and net profit 1,000. What is CFO/NI?
+53	600 ÷ 1,000 = 0.6; between 0.5 and 0.8, so the cause needs checking.
+54	CFO/NI has been 0.4 for three years in a row. The right response?
+55	A close look: is the profit stuck in receivables or inventory?
+56	Excellent; the company is reinvesting its cash
+57	This ratio doesn’t matter for sustainable profit
+58	Below 0.5 means a close look.
+59	A company has a tax exemption that ends next year. What do you do for sustainable profit?
+60	Recalculate tax at the normal 25% rate
+61	Assume the exemption is permanent because it gets renewed
+62	Take tax as zero for all years
+63	Exemptions end.
+64	In an inflationary economy, book depreciation is usually below the real cost of replacing equipment.
+65	So part of the accounting profit is really future maintenance cost.
+66	Sales grew 30% and receivables 90%. The profit?
+67	Low quality
+68	High quality
+69	Unrelated to quality
+70	Credit sales create accounting profit, not money.
+71	Estimating Sustainable Profit
+72	Build It from the Bottom Up
+73	1. Sales volume: the average of the last 12 months, adjusted for new capacity or a known constraint.
+74	2. Selling price: the latest monthly price, not last year’s average. Exports: dollar price × the exchange rate available to the company.
+75	3. Cost of sales: the materials-to-sales ratio from the notes; formula-priced feedstock at the current formula.
+76	4. General and administrative expenses: last year × (1 + expected inflation).
+77	5. Finance costs and tax: at current debt and rates.
+78	6. Divide by the share count after the latest registered or confirmed capital increase.
+79	Two Checks
+80	Compare the resulting margin with the 5-year average margin; if it’s much higher you’re probably at the top of the cycle.
+81	Value commodity companies on the cycle average, not on peak-year profit.
+82	Put the steps for building sustainable profit in order.
+83	Normal sales volume
+84	Current selling price
+85	General and administrative expenses
+86	Finance costs and tax
+87	Divide by the share count
+88	From volume and price to EPS.
+89	How do you take the selling price in the sustainable-profit model?
+90	The latest monthly price
+91	Last year’s average price
+92	The highest price in 5 years
+93	Today’s price is the best guide to future sales, not the past average.
+94	For an export product, the rial selling price = ?
+95	Dollar price × the exchange rate available to the company
+96	Dollar price × the free-market rate, because it’s the most real rate
+97	Last year’s price × inflation
+98	The exchange rate the company actually gets differs from the free market.
+99	This year’s operating margin is 45% and the 5-year average is 25%. Your takeaway?
+100	You’re probably at the top of the cycle; value on the cycle average
+101	Assume the 45% margin is permanent for coming years
+102	The stock is very cheap because its margin hit a record
+103	Valuing commodity companies on peak-year profit is a common mistake.
+104	Sustainable net profit is 763 billion rials and there are 500 million shares. What is sustainable EPS in rials?
+105	763,000 million rials ÷ 500 million shares ≈ 1,526 rials.
+106	How do you estimate next year’s administrative expenses?
+107	Last year × (1 + expected inflation)
+108	Fixed, exactly like last year
+109	A fixed percentage of last year’s net profit
+110	These costs rise with inflation.
+111	When dividing profit by the share count, include a capital increase that is confirmed but not yet registered.
+112	Forgetting the new shares overstates EPS.
+113	Earnings Yield Against Akhza
+114	E/P in a Country with High-Yield Akhza
+115	E/P = sustainable EPS ÷ price.
+116	When Akhza has a high nominal yield, a low P/E alone doesn’t mean cheap.
+117	The expected return must exceed the Akhza yield + a risk premium (say 5 to 10 percentage points).
+118	Example: E/P 20%, payout 60%, growth 25% → 20 × 0.6 + 25 = 37% against a hypothetical 30% Akhza → a thin margin of safety.
+119	Expected return ≈ E/P × payout ratio + sustainable nominal growth (g)
+120	Lab: Try It Yourself
+121	Move the sliders and watch how P/E, expected return and payback change. The same tool is also in the “Practice” tab.
+122	E/P = 20%, payout 60%, sustainable nominal growth 25%. Expected return?
+123	The same 37% against a 30% Akhza with a 5 to 10-point risk premium. Conclusion?
+124	A thin margin of safety; about equal to Akhza + the risk premium
+125	A great opportunity; the return beats Akhza with no extra risk
+126	It will surely lose money because it’s below the risk premium
+127	30 + 5 to 10 = 35 to 40%; 37% adds nothing.
+128	Price 5,000 and sustainable EPS 1,000 rials. What is E/P in percent?
+129	E/P 25%, payout 80%, growth 20%. Expected return?
+130	A P/E of 4 in Iran always means the stock is cheap.
+131	It has to be compared with the Akhza yield and with the quality and sustainability of the profit. P/Es quoted in channels often use one-off profit.
+132	What must a stock’s expected return exceed?
+133	The Akhza yield plus a risk premium
+134	Last year’s inflation alone
+135	Last year’s overall index return
+136	Otherwise you took risk for nothing.
+137	Explain why in Iran a low P/E alone doesn’t mean a stock is cheap.
+138	A stock’s return must be compared with the Akhza yield plus a risk premium, and Akhza has a high nominal yield in Iran. A low P/E may be based on one-off profit or a commodity peak year. The quality and growth of the profit also matter.
+139	It must be compared with the Akhza yield plus a risk premium
+140	It may be based on one-off or peak-year profit; sustainable profit is needed
+141	The quality and growth of profit also matter in the judgement
+142	Cheap means the expected return beats the required return by a clear margin.
+143	Set the price so that E/P is exactly 20%.
+144	Price 5,000 rials
+145	1,000 ÷ 5,000 = 20%; the same as a P/E of 5.
+146	Payback and Profit Quality
+147	The Payback Period
+148	How many years until the sum of EPS (with growth) reaches today’s price?
+149	Price 100, first-year EPS 20, growth 25% → 20, 25, 31.25, 39.06 → 76.25 after 3 years and 115.3 after 4 years → about 3.6 years.
+150	FIS rule of thumb: prefer a payback under about 4 to 5 years with sustainable profit and conservative growth. The threshold is a judgement call; adjust it to the day’s risk-free rate.
+151	Profit Quality and Replacement Value
+152	The same E/P is worth more for a company with high CFO/NI, little debt and pricing power. For low-quality profit use a lower target P/E.
+153	For asset-heavy companies (cement, mining, holdings), replacement value or NAV is a useful analytical floor.
+154	A price below replacement value is no reason to buy on its own if the factory doesn’t make a profit.
+155	Price 100, flat EPS of 25 with no growth. Payback in years?
+156	years
+157	100 ÷ 25 = 4 years
+158	Price 100, first-year EPS 20, annual growth 25%. Payback in roughly how many years?
+159	20 + 25 + 31.25 = 76.25 in 3 years; the remaining 23.75 ÷ 39.06 ≈ 0.6 → about 3.6 years.
+160	Two companies have the same E/P. Which deserves a higher P/E?
+161	High CFO/NI, little debt, pricing power
+162	High profit but piling up in receivables
+163	Fast growth with heavy foreign-currency debt
+164	Profit quality is a value multiplier.
+165	A cement stock’s price is below the factory’s replacement value; so it must be cheap.
+166	If the factory doesn’t make a profit, replacement value brings shareholders no money.
+167	The FIS rule of thumb for payback?
+168	Under about 4 to 5 years, with sustainable profit and conservative growth
+169	Under 1 year, with the company’s best-ever profit and optimistic growth next year
+170	It doesn’t matter; only future profit growth counts
+171	And adjust the threshold to the day’s risk-free rate.
+172	Set profit growth so that payback is about 4 years.
+173	Growth of about 15%
+174	With no growth it’s 5 years; with about 15% growth, 2,000 + 2,300 + 2,645 + 3,042 ≈ 10,000 in 4 years.

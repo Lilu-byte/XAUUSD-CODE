@@ -1,0 +1,260 @@
+330	Dr. Bardia Khosravani
+331	Everyday example
+332	Full version of this card
+333	Say it simpler
+334	Skip the cards
+335	Start the exercises
+336	Unstoppable!
+337	Complete explanation! +3 XP
+338	Incomplete
+339	Correct answer:
+340	You covered the key points. See the model answer above too.
+341	See the missed points and the model answer above. No energy lost.
+342	{0}Reading your answer…
+343	Cancel
+344	Tick the points you covered.
+345	Submit
+346	Correct!
+347	The right answer is shown in green.
+348	Answer fast; keys 1 to 4 work too.
+349	Tap one item from each column.
+350	Number keys work too.
+351	Ctrl+Enter also sends.
+352	Check answer
+353	Check
+354	Choose one option
+355	Fill in the blank
+356	True or false?
+357	Calculate
+358	Find the pairs
+359	Put them in order
+360	Sort them
+361	Explain in your own words
+362	Move the slider
+363	Again, this time right
+364	Rounding within {0} is accepted.
+365	Numeric answer
+366	Use a dot for decimals; a minus sign for negatives. Persian and English digits both work.
+367	{0} wrong {0|pair|pairs}; this exercise comes back at the end.
+368	2 to 4 sentences in your own words…
+369	Written answer
+370	Claude reads your answer and tells you which points you covered.
+371	After sending, you see the model answer and judge it yourself.
+372	Meaning matters, not spelling. {0} Written answers don’t cost energy.
+373	Claude is reading your answer…
+374	Model answer
+375	Which points did you cover?
+376	“Complete” needs at least {0} points.
+377	Correct: {0}
+378	{0}+{1} coins
+379	{0}Golden hour: 15 minutes of double XP
+380	{0}+{1} energy
+381	Golden chest
+382	Chest
+383	Tap to open
+384	Open the chest
+385	{0}One more run
+386	{0}Practice this hall
+387	{0}Next lesson
+388	{0}Mastery test
+389	{0} of 3 stars
+390	Blitz score
+391	New rank: {0}
+392	You moved up a level.
+393	Level {0}!
+394	New card for your collection
+395	Card turned foil
+396	Lesson {0}
+397	{0} foil
+398	{0} {1}-day streak
+399	{0} Daily goal complete
+400	+10 coins
+401	{0} Quest: {1}
+402	{0} New badge: {1}
+403	{0} New Blitz record
+404	{0}%
+405	Best streak
+406	You got a golden chest!
+407	{0} more {0|lesson or review|lessons or reviews} to a golden chest
+408	This session’s chain
+409	{0}Map
+410	Claude reading isn’t available for this account.
+411	Claude is busy right now.
+412	Sign in to claude.ai again.
+413	Claude’s reply couldn’t be read.
+414	The connection to Claude dropped.
+415	 Judge it yourself this time.
+416	{0} of {1}
+417	Share price
+418	Sustainable EPS
+419	Payout ratio
+420	Annual earnings growth
+421	Akhza yield
+422	Risk premium
+423	 rials
+424	 units
+425	Well above the required return
+426	Slightly above the required return; thin margin
+427	Above Akhza but below the required return
+428	Even below Akhza
+429	above
+430	below
+431	{0} rials
+432	{0} the price, {1}%
+433	Dividend yield
+434	Payback
+435	30+ yrs
+436	 yrs
+437	Price with a 5-year payback
+438	Price matching the required return
+439	Expected return
+440	Akhza
+441	Akhza {0}%
+442	Required return {0}%
+443	Cumulative EPS year by year against the price
+444	Price
+445	Bars: cumulative EPS up to each year. Where they cross the price line, your money has come back.
+446	Simplified and educational, using this course’s formulas; not a buy or sell recommendation.
+447	Sales for the period
+448	billion tomans
+449	Months in the period
+450	months
+451	FIS profit margin
+452	Other and non-operating income for the year
+453	Market value
+454	Average payout ratio over two years
+455	Fixed-income fund or Akhza rate
+456	Shareholders’ equity
+457	Market value of the stock portfolio
+458	Cost of the stock portfolio
+459	Net profit, same period last year
+460	Net profit, this period
+461	Sales, same three months last year
+462	Sales, last three months
+463	Profit margin, previous quarter
+464	Profit margin, this quarter
+465	Manufacturer
+466	Analysis template
+467	Holding
+468	Stop-loss
+469	Fundamental
+470	Sample numbers: Shifteh, post 21836 on his Telegram channel (Khordad 1405, about June 2026)
+471	Sample numbers: Saba, post 22784 on his Telegram channel (Shahrivar 1405, about September 2026)
+472	Sample numbers are made up, similar to the examples on his channel
+473	Current value {0}% lower
+474	Current value {0}% higher
+475	 (months between 1 and 12)
+476	Fill every box with a number{0}.
+477	 billion tomans
+478	{0} above the {1}% average
+479	{0} below the {1}% average
+480	Estimate for the year, his way
+481	Estimated annual sales
+482	“Same pace”: period sales ÷ months × 12
+483	FIS operating profit
+484	FIS profit margin × estimated sales
+485	Margin above 30%: very good
+486	Margin
+487	Estimated annual profit
+488	Plus other and non-operating income
+489	Estimated dividend
+490	Estimated profit × average payout
+491	Payout
+492	Estimated profit is zero or negative; in FIS a loss-making company scores nothing and the ratios mean nothing.
+493	Forward-looking ratios
+494	Whole-market averages in autumn 1404 (2025), by his account: P/E about 6.4, P/S about 1, payout 53%, FIS profit margin 15%.
+495	Ranges from his general rules (market value)
+496	Buy ceiling from the bank-rate rule
+497	Buy P/E ≈ 1 ÷ {0}% + 1 = {1}
+498	Buy ceiling from “P/D under 5”
+499	Estimated dividend × 5
+500	Buy with the FIS indicator
+501	Average of value at P/E 4 and P/D 4
+502	Sell with the FIS indicator
+503	Average of value at P/E 8 and P/D 8
+504	In the sell range
+505	Still below the sell range
+506	Target “estimated profit × 7”
+507	Upside ceiling in his videos
+508	Shareholders’ equity + portfolio market value − portfolio cost
+509	80% of NAV
+510	NAV is zero or negative.
+511	none
+512	Discount to NAV
+513	Under 100%: the market prices this holding below 80% of its asset value.
+514	Over 100%: the market prices this holding above 80% of its asset value.
+515	For comparison, in his posts: Vaniki 54%, Vamaaden 64%, Shasta 108%, Tapico 150%. Also check the payout (70 to 90%) and receivables to assets (under 20%).
+516	Net profit
+517	Loss 
+518	Down 
+519	Up 
+520	Against the same period last year
+521	Turned to a loss
+522	Profit fell
+523	No drop
+524	Quarterly sales
+525	Against the same three months last year
+526	Sales fell
+527	Quarterly profit margin
+528	Previous quarter 
+529	Margin fell
+530	Turning loss-making is the clearest sign of a fundamental stop-loss in his method.
+531	A fundamental stop-loss sign is showing. He hasn’t published a threshold; the examples on his channel were profit drops of 43 to 98%.
+532	No fundamental stop-loss sign. A falling price alone is no reason to sell.
+533	The rule he wrote on his channel: a stock that triggers a fundamental stop-loss is switched into gold, or into a stock with an excellent report. First check whether the drop is temporary or lasting (one-off, seasonal or structural).
+534	Sample numbers
+535	General rules from Dr. Khosravani’s videos and channel, simplified for practice. The FIS score thresholds are not public. Not a buy or sell recommendation.
+536	{0} FIS calculator
+537	Enter the Codal numbers; it works out the template he uses on his channel.
+538	Nothing found.
+539	{0} Glossary
+540	{0} terms from every hall
+541	Search: EPS, Akhza, dilution…
+542	Search the glossary
+543	 (solved)
+544	Case file: {0}{1}
+545	Case: {0}
+546	The case file opens once every lesson in “{0}” is finished.
+547	Practice again<i class='sep'></i>+10 XP
+548	+30 XP<i class='sep'></i>+20 coins<i class='sep'></i>Golden chest
+549	Hall {0} case file
+550	{0}; all names and numbers are made up
+551	{0} {0|document|documents}
+552	{0} {0|step|steps}
+553	No energy is used. Look at the documents again any time with the “Documents” button at the top.
+554	{0}Open the case
+555	; all names and numbers are made up.
+556	{0} Case documents
+557	Back to the case
+558	Ready
+559	{0}Case files
+560	Every hall has a case file: a made-up company with Codal-style reports. It opens after the hall’s lessons.
+561	Daily XP this week against last week
+562	This week
+563	Last week
+564	{0} XP ahead of last week’s you.
+565	{0} XP to catch last week’s you.
+566	You had no XP last week; set a record this week.
+567	 It’s this week!
+568	Best week so far: {0} XP.{1}
+569	No record yet.
+570	You beat the week before {0} {0|time|times}.
+571	Each week runs Saturday to Friday. XP from every lesson, review, Blitz, case file and real task this week adds up. Your only rival is last week’s you.
+572	{0} {0|day|days} left
+573	{0}You against last week’s you
+574	{0}Your weekly record
+575	+{0} XP and +{1} coins for real work
+576	New badge: {0}
+577	 and 15 minutes of golden hour
+578	+{0} coins{1}
+579	 stars
+580	, foil
+581	Not opened yet
+582	Energy refilled.
+583	You bought a streak shield.
+584	All progress erased.
+585	case
+586	 Energy already spent doesn’t come back.
+587	Leave the {0}?
+588	This session’s progress will be lost.{0}
+589	Keep going

@@ -1,0 +1,232 @@
+0	FIS 2: Industry, Capital Increases, Portfolio
+1	Sensitivity analysis, the maths of capital increases, the selection funnel, red flags
+2	Sections 4.4 to 4.7
+3	See every company within its industry chain
+4	A thin margin = high sensitivity to currency and price
+5	Adjusted price = (P + 1,000 × a) ÷ (1 + a + b)
+6	A capital increase creates value only if the project’s return beats E/P
+7	8 to 15 companies, a cap of 10 to 15% per stock and 25 to 30% per industry
+8	Sell only for one of three reasons written in advance
+9	A model without sensitivity analysis
+10	Believing “capital increases are profitable”
+11	Concentrating on one industry
+12	Selling only because the price fell
+13	Dr. Khosravani’s blog (Persian): What is a capital increase?
+14	Video (Persian): Specialist live stream on company capital increases
+15	Blog (Persian): Classifying stocks by market value
+16	Industry Chain and Sensitivity
+17	The Industry Chain
+18	Upstream: oil, gas, iron ore. Midstream: steel, petrochemicals, refining. Downstream: cars, home appliances, food.
+19	One link’s selling price is the next link’s cost; the supplier’s monthly report is a leading indicator of the consumer’s margin.
+20	Four Industry Questions
+21	Where is the product price set? Globally (in dollars), on the commodity exchange, by the government, or freely at home?
+22	What is the largest cost, and who sets its price?
+23	What is the nominal capacity, and what percent of it is used?
+24	What keeps competitors out? (licences, a dedicated mine, a brand, a distribution network)
+25	A Simple Sensitivity Model
+26	A hypothetical export petrochemical company (billion rials). With a 30% operating margin, every 10% change in the product price moves profit by about 33% (operating leverage).
+27	The thinner the margin, the higher the sensitivity and risk. Build this table for every company in your portfolio.
+28	Operating profit = volume × (dollar price × exchange rate) − dollar costs − rial costs
+29	Scenario (billion rials)
+30	Sales
+31	Dollar feedstock
+32	Other rial costs
+33	Base
+34	Exchange rate 20% higher
+35	World price 10% lower
+36	Feedstock 20% higher
+37	Which link is each industry in?
+38	Upstream
+39	Midstream
+40	Downstream
+41	Iron ore mining
+42	Gas production
+43	Steel
+44	Petrochemicals
+45	Car making
+46	Food industry
+47	Each link’s selling price is the next link’s cost.
+48	In the table, if the exchange rate rises 20% (sales 12,000, feedstock 6,000, other 2,000), what is operating profit in billion rials?
+49	12,000 − 6,000 − 2,000 = 4,000; i.e. 33% above the base.
+50	The operating margin is 30%. Roughly what percent does a 10% fall in the product price (all else equal) cut operating profit?
+51	10% of sales = 1,000 out of a 3,000 profit → 33%. That is operating leverage.
+52	Which company is more sensitive to price changes?
+53	A company with a 10% operating margin
+54	A company with a 40% operating margin
+55	Both are the same
+56	Thinner margin = more operating leverage.
+57	Which question is NOT one of the four industry questions?
+58	How much has the share price risen in the last month?
+59	Where is the product price set?
+60	What percent of capacity is used?
+61	What keeps competitors out?
+62	The industry questions are about the business, not the share price.
+63	A pipe maker buys steel sheet. The best leading indicator of its margin?
+64	The sheet supplier’s monthly report and commodity exchange price
+65	The overall stock index and the basic metals index last week
+66	The deposit rate and the Akhza yield
+67	The supplier’s selling price = the consumer’s cost of sales.
+68	The Maths of Capital Increases
+69	Price Adjustment
+70	a = percent increase from cash contributions; b = from retained earnings/reserves/revaluation; par value 1,000 rials.
+71	Price 5,000 and 100% cash contribution → (5,000 + 1,000) ÷ 2 = 3,000. 100% from retained earnings → 2,500.
+72	Your wealth doesn’t change on the adjustment day; only the share count changes. “Capital increases are profitable” is a common and wrong belief.
+73	The Key Question: What Return Will the New Money Earn?
+74	Capital 1,000 billion (1 billion shares), profit 500 billion (EPS 500), price 4,000 (E/P 12.5%), 100% cash contribution for a project.
+75	Rule: a cash contribution creates value only if the project’s return beats the current E/P and the risk-free rate, and management’s delivery record is credible.
+76	Revaluation creates no economic value; it may be a way out of Article 141 or a way to make registered capital realistic.
+77	If you neither sell your rights nor subscribe, by market practice they are sold for you and the money may arrive late (please check the details).
+78	Case
+79	Project profit
+80	Next EPS
+81	Shareholder’s profit with 2 shares
+82	Shareholder’s total money
+83	Earnings yield
+84	Before the increase
+85	500 (1 share)
+86	Project earning 30% on the new money
+87	Project earning 10%
+88	Only covering losses or debt
+89	Rights and Bonus Shares
+90	Existing shareholders get rights only in a capital increase from cash contributions.
+91	In an increase from retained earnings you get bonus shares instead; in his words: “In this method, shareholders are allotted shares known as bonus shares.”
+92	This priority is called the pre-emptive right to buy shares.
+93	Blog (Persian), “What is a capital increase? Get to know its types”, Azar 1398 (December 2019)
+94	Price 5,000 rials and a 100% capital increase from cash contributions. Adjusted price?
+95	Price 5,000 rials and a 100% increase from retained earnings. Adjusted price?
+96	Price 4,000, an increase of 50% from cash and 50% from retained earnings. Adjusted price?
+97	A capital increase from retained earnings by itself increases shareholders’ wealth.
+98	Only the share count changes; the price is adjusted in the same proportion.
+99	In the table, which capital increase case creates value?
+100	A project earning 30% on the new money
+101	A project earning 10%
+102	Money to cover losses or debt
+103	An earnings yield of 16% against 12.5% before; above the current E/P.
+104	The project returns 10% and the stock’s current E/P is 12.5%. Conclusion?
+105	Dilutive; the shareholder’s earnings yield falls
+106	Value-creating, because the project is profitable and the company’s total profit rises
+107	No effect, because total profit rises
+108	The project’s return must beat E/P and the risk-free rate.
+109	What does a capital increase from revaluation usually signal?
+110	Restructuring or a way out of Article 141; it creates no economic value
+111	A high-return expansion project that lifts future profit
+112	A bigger dividend at the company’s next general meeting
+113	Buying in hope of a capital increase from revaluation is a common mistake.
+114	What do you get in each type of capital increase?
+115	Rights
+116	Bonus shares
+117	Increase from cash contributions
+118	Increase from shareholders’ matured receivables
+119	Increase from retained earnings
+120	Rights cost money; bonus shares are free but the price is adjusted in the same proportion.
+121	Explain when a capital increase from cash contributions creates value and when it dilutes.
+122	When the new money is spent on a project with a return above the stock’s current E/P and the risk-free rate, it creates value. If the project’s return is lower, or the money goes to covering losses or repaying debt, earnings per share and the shareholder’s return fall.
+123	Value-creating: the project’s return beats the current E/P (and the risk-free rate)
+124	Dilutive: a lower project return, or money for losses and debt
+125	The effect must be judged on earnings per share after the capital increase
+126	The Selection Funnel and Portfolio Rules
+127	The 5-Stage Funnel
+128	1. First cut: loss-making, under Article 141, adverse opinion or disclaimer, base market with weak disclosure.
+129	2. Business: positive operating profit in 4 of 5 years, CFO/NI above 0.8, pricing power or dollar sales.
+130	3. Balance sheet: bank debt below 1 year of normal operating profit, small receivables from the major shareholder.
+131	4. Price: payback under 4 to 5 years and an expected return above Akhza + a risk premium.
+132	5. A clear value driver: a project starting up, a high dividend, or a large gap to NAV.
+133	Portfolio-Building Rules (a Starting Point)
+134	Rule
+135	Amount
+136	Why
+137	Number of companies
+138	8 to 15
+139	Fewer: one fatal mistake; more: impossible to monitor
+140	Weight per company
+141	At most 10 to 15%
+142	Unexpected events
+143	Weight per industry
+144	At most 25 to 30%
+145	Government decisions or world prices
+146	Dollar/rial
+147	Both
+148	A currency jump vs. domestic growth
+149	Gold or silver
+150	Part of your assets
+151	Protecting purchasing power (the FIS view)
+152	Fixed income
+153	Short-term parking only
+154	A return below inflation = economic loss
+155	Reviewing weights
+156	Every 3 or 6 months
+157	Less emotional trading
+158	When Do We Sell?
+159	Only for one of three reasons written in advance:
+160	1. The reason for buying no longer holds (sustainable profit fell for good).
+161	2. The price has risen so far that payback exceeds a reasonable limit.
+162	3. A clearly better option has turned up.
+163	A price drop alone is no reason to sell.
+164	Put the stages of the selection funnel in order.
+165	First cut
+166	Business
+167	Price
+168	Value driver
+169	From quick cuts to the value driver.
+170	Match each portfolio rule to its suggested amount.
+171	Cap per company
+172	10 to 15%
+173	Cap per industry
+174	25 to 30%
+175	A starting point, not a law.
+176	Which reason to sell is NOT valid in FIS?
+177	The share price fell 20%
+178	Sustainable profit fell for good
+179	The price rose so far that payback became unreasonable
+180	A clearly better option turned up
+181	A company has an “adverse” opinion. At which stage of the funnel is it cut?
+182	The price stage
+183	The value-driver stage
+184	Adverse, disclaimer, loss-making and Article 141 are cut first.
+185	The rule of thumb for bank debt at the balance-sheet stage?
+186	Below 1 year of normal operating profit
+187	Below 10 years of net profit
+188	Debt doesn’t matter; only profit does
+189	Heavy debt is fatal in a liquidity crisis.
+190	A portfolio should hold both export (dollar) and domestic (rial) companies.
+191	Exporters gain from a currency jump and domestic companies from economic growth and inflation.
+192	Red Flags
+193	Red Flags on Codal (1)
+194	Net profit grew but operating profit is flat or falling.
+195	Receivables from related parties grow every year; approved dividends are offset against the major shareholder’s receivables.
+196	Operating cash flow below half of net profit for several years.
+197	A high payout at the same time as fast-growing borrowings.
+198	Repeated qualifications about the tax provision, obsolete inventory or old receivables.
+199	Frequent auditor changes, late publication, repeated corrections.
+200	Red Flags on Codal (2)
+201	Monthly: the sales amount grows but volume has been falling for months.
+202	Production consistently above sales.
+203	Sales to a group company below the market or commodity exchange price.
+204	Repeated capital increases from cash contributions for projects that never start up.
+205	This year’s profit is from asset sales or currency translation, and the market prices it on a normal P/E.
+206	The interpretive report is silent or vague about a falling margin.
+207	A sharp move on unusual volume before an important announcement (possible insider information).
+208	Which item is a red flag?
+209	Red flag
+210	Normal or good
+211	High net profit, falling operating profit
+212	Borrowing to pay dividends
+213	Sales to a group company below the commodity exchange price
+214	Production and sales of the same size
+215	A red flag means the reported profit doesn’t match the money or the operations.
+216	The monthly sales amount grew 35% but sales volume has been falling for 6 months. Which flag is it?
+217	Growth from inflation only; volume is falling
+218	Healthy, sustainable sales growth with pricing power
+219	A sign of increased production capacity
+220	Nominal growth without volume growth can hide a lost market.
+221	Before an announcement of a price increase, the ticker rose 20% on unusual volume. What is it a sign of?
+222	Possible insider information and weak governance
+223	Good analysis and an accurate market forecast
+224	It’s not a sign; volume always fluctuates
+225	Approved dividends are offset against the major shareholder’s receivables and no money is paid; this is normal.
+226	It means the company’s cash stays with the major shareholder; a red flag.
+227	A company raises capital from cash contributions every year but its projects never start up. Conclusion?
+228	A capital allocation red flag
+229	A sign of growth
+230	Good news for shareholders
+231	Shareholders’ money is spent on never-ending projects.

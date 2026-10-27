@@ -1,0 +1,590 @@
+0	67	"aria-label=\"{0} ستاره از ۳\""	const starsRow = (n, label = true) => `<span class="nstars" ${label ? `aria-label="${fa(n)} ستاره از ۳"` : 'aria-hidden="true"'}>${[0, 1, 2].map(i => `<svg view
+1	168	"سپر روز {0} روز غیبت را پوشاند. {1} روز پیاپی شما سالم ماند."	if (st.freezes >= missed) { st.freezes -= missed; st.lastDay = t - 1; toast(`سپر روز ${fa(missed)} روز غیبت را پوشاند. ${fa(st.streak)} روز پیاپی شما سالم ماند.
+2	193	"نوآموز"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+3	193	"کنجکاو بازار"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+4	193	"گزارش‌خوان"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+5	193	"کدال‌خوان"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+6	193	"صورت‌مالی‌شناس"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+7	193	"تحلیلگر"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+8	193	"ارزش‌گذار"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+9	193	"سرمایه‌گذار صبور"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+10	193	"استاد کدال"	const RANKS = [[1, "نوآموز"], [3, "کنجکاو بازار"], [5, "گزارش‌خوان"], [7, "کدال‌خوان"], [9, "صورت‌مالی‌شناس"], [11, "تحلیلگر"], [13, "ارزش‌گذار"], [15, "سرمایه‌
+11	235	"امروز {0} امتیاز بگیر"	{ id: "xp", t: () => `امروز ${fa(st.goal)} امتیاز بگیر`, v: () => xpToday(), n: () => st.goal },
+12	236	"۲ درس یا مرور کامل کن"	{ id: "les", t: () => "۲ درس یا مرور کامل کن", v: () => st.quest.lessons, n: () => 2 },
+13	237	"۱۵ پاسخ درست بده"	{ id: "cor", t: () => "۱۵ پاسخ درست بده", v: () => st.quest.correct, n: () => 15 }
+14	245	"اولین قدم"	["first", "اولین قدم", "اولین درس را تمام کن", () => doneLessons() >= 1],
+15	245	"اولین درس را تمام کن"	["first", "اولین قدم", "اولین درس را تمام کن", () => doneLessons() >= 1],
+16	246	"پرونده‌ساز"	["l10", "پرونده‌ساز", "۱۰ درس را تمام کن", () => doneLessons() >= 10],
+17	246	"۱۰ درس را تمام کن"	["l10", "پرونده‌ساز", "۱۰ درس را تمام کن", () => doneLessons() >= 10],
+18	247	"همه درس‌ها"	["lall", "همه درس‌ها", `هر ${faD(TOTAL_L)} درس را تمام کن`, () => doneLessons() >= TOTAL_L],
+19	247	"هر {0} درس را تمام کن"	["lall", "همه درس‌ها", `هر ${faD(TOTAL_L)} درس را تمام کن`, () => doneLessons() >= TOTAL_L],
+20	248	"سه روز پیاپی"	["s3", "سه روز پیاپی", "۳ روز پشت سر هم تمرین کن", () => st.longest >= 3],
+21	248	"۳ روز پشت سر هم تمرین کن"	["s3", "سه روز پیاپی", "۳ روز پشت سر هم تمرین کن", () => st.longest >= 3],
+22	249	"یک هفته کامل"	["s7", "یک هفته کامل", "۷ روز پشت سر هم تمرین کن", () => st.longest >= 7],
+23	249	"۷ روز پشت سر هم تمرین کن"	["s7", "یک هفته کامل", "۷ روز پشت سر هم تمرین کن", () => st.longest >= 7],
+24	250	"عادت ماندگار"	["s30", "عادت ماندگار", "۳۰ روز پشت سر هم تمرین کن", () => st.longest >= 30],
+25	250	"۳۰ روز پشت سر هم تمرین کن"	["s30", "عادت ماندگار", "۳۰ روز پشت سر هم تمرین کن", () => st.longest >= 30],
+26	251	"۵۰۰ امتیاز"	["x500", "۵۰۰ امتیاز", "۵۰۰ امتیاز جمع کن", () => st.xp >= 500],
+27	251	"۵۰۰ امتیاز جمع کن"	["x500", "۵۰۰ امتیاز", "۵۰۰ امتیاز جمع کن", () => st.xp >= 500],
+28	252	"۲٬۰۰۰ امتیاز"	["x2000", "۲٬۰۰۰ امتیاز", "۲٬۰۰۰ امتیاز جمع کن", () => st.xp >= 2000],
+29	252	"۲٬۰۰۰ امتیاز جمع کن"	["x2000", "۲٬۰۰۰ امتیاز", "۲٬۰۰۰ امتیاز جمع کن", () => st.xp >= 2000],
+30	253	"سطح ۱۰"	["lvl10", "سطح ۱۰", "به سطح ۱۰ برس", () => levelInfo().n >= 10],
+31	253	"به سطح ۱۰ برس"	["lvl10", "سطح ۱۰", "به سطح ۱۰ برس", () => levelInfo().n >= 10],
+32	254	"بی‌خطا"	["p5", "بی‌خطا", "۵ درس بدون هیچ اشتباه", () => st.stats.perfect >= 5],
+33	254	"۵ درس بدون هیچ اشتباه"	["p5", "بی‌خطا", "۵ درس بدون هیچ اشتباه", () => st.stats.perfect >= 5],
+34	255	"ده‌تایی"	["combo10", "ده‌تایی", "۱۰ پاسخ درست پیاپی بده", () => (st.maxCombo || 0) >= 10],
+35	255	"۱۰ پاسخ درست پیاپی بده"	["combo10", "ده‌تایی", "۱۰ پاسخ درست پیاپی بده", () => (st.maxCombo || 0) >= 10],
+36	256	"ستاره‌چین"	["stars30", "ستاره‌چین", "۳۰ ستاره جمع کن", () => totalStars() >= 30],
+37	256	"۳۰ ستاره جمع کن"	["stars30", "ستاره‌چین", "۳۰ ستاره جمع کن", () => totalStars() >= 30],
+38	257	"کلکسیون براق"	["foil10", "کلکسیون براق", "۱۰ کارت براق داشته باش", () => foilCount() >= 10],
+39	257	"۱۰ کارت براق داشته باش"	["foil10", "کلکسیون براق", "۱۰ کارت براق داشته باش", () => foilCount() >= 10],
+40	258	"رگبار ۲۰۰"	["blitz200", "رگبار ۲۰۰", "در رگبار ۲۰۰ امتیاز بگیر", () => (st.blitzBest || 0) >= 200],
+41	258	"در رگبار ۲۰۰ امتیاز بگیر"	["blitz200", "رگبار ۲۰۰", "در رگبار ۲۰۰ امتیاز بگیر", () => (st.blitzBest || 0) >= 200],
+42	259	"مرور منظم"	["r10", "مرور منظم", "۱۰ جلسه مرور", () => st.stats.reviews >= 10],
+43	259	"۱۰ جلسه مرور"	["r10", "مرور منظم", "۱۰ جلسه مرور", () => st.stats.reviews >= 10],
+44	260	"آزمون تسلط «کدال ۳» را قبول شو"	["codal", "کدال‌خوان", "آزمون تسلط «کدال ۳» را قبول شو", () => mastered(UNIT_BY.u4)],
+45	261	"آزمون تسلط ارزش‌گذاری را قبول شو"	["val", "ارزش‌گذار", "آزمون تسلط ارزش‌گذاری را قبول شو", () => mastered(UNIT_BY.u7)],
+46	262	"ذهن آرام"	["calm", "ذهن آرام", "آزمون تسلط FLM را قبول شو", () => mastered(UNIT_BY.u9)],
+47	262	"آزمون تسلط FLM را قبول شو"	["calm", "ذهن آرام", "آزمون تسلط FLM را قبول شو", () => mastered(UNIT_BY.u9)],
+48	263	"تحلیلگر مستقل"	["final", "تحلیلگر مستقل", "آزمون نهایی را قبول شو", () => st.finalPassed],
+49	263	"آزمون نهایی را قبول شو"	["final", "تحلیلگر مستقل", "آزمون نهایی را قبول شو", () => st.finalPassed],
+50	264	"کارآگاه"	["case1", "کارآگاه", "اولین پرونده ویژه را حل کن", () => casesSolved() >= 1],
+51	264	"اولین پرونده ویژه را حل کن"	["case1", "کارآگاه", "اولین پرونده ویژه را حل کن", () => casesSolved() >= 1],
+52	265	"همه پرونده‌ها بسته شد"	["caseall", "همه پرونده‌ها بسته شد", `هر ${faD(CASES.length)} پرونده ویژه را حل کن`, () => casesSolved() >= CASES.length],
+53	265	"هر {0} پرونده ویژه را حل کن"	["caseall", "همه پرونده‌ها بسته شد", `هر ${faD(CASES.length)} پرونده ویژه را حل کن`, () => casesSolved() >= CASES.length],
+54	266	"با زبان خودم"	["own5", "با زبان خودم", "۵ پاسخ نوشتاری کامل بنویس", () => (st.owns || 0) >= 5],
+55	266	"۵ پاسخ نوشتاری کامل بنویس"	["own5", "با زبان خودم", "۵ پاسخ نوشتاری کامل بنویس", () => (st.owns || 0) >= 5],
+56	267	"دست به کدال"	["real5", "دست به کدال", "۵ کار واقعی انجام بده", () => Object.keys(st.taskPaid || {}).filter(k => !k.startsWith("w:")).length >= 5],
+57	267	"۵ کار واقعی انجام بده"	["real5", "دست به کدال", "۵ کار واقعی انجام بده", () => Object.keys(st.taskPaid || {}).filter(k => !k.startsWith("w:")).length >= 5],
+58	268	"روال هفتگی"	["week4", "روال هفتگی", "۴ هفته روال ۳۰ دقیقه‌ای را انجام بده", () => Object.keys(st.taskPaid || {}).filter(k => k.startsWith("w:")).length >= 4],
+59	268	"۴ هفته روال ۳۰ دقیقه‌ای را انجام بده"	["week4", "روال هفتگی", "۴ هفته روال ۳۰ دقیقه‌ای را انجام بده", () => Object.keys(st.taskPaid || {}).filter(k => k.startsWith("w:")).length >= 4],
+60	269	"بهتر از خودم"	["better", "بهتر از خودم", "هفته‌ای را با امتیاز بیشتر از هفته قبلش تمام کن", () => weeksBeaten() >= 1]
+61	269	"هفته‌ای را با امتیاز بیشتر از هفته قبلش تمام کن"	["better", "بهتر از خودم", "هفته‌ای را با امتیاز بیشتر از هفته قبلش تمام کن", () => weeksBeaten() >= 1]
+62	382	"، انرژی بعدی تا {0} دقیقه"	const h = st.hearts >= MAXH ? "" : `، انرژی بعدی تا ${fa(nextHeartMin())} دقیقه`;
+63	389	" (امروز هنوز تمرین نکرده‌اید)"	<button class="stat sun ${active ? "" : "off"}" data-a="tab" data-t="profile" title="روزهای پیاپی${active ? "" : " (امروز هنوز تمرین نکرده‌اید)"}">${ic("sun")}<
+64	392	"ساعت طلایی: امتیاز دو برابر"	</div></div>${boostOn() ? `<div class="boost" role="status">${ic("bolt")}<span>ساعت طلایی: امتیاز دو برابر</span><b class="num" id="boostleft">${boostLeft()}</b
+65	384	"سطح {0}، {1}"	<button class="me" data-a="tab" data-t="profile" aria-label="سطح ${fa(L.n)}، ${esc(rankOf(L.n))}">
+66	386	"سطح {0}"	<span class="who"><span class="brand">کدال‌خوان</span><span class="rank">سطح ${fa(L.n)}<i class='sep'></i>${esc(rankOf(L.n))}</span><span class="xpbar"><i style
+67	389	"روزهای پیاپی{0}"	<button class="stat sun ${active ? "" : "off"}" data-a="tab" data-t="profile" title="روزهای پیاپی${active ? "" : " (امروز هنوز تمرین نکرده‌اید)"}">${ic("sun")}<
+68	390	"سکه"	<button class="stat coin" data-a="tab" data-t="practice" title="سکه">${ic("coin")}<span class="num">${fa(st.gems)}</span></button>
+69	391	"انرژی{0}"	<button class="stat bolt" data-a="tab" data-t="practice" title="انرژی${h}">${ic("bolt")}<span class="num">${fa(st.hearts)}</span></button>
+70	395	"نقشه"	const T = [["path", "نقشه", "map"], ["practice", "تمرین", "bolt"], ["week", "هفته من", "trophy"], ["checklist", "کار واقعی", "list"], ["profile", "پروفایل", "us
+71	395	"تمرین"	const T = [["path", "نقشه", "map"], ["practice", "تمرین", "bolt"], ["week", "هفته من", "trophy"], ["checklist", "کار واقعی", "list"], ["profile", "پروفایل", "us
+72	395	"هفته من"	const T = [["path", "نقشه", "map"], ["practice", "تمرین", "bolt"], ["week", "هفته من", "trophy"], ["checklist", "کار واقعی", "list"], ["profile", "پروفایل", "us
+73	395	"کار واقعی"	const T = [["path", "نقشه", "map"], ["practice", "تمرین", "bolt"], ["week", "هفته من", "trophy"], ["checklist", "کار واقعی", "list"], ["profile", "پروفایل", "us
+74	395	"پروفایل"	const T = [["path", "نقشه", "map"], ["practice", "تمرین", "bolt"], ["week", "هفته من", "trophy"], ["checklist", "کار واقعی", "list"], ["profile", "پروفایل", "us
+75	396	"بخش‌ها"	return `<nav class="dock" aria-label="بخش‌ها"><div>${T.map(([id, t, i]) => `<button class="tab" data-a="tab" data-t="${id}" ${TAB === id ? 'aria-current="page"'
+76	430	"ساده"	<div class="seg" role="group">${[[1, "ساده"], [0, "کامل"]].map(([v, t]) => `<button data-a="simple" data-v="${v}" aria-pressed="${!!st.simple === !!v}">${t}</bu
+77	430	"کامل"	<div class="seg" role="group">${[[1, "ساده"], [0, "کامل"]].map(([v, t]) => `<button data-a="simple" data-v="${v}" aria-pressed="${!!st.simple === !!v}">${t}</bu
+78	429	"ساده: هر نکته با زبان روزمره و یک مثال از زندگی. کامل: همه جزئیات، جدول‌ها و عددها. در هر کارت هم می‌شود نسخه دیگر را دید."	return `<div class="panel"><h3>${ic("sun")}${title}</h3><p>ساده: هر نکته با زبان روزمره و یک مثال از زندگی. کامل: همه جزئیات، جدول‌ها و عددها. در هر کارت هم می‌
+79	433	"آرام"	const goals = [[10, "آرام"], [20, "معمولی"], [30, "جدی"], [50, "فشرده"]];
+80	433	"معمولی"	const goals = [[10, "آرام"], [20, "معمولی"], [30, "جدی"], [50, "فشرده"]];
+81	433	"جدی"	const goals = [[10, "آرام"], [20, "معمولی"], [30, "جدی"], [50, "فشرده"]];
+82	433	"فشرده"	const goals = [[10, "آرام"], [20, "معمولی"], [30, "جدی"], [50, "فشرده"]];
+83	447	"{0} امتیاز"	<div class="seg" role="group">${goals.map(([g, t]) => `<button data-a="goal" data-g="${g}" aria-pressed="${st.goal === g}">${t}<i class='sep'></i>${fa(g)} امتیا
+84	448	"توضیح‌ها چطور باشد؟"	${simplePanel("توضیح‌ها چطور باشد؟")}
+85	437	"سرمایه‌گذاری بنیادی در بورس ایران با کدال، به روش FIS دکتر بردیا خسروانی، و مدیریت روان و زندگی مالی (FLM)، در درس‌های کوتاه و تمرین‌های روزانه."	<p class="pitch">سرمایه‌گذاری بنیادی در بورس ایران با کدال، به روش FIS دکتر بردیا خسروانی، و مدیریت روان و زندگی مالی (FLM)، در درس‌های کوتاه و تمرین‌های روزانه
+86	438	"{0} تالار"	<div class="facts"><span class="chip">${fa(UNITS.length)} تالار</span><span class="chip">${fa(TOTAL_L)} درس</span><span class="chip">${fa(TOTAL_X)} تمرین</span>
+87	438	"{0} درس"	<div class="facts"><span class="chip">${fa(UNITS.length)} تالار</span><span class="chip">${fa(TOTAL_L)} درس</span><span class="chip">${fa(TOTAL_X)} تمرین</span>
+88	438	"{0} تمرین"	<div class="facts"><span class="chip">${fa(UNITS.length)} تالار</span><span class="chip">${fa(TOTAL_L)} درس</span><span class="chip">${fa(TOTAL_X)} تمرین</span>
+89	438	"آزمون تسلط برای هر تالار"	<div class="facts"><span class="chip">${fa(UNITS.length)} تالار</span><span class="chip">${fa(TOTAL_L)} درس</span><span class="chip">${fa(TOTAL_X)} تمرین</span>
+90	440	"هر درس چند دقیقه است. بی‌خطا تمامش کنید تا ۳ ستاره و کارت براق بگیرید."	<li>${oct(ic("star8"))}<span>هر درس چند دقیقه است. بی‌خطا تمامش کنید تا ۳ ستاره و کارت براق بگیرید.</span></li>
+91	441	"پاسخ‌های درست پشت سر هم امتیاز اضافه می‌دهند و سطح‌تان را بالا می‌برند."	<li>${oct(ic("bolt"), "turq")}<span>پاسخ‌های درست پشت سر هم امتیاز اضافه می‌دهند و سطح‌تان را بالا می‌برند.</span></li>
+92	442	"بعد از هر درس یک صندوقچه باز می‌کنید؛ گاهی «ساعت طلایی» با امتیاز دو برابر در آن است."	<li>${oct(ic("chest"), "sky")}<span>بعد از هر درس یک صندوقچه باز می‌کنید؛ گاهی «ساعت طلایی» با امتیاز دو برابر در آن است.</span></li>
+93	443	"«رگبار ۶۰ ثانیه»: هر پاسخ درست وقت اضافه می‌دهد. رکورد خودتان را بشکنید."	<li>${oct(ic("timer"), "pom")}<span>«رگبار ۶۰ ثانیه»: هر پاسخ درست وقت اضافه می‌دهد. رکورد خودتان را بشکنید.</span></li>
+94	445	"این برنامه آموزشی است و توصیه سرمایه‌گذاری نیست. هیچ روشی سود تضمین‌شده نمی‌دهد. نام شرکت‌ها در مثال‌ها ساختگی است؛ جاهایی که جزئیات قانون یا منوی کدال قطعی نیست با «(بررسی کنید)» آمده است. این برنامه را خود دکتر خسروانی نساخته یا تأیید نکرده؛ کادرهای «از زبان دکتر خسروانی» عین جمله‌های عمومی او با ذکر منبع‌اند."	<div class="note">این برنامه آموزشی است و توصیه سرمایه‌گذاری نیست. هیچ روشی سود تضمین‌شده نمی‌دهد. نام شرکت‌ها در مثال‌ها ساختگی است؛ جاهایی که جزئیات قانون یا 
+95	446	"هدف روزانه‌تان چقدر باشد؟"	<div class="panel"><h3>هدف روزانه‌تان چقدر باشد؟</h3><p>هر درس حدود ۱۰ تا ۲۰ امتیاز است. بعداً از پروفایل عوضش کنید.</p>
+96	446	"هر درس حدود ۱۰ تا ۲۰ امتیاز است. بعداً از پروفایل عوضش کنید."	<div class="panel"><h3>هدف روزانه‌تان چقدر باشد؟</h3><p>هر درس حدود ۱۰ تا ۲۰ امتیاز است. بعداً از پروفایل عوضش کنید.</p>
+97	449	"{0}شروع سفر"	<button class="btn wide shine" data-a="begin">${ic("play")}شروع سفر</button>
+98	459	"ادامه سفر"	<button class="btn wide shine" data-a="go" data-l="${cur.id}">${ic("play")}${doneLessons() ? "ادامه سفر" : "اولین درس"}</button></section>`;
+99	459	"اولین درس"	<button class="btn wide shine" data-a="go" data-l="${cur.id}">${ic("play")}${doneLessons() ? "ادامه سفر" : "اولین درس"}</button></section>`;
+100	457	"تالار {0}"	return `<section class="hero ${ucls(u)}"><span class="eyebrow">تالار ${fa(u.n + 1)}<i class='sep'></i>${esc(u.title)}</span><h2>${esc(cur.title)}</h2>
+101	458	"درس {0} از {1}"	<p class="meta">درس ${fa(cur.n + 1)} از ${fa(u.lessons.length)}<i class='sep'></i>${fa(cur.cards.length)} نکته<i class='sep'></i>${fa(cur.ex.length)} تمرین</p>
+102	458	"{0} نکته"	<p class="meta">درس ${fa(cur.n + 1)} از ${fa(u.lessons.length)}<i class='sep'></i>${fa(cur.cards.length)} نکته<i class='sep'></i>${fa(cur.ex.length)} تمرین</p>
+103	461	"دروازه"	if (curM) return `<section class="hero ${ucls(curM)}"><span class="eyebrow">تالار ${fa(curM.n + 1)}<i class='sep'></i>دروازه</span><h2>آزمون تسلط: ${esc(curM.ti
+104	461	"آزمون تسلط: {0}"	if (curM) return `<section class="hero ${ucls(curM)}"><span class="eyebrow">تالار ${fa(curM.n + 1)}<i class='sep'></i>دروازه</span><h2>آزمون تسلط: ${esc(curM.ti
+105	462	"۱۰ سؤال؛ با ۸ پاسخ درست تالارهای بعد باز می‌شوند و صندوقچه طلایی می‌گیرید."	<p class="meta">۱۰ سؤال؛ با ۸ پاسخ درست تالارهای بعد باز می‌شوند و صندوقچه طلایی می‌گیرید.</p>
+106	463	"{0}شروع آزمون"	<button class="btn wide shine" data-a="startm" data-u="${curM.id}">${ic("gate")}شروع آزمون</button></section>`;
+107	464	"همه تالارها فتح شد"	if (!st.finalPassed) return `<section class="hero c-gold"><span class="eyebrow">همه تالارها فتح شد</span><h2>آزمون نهایی تحلیلگر مستقل</h2><p class="meta">۲۰ سؤ
+108	464	"آزمون نهایی تحلیلگر مستقل"	if (!st.finalPassed) return `<section class="hero c-gold"><span class="eyebrow">همه تالارها فتح شد</span><h2>آزمون نهایی تحلیلگر مستقل</h2><p class="meta">۲۰ سؤ
+109	464	"۲۰ سؤال از همه تالارها؛ ۱۶ پاسخ درست لازم است."	if (!st.finalPassed) return `<section class="hero c-gold"><span class="eyebrow">همه تالارها فتح شد</span><h2>آزمون نهایی تحلیلگر مستقل</h2><p class="meta">۲۰ سؤ
+110	465	"{0}شروع آزمون نهایی"	<button class="btn wide shine" data-a="final">${ic("dome")}شروع آزمون نهایی</button></section>`;
+111	466	"همه درس‌ها و آزمون‌ها تمام شد"	return `<section class="hero c-gold"><span class="eyebrow">تحلیلگر مستقل</span><h2>همه درس‌ها و آزمون‌ها تمام شد</h2><p class="meta">ستاره‌های ناقص را کامل کنید
+112	466	"ستاره‌های ناقص را کامل کنید، کارت‌ها را براق کنید یا رکورد رگبار را بشکنید."	return `<section class="hero c-gold"><span class="eyebrow">تحلیلگر مستقل</span><h2>همه درس‌ها و آزمون‌ها تمام شد</h2><p class="meta">ستاره‌های ناقص را کامل کنید
+113	467	"{0}رگبار ۶۰ ثانیه"	<button class="btn wide shine" data-a="blitz">${ic("timer")}رگبار ۶۰ ثانیه</button></section>`;
+114	471	"امروز"	return `<section class="today" aria-label="امروز">
+115	473	"از {0}"	<b class="num">${fa(Math.min(x, 999))}<small>از ${fa(st.goal)}</small></b></div>
+116	474	"مأموریت‌های امروز"	<div class="quests"><span class="qlabel">مأموریت‌های امروز<i class='sep'></i>هر کدام ۱۰ سکه</span>
+117	474	"هر کدام ۱۰ سکه"	<div class="quests"><span class="qlabel">مأموریت‌های امروز<i class='sep'></i>هر کدام ۱۰ سکه</span>
+118	481	"رکورد {0}"	<button class="qk" data-a="blitz" ${can ? "" : 'aria-disabled="true"'}>${oct(ic("timer"), "sm pom")}<span><b>رگبار ۶۰ ثانیه</b><small>${can ? (st.blitzBest ? `ر
+119	481	"رکورد بزنید"	<button class="qk" data-a="blitz" ${can ? "" : 'aria-disabled="true"'}>${oct(ic("timer"), "sm pom")}<span><b>رگبار ۶۰ ثانیه</b><small>${can ? (st.blitzBest ? `ر
+120	481	"بعد از اولین درس"	<button class="qk" data-a="blitz" ${can ? "" : 'aria-disabled="true"'}>${oct(ic("timer"), "sm pom")}<span><b>رگبار ۶۰ ثانیه</b><small>${can ? (st.blitzBest ? `ر
+121	482	"{0} تمرین موعد دارد"	<button class="qk" data-a="review" ${seen ? "" : 'aria-disabled="true"'}>${oct(ic("dumbbell"), "sm turq")}<span><b>مرور هوشمند</b><small>${due ? `${fa(due)} تمر
+122	482	"تمرین‌های ضعیف‌تر"	<button class="qk" data-a="review" ${seen ? "" : 'aria-disabled="true"'}>${oct(ic("dumbbell"), "sm turq")}<span><b>مرور هوشمند</b><small>${due ? `${fa(due)} تمر
+123	481	"رگبار ۶۰ ثانیه"	<button class="qk" data-a="blitz" ${can ? "" : 'aria-disabled="true"'}>${oct(ic("timer"), "sm pom")}<span><b>رگبار ۶۰ ثانیه</b><small>${can ? (st.blitzBest ? `ر
+124	482	"مرور هوشمند"	<button class="qk" data-a="review" ${seen ? "" : 'aria-disabled="true"'}>${oct(ic("dumbbell"), "sm turq")}<span><b>مرور هوشمند</b><small>${due ? `${fa(due)} تمر
+125	490	"نیاز به مرور"	if (unitDone(u)) chip = hl.seen >= 5 && hl.share >= .3 ? `<span class="chip warn">نیاز به مرور</span>` : `<span class="chip ok">${ic("crown")} تسلط</span>`;
+126	490	"{0} تسلط"	if (unitDone(u)) chip = hl.seen >= 5 && hl.share >= .3 ? `<span class="chip warn">نیاز به مرور</span>` : `<span class="chip ok">${ic("crown")} تسلط</span>`;
+127	492	"تالار {0} از {1}"	<header class="hall"><span class="eyebrow">تالار ${fa(u.n + 1)} از ${fa(UNITS.length)}<i class='sep'></i>${esc(u.src)}</span><h3>${esc(u.title)}</h3><p>${esc(u.
+128	493	"{0} ستاره از {1}"	<div class="hmeta"><span class="chip" aria-label="${fa(ns)} ستاره از ${fa(u.lessons.length * 3)}">${ic("star8")}<span class="num">${fa(ns)}/${fa(u.lessons.lengt
+129	493	"درس"	<div class="hmeta"><span class="chip" aria-label="${fa(ns)} ستاره از ${fa(u.lessons.length * 3)}">${ic("star8")}<span class="num">${fa(ns)}/${fa(u.lessons.lengt
+130	493	"{0}راهنما"	<div class="hmeta"><span class="chip" aria-label="${fa(ns)} ستاره از ${fa(u.lessons.length * 3)}">${ic("star8")}<span class="num">${fa(ns)}/${fa(u.lessons.lengt
+131	495	" و "	const missing = u.req.map(r => UNIT_BY[r]).filter(v => !unitDone(v)).map(v => qq(v.title)).join(" و ");
+132	496	"پیش‌نیاز: {0}"	h += `<div class="lockinfo">${ic("lock")}<span>پیش‌نیاز: ${esc(missing)}</span><button class="link" data-a="jump" data-u="${u.id}">آزمون پرش به این تالار</butto
+133	496	"آزمون پرش به این تالار"	h += `<div class="lockinfo">${ic("lock")}<span>پیش‌نیاز: ${esc(missing)}</span><button class="link" data-a="jump" data-u="${u.id}">آزمون پرش به این تالار</butto
+134	497	"تمرین این تالار"	} else if (chip) h += `<div class="lockinfo"><button class="link" data-a="upractice" data-u="${u.id}">تمرین این تالار</button></div>`;
+135	502	"ادامه"	h += `<div class="nwrap ${c ? "cur" : ""}" style="--x:${OFFS[i % 8]}px">${c ? `<span class="here">${doneLessons() ? "ادامه" : "شروع"}</span>` : ""}<button class
+136	502	"شروع"	h += `<div class="nwrap ${c ? "cur" : ""}" style="--x:${OFFS[i % 8]}px">${c ? `<span class="here">${doneLessons() ? "ادامه" : "شروع"}</span>` : ""}<button class
+137	502	" (تمام‌شده)"	h += `<div class="nwrap ${c ? "cur" : ""}" style="--x:${OFFS[i % 8]}px">${c ? `<span class="here">${doneLessons() ? "ادامه" : "شروع"}</span>` : ""}<button class
+138	502	" (قفل)"	h += `<div class="nwrap ${c ? "cur" : ""}" style="--x:${OFFS[i % 8]}px">${c ? `<span class="here">${doneLessons() ? "ادامه" : "شروع"}</span>` : ""}<button class
+139	505	"آزمون"	h += `<div class="nwrap ${mc ? "cur" : ""}" style="--x:${OFFS[u.lessons.length % 8]}px">${mc ? `<span class="here">آزمون</span>` : ""}<button class="node gate $
+140	505	"آزمون تسلط"	h += `<div class="nwrap ${mc ? "cur" : ""}" style="--x:${OFFS[u.lessons.length % 8]}px">${mc ? `<span class="here">آزمون</span>` : ""}<button class="node gate $
+141	514	"بعد از تسلط بر همه تالارها باز می‌شود."	h += `<section class="final">${oct(ic("dome"), "xl lv")}<h3>آزمون نهایی تحلیلگر مستقل</h3><p>${fOpen ? "۲۰ سؤال از همه تالارها؛ ۱۶ پاسخ درست لازم است." : "بعد ا
+142	514	" قبول شده‌اید."	h += `<section class="final">${oct(ic("dome"), "xl lv")}<h3>آزمون نهایی تحلیلگر مستقل</h3><p>${fOpen ? "۲۰ سؤال از همه تالارها؛ ۱۶ پاسخ درست لازم است." : "بعد ا
+143	515	"دوباره امتحان کنید"	<button class="btn ${fOpen ? "shine" : ""}" data-a="final" ${fOpen ? "" : "disabled"}>${st.finalPassed ? "دوباره امتحان کنید" : "شروع آزمون نهایی"}</button></se
+144	515	"شروع آزمون نهایی"	<button class="btn ${fOpen ? "shine" : ""}" data-a="final" ${fOpen ? "" : "disabled"}>${st.finalPassed ? "دوباره امتحان کنید" : "شروع آزمون نهایی"}</button></se
+145	516	"آموزشی است، نه توصیه سرمایه‌گذاری. محتوا از برنامه خودآموز FIS و FLM، اسلایدها و فایل اکسل ارزش‌گذاری همین پروژه گرفته شده است."	h += `<p class="foot">آموزشی است، نه توصیه سرمایه‌گذاری. محتوا از برنامه خودآموز FIS و FLM، اسلایدها و فایل اکسل ارزش‌گذاری همین پروژه گرفته شده است.</p>`;
+146	526	"شروع رگبار"	<button class="btn wide ${can ? "shine" : ""}" data-a="blitz" ${can ? "" : "disabled"}>${can ? ic("timer") + "شروع رگبار" : "بعد از اولین درس باز می‌شود"}</butt
+147	526	"بعد از اولین درس باز می‌شود"	<button class="btn wide ${can ? "shine" : ""}" data-a="blitz" ${can ? "" : "disabled"}>${can ? ic("timer") + "شروع رگبار" : "بعد از اولین درس باز می‌شود"}</butt
+148	527	"{0} تمرین موعد مرور دارد."	<div class="panel row"><div><h3>${ic("dumbbell")}مرور هوشمند</h3><p>${due ? `${fa(due)} تمرین موعد مرور دارد.` : seen ? "امروز چیزی موعد ندارد؛ ضعیف‌ترین تمرین‌
+149	527	"امروز چیزی موعد ندارد؛ ضعیف‌ترین تمرین‌ها می‌آیند."	<div class="panel row"><div><h3>${ic("dumbbell")}مرور هوشمند</h3><p>${due ? `${fa(due)} تمرین موعد مرور دارد.` : seen ? "امروز چیزی موعد ندارد؛ ضعیف‌ترین تمرین‌
+150	527	"بعد از اولین درس فعال می‌شود."	<div class="panel row"><div><h3>${ic("dumbbell")}مرور هوشمند</h3><p>${due ? `${fa(due)} تمرین موعد مرور دارد.` : seen ? "امروز چیزی موعد ندارد؛ ضعیف‌ترین تمرین‌
+151	528	"{0} تمرین که آخرین بار اشتباه جواب دادید."	<div class="panel row"><div><h3>اشتباه‌های من</h3><p>${weak ? `${fa(weak)} تمرین که آخرین بار اشتباه جواب دادید.` : "فعلاً اشتباه بازی نیست."}</p></div><button 
+152	528	"فعلاً اشتباه بازی نیست."	<div class="panel row"><div><h3>اشتباه‌های من</h3><p>${weak ? `${fa(weak)} تمرین که آخرین بار اشتباه جواب دادید.` : "فعلاً اشتباه بازی نیست."}</p></div><button 
+153	523	"مرور با فاصله: هر تمرینی که درست جواب دهید دیرتر برمی‌گردد (۱، ۳، ۷، ۱۶ و ۳۵ روز)؛ هر اشتباه همان روز برمی‌گردد."	let h = `<section class="page"><h2>تمرین</h2><p class="lead">مرور با فاصله: هر تمرینی که درست جواب دهید دیرتر برمی‌گردد (۱، ۳، ۷، ۱۶ و ۳۵ روز)؛ هر اشتباه همان ر
+154	524	"سؤال‌های سریع از درس‌هایی که تمام کرده‌اید. هر پاسخ درست ۲ ثانیه وقت اضافه می‌دهد و هر اشتباه ۳ ثانیه کم می‌کند. پاسخ‌های پیاپی ضریب ۲، ۳ و ۴ می‌گیرند. انرژی کم نمی‌شود."	<div class="panel blitzp"><div class="top">${oct(ic("timer"), "md pom")}<div><h3>رگبار ۶۰ ثانیه</h3><p>سؤال‌های سریع از درس‌هایی که تمام کرده‌اید. هر پاسخ درست 
+155	525	"رکورد"	<div class="bstats"><span>رکورد <b class="num">${fa(st.blitzBest || 0)}</b></span><span>دورها <b class="num">${fa(st.blitzRuns || 0)}</b></span></div>
+156	525	"دورها"	<div class="bstats"><span>رکورد <b class="num">${fa(st.blitzBest || 0)}</b></span><span>دورها <b class="num">${fa(st.blitzRuns || 0)}</b></span></div>
+157	527	"{0}مرور هوشمند"	<div class="panel row"><div><h3>${ic("dumbbell")}مرور هوشمند</h3><p>${due ? `${fa(due)} تمرین موعد مرور دارد.` : seen ? "امروز چیزی موعد ندارد؛ ضعیف‌ترین تمرین‌
+158	527	"هر مرور ۱ انرژی برمی‌گرداند."	<div class="panel row"><div><h3>${ic("dumbbell")}مرور هوشمند</h3><p>${due ? `${fa(due)} تمرین موعد مرور دارد.` : seen ? "امروز چیزی موعد ندارد؛ ضعیف‌ترین تمرین‌
+159	528	"اشتباه‌های من"	<div class="panel row"><div><h3>اشتباه‌های من</h3><p>${weak ? `${fa(weak)} تمرین که آخرین بار اشتباه جواب دادید.` : "فعلاً اشتباه بازی نیست."}</p></div><button 
+160	530	"{0}آزمایشگاه ارزش‌گذاری"	<div class="panel labp"><h3>${ic("sliders")}آزمایشگاه ارزش‌گذاری</h3><p>قیمت، سود، رشد و اخزا را جابه‌جا کنید و ببینید P/E، بازده مورد انتظار، بازگشت سرمایه و ا
+161	530	"قیمت، سود، رشد و اخزا را جابه‌جا کنید و ببینید P/E، بازده مورد انتظار، بازگشت سرمایه و ارزش چطور عوض می‌شوند."	<div class="panel labp"><h3>${ic("sliders")}آزمایشگاه ارزش‌گذاری</h3><p>قیمت، سود، رشد و اخزا را جابه‌جا کنید و ببینید P/E، بازده مورد انتظار، بازگشت سرمایه و ا
+162	531	"{0}ماشین‌حساب FIS"	<div class="panel row"><div><h3>${ic("calc")}ماشین‌حساب FIS</h3><p>قالب تحلیل کانال او برای شرکت تولیدی، P/80%NAV هلدینگ و بررسی حد ضرر بنیادی، با عددهای کدال خ
+163	531	"قالب تحلیل کانال او برای شرکت تولیدی، P/80%NAV هلدینگ و بررسی حد ضرر بنیادی، با عددهای کدال خودتان."	<div class="panel row"><div><h3>${ic("calc")}ماشین‌حساب FIS</h3><p>قالب تحلیل کانال او برای شرکت تولیدی، P/80%NAV هلدینگ و بررسی حد ضرر بنیادی، با عددهای کدال خ
+164	531	"باز کردن"	<div class="panel row"><div><h3>${ic("calc")}ماشین‌حساب FIS</h3><p>قالب تحلیل کانال او برای شرکت تولیدی، P/80%NAV هلدینگ و بررسی حد ضرر بنیادی، با عددهای کدال خ
+165	532	"{0}واژه‌نامه"	<div class="panel row"><div><h3>${ic("book")}واژه‌نامه</h3><p>${fa(GLOSS.length)} واژه از همه تالارها، با جستجو.</p></div><button class="btn sec" data-a="gloss"
+166	532	"{0} واژه از همه تالارها، با جستجو."	<div class="panel row"><div><h3>${ic("book")}واژه‌نامه</h3><p>${fa(GLOSS.length)} واژه از همه تالارها، با جستجو.</p></div><button class="btn sec" data-a="gloss"
+167	533	"قدرت هر تالار"	<div class="panel"><h3>قدرت هر تالار</h3><p>سهم تمرین‌هایی که هنوز موعد مرورشان نرسیده.</p><div class="ulist">`;
+168	533	"سهم تمرین‌هایی که هنوز موعد مرورشان نرسیده."	<div class="panel"><h3>قدرت هر تالار</h3><p>سهم تمرین‌هایی که هنوز موعد مرورشان نرسیده.</p><div class="ulist">`;
+169	539	"هنوز درسی تمام نشده."	if (!seen) h += `<p>هنوز درسی تمام نشده.</p>`;
+170	541	"(بعدی تا {0} دقیقه)"	<div class="panel row"><div><h3>${ic("bolt")}انرژی: ${fa(st.hearts)} از ${fa(MAXH)}</h3><p>هر اشتباه در درس ۱ انرژی کم می‌کند. هر ۳۰ دقیقه ۱ انرژی برمی‌گردد${nh
+171	541	"{0}انرژی: {1} از {2}"	<div class="panel row"><div><h3>${ic("bolt")}انرژی: ${fa(st.hearts)} از ${fa(MAXH)}</h3><p>هر اشتباه در درس ۱ انرژی کم می‌کند. هر ۳۰ دقیقه ۱ انرژی برمی‌گردد${nh
+172	541	"هر اشتباه در درس ۱ انرژی کم می‌کند. هر ۳۰ دقیقه ۱ انرژی برمی‌گردد"	<div class="panel row"><div><h3>${ic("bolt")}انرژی: ${fa(st.hearts)} از ${fa(MAXH)}</h3><p>هر اشتباه در درس ۱ انرژی کم می‌کند. هر ۳۰ دقیقه ۱ انرژی برمی‌گردد${nh
+173	541	". مرور، رگبار و آزمون انرژی کم نمی‌کنند."	<div class="panel row"><div><h3>${ic("bolt")}انرژی: ${fa(st.hearts)} از ${fa(MAXH)}</h3><p>هر اشتباه در درس ۱ انرژی کم می‌کند. هر ۳۰ دقیقه ۱ انرژی برمی‌گردد${nh
+174	542	"پر کردن"	<button class="btn sec" data-a="buyhearts" ${st.hearts >= MAXH || st.gems < COST_HEARTS ? "disabled" : ""}>پر کردن<i class='sep'></i>${fa(COST_HEARTS)} سکه</but
+175	542	"{0} سکه"	<button class="btn sec" data-a="buyhearts" ${st.hearts >= MAXH || st.gems < COST_HEARTS ? "disabled" : ""}>پر کردن<i class='sep'></i>${fa(COST_HEARTS)} سکه</but
+176	543	"{0}سپر روز: {1} از {2}"	<div class="panel row"><div><h3>${ic("shield")}سپر روز: ${fa(st.freezes)} از ${fa(MAX_FREEZE)}</h3><p>اگر یک روز تمرین نکنید، یک سپر خودکار روزهای پیاپی شما را 
+177	543	"اگر یک روز تمرین نکنید، یک سپر خودکار روزهای پیاپی شما را نگه می‌دارد."	<div class="panel row"><div><h3>${ic("shield")}سپر روز: ${fa(st.freezes)} از ${fa(MAX_FREEZE)}</h3><p>اگر یک روز تمرین نکنید، یک سپر خودکار روزهای پیاپی شما را 
+178	544	"خرید"	<button class="btn sec" data-a="buyfreeze" ${st.freezes >= MAX_FREEZE || st.gems < COST_FREEZE ? "disabled" : ""}>خرید<i class='sep'></i>${fa(COST_FREEZE)} سکه<
+179	545	"سکه از درس‌ها، صندوقچه‌ها، هدیه روزانه، مأموریت‌ها، رسیدن به هدف روزانه و آزمون‌های تسلط به دست می‌آید. موجودی: {0}."	<p class="foot">سکه از درس‌ها، صندوقچه‌ها، هدیه روزانه، مأموریت‌ها، رسیدن به هدف روزانه و آزمون‌های تسلط به دست می‌آید. موجودی: ${fa(st.gems)}.</p></section>`;
+180	555	"ی"	const WD = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
+181	555	"د"	const WD = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
+182	555	"س"	const WD = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
+183	555	"چ"	const WD = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
+184	555	"پ"	const WD = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
+185	555	"ج"	const WD = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
+186	555	"ش"	const WD = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
+187	565	"پیشرفت شما در حساب claude.ai ذخیره می‌شود و روی هر دستگاهی که با همین حساب باز کنید ادامه پیدا می‌کند."	const sync = remote.doc ? "پیشرفت شما در حساب claude.ai ذخیره می‌شود و روی هر دستگاهی که با همین حساب باز کنید ادامه پیدا می‌کند." : "پیشرفت شما فقط در همین مرو
+188	565	"پیشرفت شما فقط در همین مرورگر ذخیره می‌شود."	const sync = remote.doc ? "پیشرفت شما در حساب claude.ai ذخیره می‌شود و روی هر دستگاهی که با همین حساب باز کنید ادامه پیدا می‌کند." : "پیشرفت شما فقط در همین مرو
+189	567	"؛ رتبه بعد «{0}» در سطح {1}"	<div class="panel lvlcard">${oct(`<b class="num">${fa(L.n)}</b>`, "xl lv")}<div><span class="eyebrow">سطح ${fa(L.n)}</span><h3>${esc(rankOf(L.n))}</h3><div clas
+190	573	"٪"	<div class="tile"><b class="num">${answered ? fa(acc) + "٪" : "—"}</b><span>دقت</span></div>
+191	578	"{0} گواهی تکمیل"	${st.finalPassed ? `<div class="panel"><h3>${ic("crown")} گواهی تکمیل</h3><p>آزمون نهایی «تحلیلگر مستقل» را در ${fa(st.finalDate || "")} قبول شدید. قدم بعد: کار
+192	578	"آزمون نهایی «تحلیلگر مستقل» را در {0} قبول شدید. قدم بعد: کارهای واقعی روی کدال در برگه «کار واقعی»."	${st.finalPassed ? `<div class="panel"><h3>${ic("crown")} گواهی تکمیل</h3><p>آزمون نهایی «تحلیلگر مستقل» را در ${fa(st.finalDate || "")} قبول شدید. قدم بعد: کار
+193	582	"نسخه ساده یا کامل"	${simplePanel("نسخه ساده یا کامل")}
+194	583	"تیره"	<div class="panel"><h3>${ic("moon")}ظاهر</h3><p>تیره ظاهر اصلی برنامه است؛ روشن برای روز و نور زیاد.</p><div class="seg">${[["dark", "تیره"], ["light", "روشن"],
+195	583	"روشن"	<div class="panel"><h3>${ic("moon")}ظاهر</h3><p>تیره ظاهر اصلی برنامه است؛ روشن برای روز و نور زیاد.</p><div class="seg">${[["dark", "تیره"], ["light", "روشن"],
+196	583	"مثل دستگاه"	<div class="panel"><h3>${ic("moon")}ظاهر</h3><p>تیره ظاهر اصلی برنامه است؛ روشن برای روز و نور زیاد.</p><div class="seg">${[["dark", "تیره"], ["light", "روشن"],
+197	584	"خاموش"	<div class="panel row"><div><h3>صدا</h3><p>صدای پاسخ‌ها، صندوقچه و بالا رفتن سطح</p></div><button class="btn sec" data-a="sound">${st.sound ? "روشن" : "خاموش"}<
+198	586	"مطمئنید؟ دوباره بزنید تا همه پیشرفت پاک شود"	<div class="seg"><button data-a="reset" id="reset-btn">${resetArmed ? "مطمئنید؟ دوباره بزنید تا همه پیشرفت پاک شود" : "پاک کردن همه پیشرفت"}</button></div></div
+199	586	"پاک کردن همه پیشرفت"	<div class="seg"><button data-a="reset" id="reset-btn">${resetArmed ? "مطمئنید؟ دوباره بزنید تا همه پیشرفت پاک شود" : "پاک کردن همه پیشرفت"}</button></div></div
+200	567	"{0} از {1} امتیاز تا سطح {2}"	<div class="panel lvlcard">${oct(`<b class="num">${fa(L.n)}</b>`, "xl lv")}<div><span class="eyebrow">سطح ${fa(L.n)}</span><h3>${esc(rankOf(L.n))}</h3><div clas
+201	569	"کل امتیاز"	<div class="tile"><b class="num">${fa(st.xp)}</b><span>کل امتیاز</span></div>
+202	570	"روز پیاپی"	<div class="tile"><b class="num">${fa(st.streak)}</b><span>روز پیاپی<i class='sep'></i>بیشترین ${fa(st.longest)}</span></div>
+203	570	"بیشترین {0}"	<div class="tile"><b class="num">${fa(st.streak)}</b><span>روز پیاپی<i class='sep'></i>بیشترین ${fa(st.longest)}</span></div>
+204	571	"ستاره از {0}"	<div class="tile"><b class="num">${fa(totalStars())}</b><span>ستاره از ${fa(TOTAL_L * 3)}</span></div>
+205	573	"دقت"	<div class="tile"><b class="num">${answered ? fa(acc) + "٪" : "—"}</b><span>دقت</span></div>
+206	574	"رکورد رگبار"	<div class="tile"><b class="num">${fa(st.blitzBest || 0)}</b><span>رکورد رگبار</span></div>
+207	576	"امتیاز ۷ روز اخیر"	<div class="panel"><h3>امتیاز ۷ روز اخیر</h3>
+208	577	"نمودار امتیاز هفت روز اخیر"	<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="نمودار امتیاز هفت روز اخیر"><line x1="0" x2="${W}" y1="${gy}" y2="${gy}" stroke="
+209	577	"هدف"	<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="نمودار امتیاز هفت روز اخیر"><line x1="0" x2="${W}" y1="${gy}" y2="${gy}" stroke="
+210	579	"{0}کلکسیون کارت‌ها"	<div class="panel"><h3>${ic("star8")}کلکسیون کارت‌ها</h3><p>${fa(doneLessons())} از ${fa(TOTAL_L)} کارت<i class='sep'></i>${fa(foilCount())} براق. هر درس تمام‌ش
+211	579	"{0} از {1} کارت"	<div class="panel"><h3>${ic("star8")}کلکسیون کارت‌ها</h3><p>${fa(doneLessons())} از ${fa(TOTAL_L)} کارت<i class='sep'></i>${fa(foilCount())} براق. هر درس تمام‌ش
+212	579	"{0} براق. هر درس تمام‌شده یک کارت است؛ درس سه‌ستاره کارتش را براق می‌کند."	<div class="panel"><h3>${ic("star8")}کلکسیون کارت‌ها</h3><p>${fa(doneLessons())} از ${fa(TOTAL_L)} کارت<i class='sep'></i>${fa(foilCount())} براق. هر درس تمام‌ش
+213	580	"نشان‌ها"	<div class="panel"><h3>نشان‌ها</h3><div class="ach">${ACH.map(([id, t, d]) => `<div class="badge ${st.ach[id] ? "on" : ""}">${oct(ic(st.ach[id] ? "star8" : "loc
+214	581	"هدف روزانه"	<div class="panel"><h3>هدف روزانه</h3><div class="seg">${[10, 20, 30, 50].map(g => `<button data-a="goal" data-g="${g}" aria-pressed="${st.goal === g}">${fa(g)}
+215	583	"{0}ظاهر"	<div class="panel"><h3>${ic("moon")}ظاهر</h3><p>تیره ظاهر اصلی برنامه است؛ روشن برای روز و نور زیاد.</p><div class="seg">${[["dark", "تیره"], ["light", "روشن"],
+216	583	"تیره ظاهر اصلی برنامه است؛ روشن برای روز و نور زیاد."	<div class="panel"><h3>${ic("moon")}ظاهر</h3><p>تیره ظاهر اصلی برنامه است؛ روشن برای روز و نور زیاد.</p><div class="seg">${[["dark", "تیره"], ["light", "روشن"],
+217	584	"صدا"	<div class="panel row"><div><h3>صدا</h3><p>صدای پاسخ‌ها، صندوقچه و بالا رفتن سطح</p></div><button class="btn sec" data-a="sound">${st.sound ? "روشن" : "خاموش"}<
+218	584	"صدای پاسخ‌ها، صندوقچه و بالا رفتن سطح"	<div class="panel row"><div><h3>صدا</h3><p>صدای پاسخ‌ها، صندوقچه و بالا رفتن سطح</p></div><button class="btn sec" data-a="sound">${st.sound ? "روشن" : "خاموش"}<
+219	585	"ذخیره پیشرفت"	<div class="panel"><h3>ذخیره پیشرفت</h3><p>${sync}</p>
+220	587	"آموزشی است، نه توصیه سرمایه‌گذاری. هیچ روشی سود تضمین‌شده نمی‌دهد."	<p class="foot">آموزشی است، نه توصیه سرمایه‌گذاری. هیچ روشی سود تضمین‌شده نمی‌دهد.</p></section>`;
+221	592	"جایزه گرفته شد"	const box = (id, text) => { const [x, g] = taskPay(id), paid = st.taskPaid[id]; return `<label class="check"><input type="checkbox" data-a="task" data-id="${id}
+222	592	"+{0} امتیاز"	const box = (id, text) => { const [x, g] = taskPay(id), paid = st.taskPaid[id]; return `<label class="check"><input type="checkbox" data-a="task" data-id="${id}
+223	592	"+{0} سکه"	const box = (id, text) => { const [x, g] = taskPay(id), paid = st.taskPaid[id]; return `<label class="check"><input type="checkbox" data-a="task" data-id="${id}
+224	594	"کار واقعی روی کدال"	let h = `<section class="page"><h2>کار واقعی روی کدال</h2><p class="lead">درس‌ها مهارت را می‌سازند؛ این کارها را باید خودتان روی کدال و صفحه‌گسترده انجام دهید. 
+225	594	"درس‌ها مهارت را می‌سازند؛ این کارها را باید خودتان روی کدال و صفحه‌گسترده انجام دهید. هر کار بار اول امتیاز و سکه می‌دهد و در «هفته من» هم حساب می‌شود. برنامه نمی‌تواند آن‌ها را بسنجد، پس با صداقت تیک بزنید. {0} از {1} انجام شده."	let h = `<section class="page"><h2>کار واقعی روی کدال</h2><p class="lead">درس‌ها مهارت را می‌سازند؛ این کارها را باید خودتان روی کدال و صفحه‌گسترده انجام دهید. 
+226	595	"مرحله‌ها و نشانه‌های آمادگی"	<div class="panel"><h3>مرحله‌ها و نشانه‌های آمادگی</h3><p>فقط وقتی به مرحله بعد بروید که نشانه آمادگی مرحله فعلی را دارید.</p>`;
+227	595	"فقط وقتی به مرحله بعد بروید که نشانه آمادگی مرحله فعلی را دارید."	<div class="panel"><h3>مرحله‌ها و نشانه‌های آمادگی</h3><p>فقط وقتی به مرحله بعد بروید که نشانه آمادگی مرحله فعلی را دارید.</p>`;
+228	596	"تمرین: {0}"	STAGES.forEach((s, i) => { h += `<div class="stage"><h4>${esc(s.t)}</h4><p class="can">باید بتوانید: ${esc(s.can)}</p>${box("s" + i + "t", `تمرین: ${s.task}`)}$
+229	596	"نشانه آمادگی: {0}"	STAGES.forEach((s, i) => { h += `<div class="stage"><h4>${esc(s.t)}</h4><p class="can">باید بتوانید: ${esc(s.can)}</p>${box("s" + i + "t", `تمرین: ${s.task}`)}$
+230	596	"باید بتوانید: {0}"	STAGES.forEach((s, i) => { h += `<div class="stage"><h4>${esc(s.t)}</h4><p class="can">باید بتوانید: ${esc(s.can)}</p>${box("s" + i + "t", `تمرین: ${s.task}`)}$
+231	598	"روال این هفته را انجام دادم (هر هفته از نو)"	<div class="panel"><h3>روال هفتگی ۳۰ دقیقه</h3><p>هر هفته در زمان ثابت: اطلاعیه‌های جدید فهرست را در کدال باز کنید، عدد را در صفحه‌گسترده وارد کنید، EPS پایدار 
+232	597	"آزمون نهایی «تحلیلگر مستقل» در دنیای واقعی"	h += `</div><div class="panel"><h3>آزمون نهایی «تحلیلگر مستقل» در دنیای واقعی</h3><p>بدون هیچ منبعی جز کدال و tsetmc.</p>${FINAL_TASKS.map((t, i) => box("f" + i
+233	597	"بدون هیچ منبعی جز کدال و tsetmc."	h += `</div><div class="panel"><h3>آزمون نهایی «تحلیلگر مستقل» در دنیای واقعی</h3><p>بدون هیچ منبعی جز کدال و tsetmc.</p>${FINAL_TASKS.map((t, i) => box("f" + i
+234	598	"روال هفتگی ۳۰ دقیقه"	<div class="panel"><h3>روال هفتگی ۳۰ دقیقه</h3><p>هر هفته در زمان ثابت: اطلاعیه‌های جدید فهرست را در کدال باز کنید، عدد را در صفحه‌گسترده وارد کنید، EPS پایدار 
+235	598	"هر هفته در زمان ثابت: اطلاعیه‌های جدید فهرست را در کدال باز کنید، عدد را در صفحه‌گسترده وارد کنید، EPS پایدار را به‌روز کنید، و فقط بعد قیمت را در tsetmc ببینید. هر تصمیم را با دلیل در دفترچه بنویسید."	<div class="panel"><h3>روال هفتگی ۳۰ دقیقه</h3><p>هر هفته در زمان ثابت: اطلاعیه‌های جدید فهرست را در کدال باز کنید، عدد را در صفحه‌گسترده وارد کنید، EPS پایدار 
+236	613	"منابع"	${u.guide.refs ? `<h4>منابع</h4><ul class="refs">${u.guide.refs.map(r => `<li><a href="${esc(r[1])}" target="_blank" rel="noopener">${esc(r[0])}</a></li>`).join
+237	609	"راهنمای تالار {0}"	modal(`<h3>${esc(u.title)}</h3><p class="sub">راهنمای تالار ${fa(u.n + 1)}<i class='sep'></i>${esc(u.src)}</p>
+238	610	"نکته‌های کلیدی"	<h4>نکته‌های کلیدی</h4><ul>${u.guide.keys.map(k => `<li>${esc(k)}</li>`).join("")}</ul>
+239	611	"اشتباهات رایج"	<h4 class="m">اشتباهات رایج</h4><ul>${u.guide.mistakes.map(k => `<li>${esc(k)}</li>`).join("")}</ul>
+240	612	"درس‌ها"	<h4>درس‌ها</h4><ul>${u.lessons.map(l => `<li>${esc(l.title)}${lessonDone(l) ? " " + "★".repeat(starsOf(l)) : ""}</li>`).join("")}</ul>
+241	614	"بستن"	<div class="acts"><button class="btn sec wide" data-a="closemodal">بستن</button></div>`);
+242	618	"این تالار هنوز قفل است. پیش‌نیازها را تمام کنید یا آزمون پرش بدهید."	if (!unitOpen(u)) { toast("این تالار هنوز قفل است. پیش‌نیازها را تمام کنید یا آزمون پرش بدهید."); return; }
+243	619	"اول درس قبلی را تمام کنید."	if (!lessonOpen(l)) { toast("اول درس قبلی را تمام کنید."); return; }
+244	623	"بی‌خطا تمامش کنید تا {0} ستاره و کارت براق بگیرید."	<p>${fa(l.cards.length)} نکته و ${fa(l.ex.length)} تمرین. ${d ? (s < 3 ? `بی‌خطا تمامش کنید تا ${fa(3)} ستاره و کارت براق بگیرید.` : "سه ستاره و کارت براق را گر
+245	623	"سه ستاره و کارت براق را گرفته‌اید."	<p>${fa(l.cards.length)} نکته و ${fa(l.ex.length)} تمرین. ${d ? (s < 3 ? `بی‌خطا تمامش کنید تا ${fa(3)} ستاره و کارت براق بگیرید.` : "سه ستاره و کارت براق را گر
+246	623	"بی‌خطا = ۳ ستاره و کارت براق."	<p>${fa(l.cards.length)} نکته و ${fa(l.ex.length)} تمرین. ${d ? (s < 3 ? `بی‌خطا تمامش کنید تا ${fa(3)} ستاره و کارت براق بگیرید.` : "سه ستاره و کارت براق را گر
+247	624	"تمرین دوباره<i class='sep'></i>+۵ امتیاز"	<div class="acts"><button class="btn wide ${d ? "" : "shine"}" data-a="start" data-l="${l.id}">${ic("play")}${d ? "تمرین دوباره<i class='sep'></i>+۵ امتیاز" : "
+248	624	"شروع<i class='sep'></i>+۱۰ امتیاز"	<div class="acts"><button class="btn wide ${d ? "" : "shine"}" data-a="start" data-l="${l.id}">${ic("play")}${d ? "تمرین دوباره<i class='sep'></i>+۵ امتیاز" : "
+249	623	"{0} نکته و {1} تمرین."	<p>${fa(l.cards.length)} نکته و ${fa(l.ex.length)} تمرین. ${d ? (s < 3 ? `بی‌خطا تمامش کنید تا ${fa(3)} ستاره و کارت براق بگیرید.` : "سه ستاره و کارت براق را گر
+250	623	"هر اشتباه ۱ انرژی کم می‌کند و تمرین اشتباه در پایان درس دوباره می‌آید."	<p>${fa(l.cards.length)} نکته و ${fa(l.ex.length)} تمرین. ${d ? (s < 3 ? `بی‌خطا تمامش کنید تا ${fa(3)} ستاره و کارت براق بگیرید.` : "سه ستاره و کارت براق را گر
+251	628	"آزمون تسلط بعد از تمام شدن همه درس‌های این تالار باز می‌شود."	if (!unitOpen(u) || !allLessonsDone(u)) { toast("آزمون تسلط بعد از تمام شدن همه درس‌های این تالار باز می‌شود."); return; }
+252	629	"قبلاً قبول شده‌اید؛ این بار برای تمرین است."	modal(`<h3>آزمون تسلط: ${esc(u.title)}</h3><p class="sub">${mastered(u) ? "قبلاً قبول شده‌اید؛ این بار برای تمرین است." : "برای باز شدن تالارهای بعدی لازم است."
+253	629	"برای باز شدن تالارهای بعدی لازم است."	modal(`<h3>آزمون تسلط: ${esc(u.title)}</h3><p class="sub">${mastered(u) ? "قبلاً قبول شده‌اید؛ این بار برای تمرین است." : "برای باز شدن تالارهای بعدی لازم است."
+254	630	"۱۰ سؤال از همه درس‌های این تالار. برای قبولی ۸ پاسخ درست لازم است. انرژی کم نمی‌شود و بازخورد بعد از هر پاسخ می‌آید. قبولی صندوقچه طلایی دارد."	<p>۱۰ سؤال از همه درس‌های این تالار. برای قبولی ۸ پاسخ درست لازم است. انرژی کم نمی‌شود و بازخورد بعد از هر پاسخ می‌آید. قبولی صندوقچه طلایی دارد.</p>
+255	631	"بعداً"	<div class="acts"><button class="btn wide shine" data-a="startm" data-u="${u.id}">${ic("gate")}شروع آزمون</button><button class="btn sec wide" data-a="closemoda
+256	636	"، "	<p>اگر این مطالب را از قبل بلدید، با این آزمون ثابت کنید: ${fa(n)} سؤال از ${fa(cl.length)} تالار (${esc(cl.map(v => v.title).join("، "))}). برای قبولی ${fa(nee
+257	635	"آزمون پرش"	modal(`<h3>آزمون پرش</h3><p class="sub">پرش به «${esc(u.title)}»</p>
+258	635	"پرش به «{0}»"	modal(`<h3>آزمون پرش</h3><p class="sub">پرش به «${esc(u.title)}»</p>
+259	636	"اگر این مطالب را از قبل بلدید، با این آزمون ثابت کنید: {0} سؤال از {1} تالار ({2}). برای قبولی {3} پاسخ درست لازم است. با قبولی همه این تالارها تمام‌شده حساب می‌شوند."	<p>اگر این مطالب را از قبل بلدید، با این آزمون ثابت کنید: ${fa(n)} سؤال از ${fa(cl.length)} تالار (${esc(cl.map(v => v.title).join("، "))}). برای قبولی ${fa(nee
+260	637	"شروع آزمون پرش"	<div class="acts"><button class="btn wide" data-a="startj" data-u="${u.id}">شروع آزمون پرش</button><button class="btn sec wide" data-a="closemodal">بعداً</butto
+261	641	"این درس با انرژی صفر ادامه پیدا نمی‌کند."	<p>${inSession ? "این درس با انرژی صفر ادامه پیدا نمی‌کند." : "برای شروع درس جدید انرژی لازم است."} یک مرور کوتاه انجام دهید تا ۱ انرژی برگردد، یا صبر کنید (هر 
+262	641	"برای شروع درس جدید انرژی لازم است."	<p>${inSession ? "این درس با انرژی صفر ادامه پیدا نمی‌کند." : "برای شروع درس جدید انرژی لازم است."} یک مرور کوتاه انجام دهید تا ۱ انرژی برگردد، یا صبر کنید (هر 
+263	641	"؛ بعدی تا {0} دقیقه"	<p>${inSession ? "این درس با انرژی صفر ادامه پیدا نمی‌کند." : "برای شروع درس جدید انرژی لازم است."} یک مرور کوتاه انجام دهید تا ۱ انرژی برگردد، یا صبر کنید (هر 
+264	645	"خروج از درس"	<button class="btn sec wide" data-a="${inSession ? "quit" : "closemodal"}">${inSession ? "خروج از درس" : "بستن"}</button></div>`);
+265	640	"{0} انرژی تمام شد"	modal(`<h3>${ic("bolt")} انرژی تمام شد</h3>
+266	641	"{0} یک مرور کوتاه انجام دهید تا ۱ انرژی برگردد، یا صبر کنید (هر ۳۰ دقیقه ۱ انرژی"	<p>${inSession ? "این درس با انرژی صفر ادامه پیدا نمی‌کند." : "برای شروع درس جدید انرژی لازم است."} یک مرور کوتاه انجام دهید تا ۱ انرژی برگردد، یا صبر کنید (هر 
+267	641	"). رگبار ۶۰ ثانیه هم بدون انرژی بازی می‌شود."	<p>${inSession ? "این درس با انرژی صفر ادامه پیدا نمی‌کند." : "برای شروع درس جدید انرژی لازم است."} یک مرور کوتاه انجام دهید تا ۱ انرژی برگردد، یا صبر کنید (هر 
+268	643	"مرور برای گرفتن انرژی"	<button class="btn wide" data-a="review" ${Object.keys(st.items).length ? "" : "disabled"}>مرور برای گرفتن انرژی</button>
+269	644	"پر کردن انرژی"	<button class="btn sec wide" data-a="${inSession ? "refillcont" : "buyhearts"}" ${st.gems < COST_HEARTS ? "disabled" : ""}>پر کردن انرژی<i class='sep'></i>${fa(
+270	644	"{0} سکه (موجودی {1})"	<button class="btn sec wide" data-a="${inSession ? "refillcont" : "buyhearts"}" ${st.gems < COST_HEARTS ? "disabled" : ""}>پر کردن انرژی<i class='sep'></i>${fa(
+271	652	"روز {0}"	<div class="gdays">${GIFT.map((g, i) => `<div class="gday ${i < d ? "past" : i === d ? "now" : ""}"><span>روز ${fa(i + 1)}</span>${ic(i === 6 ? "chest" : "coin"
+272	653	" و ساعت طلایی"	<div class="acts"><button class="btn wide shine" data-a="claimgift">گرفتن ${fa(GIFT[d])} سکه${d === 6 ? " و ساعت طلایی" : ""}</button></div>`);
+273	651	"{0} هدیه امروز"	modal(`<h3>${ic("chest")} هدیه امروز</h3><p class="sub">هر روزی که سر بزنید هدیه بزرگ‌تر می‌شود. روز هفتم صندوقچه با ساعت طلایی است.</p>
+274	651	"هر روزی که سر بزنید هدیه بزرگ‌تر می‌شود. روز هفتم صندوقچه با ساعت طلایی است."	modal(`<h3>${ic("chest")} هدیه امروز</h3><p class="sub">هر روزی که سر بزنید هدیه بزرگ‌تر می‌شود. روز هفتم صندوقچه با ساعت طلایی است.</p>
+275	653	"گرفتن {0} سکه{1}"	<div class="acts"><button class="btn wide shine" data-a="claimgift">گرفتن ${fa(GIFT[d])} سکه${d === 6 ? " و ساعت طلایی" : ""}</button></div>`);
+276	686	"هنوز تمرینی برای مرور نیست. اول یک درس را تمام کنید."	if (!keys.length) { toast("هنوز تمرینی برای مرور نیست. اول یک درس را تمام کنید."); return; }
+277	693	"آزمون نهایی"	else { units = UNITS; n = 20; need = 16; title = "آزمون نهایی"; }
+278	698	"رگبار بعد از تمام کردن اولین درس باز می‌شود."	if (pool.length < 4) { toast("رگبار بعد از تمام کردن اولین درس باز می‌شود."); return; }
+279	763	"درست"	case "tf": return x.a ? "درست" : "نادرست";
+280	763	"نادرست"	case "tf": return x.a ? "درست" : "نادرست";
+281	766	"جفت‌های درست روی صفحه مانده‌اند."	case "match": return "جفت‌های درست روی صفحه مانده‌اند.";
+282	767	"ردیف‌های قرمز را ببینید؛ دسته درست زیرشان نوشته شده."	case "sort": return "ردیف‌های قرمز را ببینید؛ دسته درست زیرشان نوشته شده.";
+283	814	"{0} پاسخ پیاپی!"	if ([5, 10, 15, 20, 30, 40].includes(s.combo)) { setTimeout(() => { floatBig(`${fa(s.combo)} پاسخ پیاپی!`); snd("streak", Math.min(s.combo / 5, 4)); }, 120); }
+284	849	"تمرین دوباره"	xp = first ? 10 : 5; parts.push([first ? "درس" : "تمرین دوباره", xp]);
+285	856	"بی‌خطا!"	head = perfect ? "بی‌خطا!" : stars === 2 ? "خیلی خوب!" : "درس تمام شد!";
+286	856	"خیلی خوب!"	head = perfect ? "بی‌خطا!" : stars === 2 ? "خیلی خوب!" : "درس تمام شد!";
+287	856	"درس تمام شد!"	head = perfect ? "بی‌خطا!" : stars === 2 ? "خیلی خوب!" : "درس تمام شد!";
+288	857	"همه درس‌های این تالار تمام شد. دروازه آزمون تسلط باز شد."	sub = first && allLessonsDone(s.unit) && !mastered(s.unit) ? "همه درس‌های این تالار تمام شد. دروازه آزمون تسلط باز شد." : stars < 3 ? "بی‌خطا تکرارش کنید تا ۳ س
+289	857	"بی‌خطا تکرارش کنید تا ۳ ستاره و کارت براق بگیرید."	sub = first && allLessonsDone(s.unit) && !mastered(s.unit) ? "همه درس‌های این تالار تمام شد. دروازه آزمون تسلط باز شد." : stars < 3 ? "بی‌خطا تکرارش کنید تا ۳ س
+290	859	"مرور"	xp = 8; gems = 3; parts.push(["مرور", 8]); addHeart(1); st.stats.reviews++; st.quest.lessons++;
+291	860	"مرور تمام شد!"	head = "مرور تمام شد!"; sub = "۱ انرژی برگشت.";
+292	860	"۱ انرژی برگشت."	head = "مرور تمام شد!"; sub = "۱ انرژی برگشت.";
+293	864	"پرونده حل شد"	xp = caseFirst ? 30 : 10; parts.push([caseFirst ? "پرونده حل شد" : "تمرین دوباره", xp]);
+294	868	"پرونده بی‌خطا بسته شد!"	head = perfect ? "پرونده بی‌خطا بسته شد!" : "پرونده حل شد!";
+295	868	"پرونده حل شد!"	head = perfect ? "پرونده بی‌خطا بسته شد!" : "پرونده حل شد!";
+296	869	"{0} از {1} پرونده ویژه حل شده."	sub = caseFirst ? `${fa(casesSolved())} از ${fa(CASES.length)} پرونده ویژه حل شده.` : stars < 3 ? "بی‌خطا تکرارش کنید تا ۳ ستاره بگیرید." : "";
+297	869	"بی‌خطا تکرارش کنید تا ۳ ستاره بگیرید."	sub = caseFirst ? `${fa(casesSolved())} از ${fa(CASES.length)} پرونده ویژه حل شده.` : stars < 3 ? "بی‌خطا تکرارش کنید تا ۳ ستاره بگیرید." : "";
+298	875	"رگبار"	if (xp) parts.push(["رگبار", xp]);
+299	877	"رکورد تازه!"	head = record ? "رکورد تازه!" : "رگبار تمام شد";
+300	877	"رگبار تمام شد"	head = record ? "رکورد تازه!" : "رگبار تمام شد";
+301	878	"؛ رکورد شما {0}"	sub = `${fa(s.correct)} پاسخ درست${record ? "" : `؛ رکورد شما ${fa(st.blitzBest)}`}`;
+302	878	"{0} پاسخ درست"	sub = `${fa(s.correct)} پاسخ درست${record ? "" : `؛ رکورد شما ${fa(st.blitzBest)}`}`;
+303	881	"{0} از {1} درست؛ {2} لازم بود."	sub = `${fa(score)} از ${fa(s.total)} درست؛ ${fa(s.need)} لازم بود.`;
+304	884	"تحلیلگر مستقل!"	if (s.mode === "final") { st.finalPassed = true; st.finalDate = dkey(); head = "تحلیلگر مستقل!"; }
+305	887	"پرش موفق!"	head = s.mode === "jump" ? "پرش موفق!" : "تسلط کامل!";
+306	887	"تسلط کامل!"	head = s.mode === "jump" ? "پرش موفق!" : "تسلط کامل!";
+307	889	"باز شد: {0}"	if (opened.length) sub += ` باز شد: ${opened.map(v => qq(v.title)).join("، ")}`;
+308	892	"تلاش"	xp = 5; parts.push(["تلاش", 5]); head = "این بار نشد";
+309	892	"این بار نشد"	xp = 5; parts.push(["تلاش", 5]); head = "این بار نشد";
+310	894	"این درس‌ها را مرور کنید و دوباره امتحان دهید: {0}"	sub += ` این درس‌ها را مرور کنید و دوباره امتحان دهید: ${weakL.join("، ")}`;
+311	897	"پاسخ‌های پیاپی"	if (s.bonus) { xp += s.bonus; parts.push(["پاسخ‌های پیاپی", s.bonus]); }
+312	899	"ساعت طلایی ×۲"	if (boosted) { parts.push(["ساعت طلایی ×۲", xp]); xp *= 2; }
+313	919	"{0}{1} پیاپی"	return s.mode === "blitz" ? `<span class="combo ${s.combo >= 6 ? "hot" : ""}" id="combo">×${fa(multOf(s.combo))}</span>` : `<span class="combo ${s.combo >= 6 ? 
+314	921	"آفرین!"	const PRAISE = ["آفرین!", "درست است!", "عالی!", "دقیق!", "همین است!", "کاملاً درست!"];
+315	921	"درست است!"	const PRAISE = ["آفرین!", "درست است!", "عالی!", "دقیق!", "همین است!", "کاملاً درست!"];
+316	921	"عالی!"	const PRAISE = ["آفرین!", "درست است!", "عالی!", "دقیق!", "همین است!", "کاملاً درست!"];
+317	921	"دقیق!"	const PRAISE = ["آفرین!", "درست است!", "عالی!", "دقیق!", "همین است!", "کاملاً درست!"];
+318	921	"همین است!"	const PRAISE = ["آفرین!", "درست است!", "عالی!", "دقیق!", "همین است!", "کاملاً درست!"];
+319	921	"کاملاً درست!"	const PRAISE = ["آفرین!", "درست است!", "عالی!", "دقیق!", "همین است!", "کاملاً درست!"];
+320	930	"پایان رگبار"	head = `<button class="xbtn" data-a="askquit" aria-label="پایان رگبار">${ic("x")}</button><div class="tbar ${left < 10000 ? "low" : ""}"><i id="tbar" style="wid
+321	930	"امتیاز"	head = `<button class="xbtn" data-a="askquit" aria-label="پایان رگبار">${ic("x")}</button><div class="tbar ${left < 10000 ? "low" : ""}"><i id="tbar" style="wid
+322	933	"انرژی"	const right = s.mode === "lesson" ? `<span class="shearts" title="انرژی">${ic("bolt")}<span class="num">${fa(st.hearts)}</span></span>` : s.mode === "case" ? `<
+323	933	"{0}اسناد"	const right = s.mode === "lesson" ? `<span class="shearts" title="انرژی">${ic("bolt")}<span class="num">${fa(st.hearts)}</span></span>` : s.mode === "case" ? `<
+324	934	"خروج"	head = `<button class="xbtn" data-a="askquit" aria-label="خروج">${ic("x")}</button><div class="segs" role="progressbar" aria-valuenow="${s.done}" aria-valuemin=
+325	940	"از زبان دکتر خسروانی"	<span class="kind">${c.qt ? (c.qk || "از زبان دکتر خسروانی") : s.mode === "case" ? (s.ci ? `سند ${fa(s.ci)}` : "پرونده ویژه") : "نکته"}<i class='sep'></i>${esc(
+326	940	"سند {0}"	<span class="kind">${c.qt ? (c.qk || "از زبان دکتر خسروانی") : s.mode === "case" ? (s.ci ? `سند ${fa(s.ci)}` : "پرونده ویژه") : "نکته"}<i class='sep'></i>${esc(
+327	940	"پرونده ویژه"	<span class="kind">${c.qt ? (c.qk || "از زبان دکتر خسروانی") : s.mode === "case" ? (s.ci ? `سند ${fa(s.ci)}` : "پرونده ویژه") : "نکته"}<i class='sep'></i>${esc(
+328	940	"نکته"	<span class="kind">${c.qt ? (c.qk || "از زبان دکتر خسروانی") : s.mode === "case" ? (s.ci ? `سند ${fa(s.ci)}` : "پرونده ویژه") : "نکته"}<i class='sep'></i>${esc(
+329	940	"<i class='sep'></i>ساده"	<span class="kind">${c.qt ? (c.qk || "از زبان دکتر خسروانی") : s.mode === "case" ? (s.ci ? `سند ${fa(s.ci)}` : "پرونده ویژه") : "نکته"}<i class='sep'></i>${esc(
+330	941	"دکتر بردیا خسروانی"	${c.qt ? `<blockquote class="qt"><p>«${esc(c.qt)}»</p><cite>${esc(c.au || "دکتر بردیا خسروانی")}<i class='sep'></i>${esc(c.by)}</cite></blockquote>` : ""}
+331	942	"مثال روزمره"	${simp ? `<ul>${sc.b.map(b => `<li>${esc(b)}</li>`).join("")}</ul>${sc.f && c.f ? `<div class="formula">${esc(c.f)}</div>` : ""}${sc.tb && c.tb ? tableHTML(c.tb
+332	944	"نسخه کامل این کارت"	<div class="cardtools">${sc ? `<button class="gbtn" data-a="cardview">${ic(simp ? "list" : "sun")}${simp ? "نسخه کامل این کارت" : "ساده‌تر بگو"}</button>` : ""}
+333	944	"ساده‌تر بگو"	<div class="cardtools">${sc ? `<button class="gbtn" data-a="cardview">${ic(simp ? "list" : "sun")}${simp ? "نسخه کامل این کارت" : "ساده‌تر بگو"}</button>` : ""}
+334	945	"رد شدن از نکته‌ها"	foot = `<div class="sfwrap">${s.replay ? `<button class="link" data-a="skipcards">رد شدن از نکته‌ها</button>` : "<span></span>"}<button class="btn" data-a="next
+335	945	"شروع تمرین"	foot = `<div class="sfwrap">${s.replay ? `<button class="link" data-a="skipcards">رد شدن از نکته‌ها</button>` : "<span></span>"}<button class="btn" data-a="next
+336	951	"بی‌وقفه!"	const praise = s.combo >= 5 ? "بی‌وقفه!" : PRAISE[(s.correct + s.pos) % PRAISE.length];
+337	953	"توضیح کامل! +۳ امتیاز"	foot = `<div class="sfwrap"><div class="fbtxt"><h3>${oct(ic(ok ? "check" : "x"), "sm " + (ok ? "turqc" : "pomc"))}${ok ? (wr ? "توضیح کامل! +۳ امتیاز" : praise)
+338	953	"ناقص بود"	foot = `<div class="sfwrap"><div class="fbtxt"><h3>${oct(ic(ok ? "check" : "x"), "sm " + (ok ? "turqc" : "pomc"))}${ok ? (wr ? "توضیح کامل! +۳ امتیاز" : praise)
+339	953	"پاسخ درست:"	foot = `<div class="sfwrap"><div class="fbtxt"><h3>${oct(ic(ok ? "check" : "x"), "sm " + (ok ? "turqc" : "pomc"))}${ok ? (wr ? "توضیح کامل! +۳ امتیاز" : praise)
+340	955	"نکته‌های کلیدی را گفتید. پاسخ نمونه را هم بالا ببینید."	<p>${wr ? (ok ? "نکته‌های کلیدی را گفتید. پاسخ نمونه را هم بالا ببینید." : "نکته‌های جاافتاده و پاسخ نمونه را بالا ببینید. انرژی کم نشد.") : esc(x.e)}</p></div>
+341	955	"نکته‌های جاافتاده و پاسخ نمونه را بالا ببینید. انرژی کم نشد."	<p>${wr ? (ok ? "نکته‌های کلیدی را گفتید. پاسخ نمونه را هم بالا ببینید." : "نکته‌های جاافتاده و پاسخ نمونه را بالا ببینید. انرژی کم نشد.") : esc(x.e)}</p></div>
+342	956	"{0}پاسخ شما در حال خواندن است…"	} else if (s.phase === "grading") foot = `<div class="sfwrap"><span class="hint">${ic("book")}پاسخ شما در حال خواندن است…</span><button class="btn sec" data-a="
+343	956	"لغو"	} else if (s.phase === "grading") foot = `<div class="sfwrap"><span class="hint">${ic("book")}پاسخ شما در حال خواندن است…</span><button class="btn sec" data-a="
+344	957	"نکته‌هایی را که گفته‌اید تیک بزنید."	else if (s.phase === "self") foot = `<div class="sfwrap"><span class="hint">نکته‌هایی را که گفته‌اید تیک بزنید.</span><button class="btn" data-a="selfok">ثبت</b
+345	957	"ثبت"	else if (s.phase === "self") foot = `<div class="sfwrap"><span class="hint">نکته‌هایی را که گفته‌اید تیک بزنید.</span><button class="btn" data-a="selfok">ثبت</b
+346	958	"درست!"	else if (blitz) foot = `<div class="sfwrap"><span class="hint">${s.phase === "flash" ? (s.ok ? "درست!" : "پاسخ درست سبز شد.") : "سریع جواب بدهید؛ کلیدهای ۱ تا ۴
+347	958	"پاسخ درست سبز شد."	else if (blitz) foot = `<div class="sfwrap"><span class="hint">${s.phase === "flash" ? (s.ok ? "درست!" : "پاسخ درست سبز شد.") : "سریع جواب بدهید؛ کلیدهای ۱ تا ۴
+348	958	"سریع جواب بدهید؛ کلیدهای ۱ تا ۴ هم کار می‌کنند."	else if (blitz) foot = `<div class="sfwrap"><span class="hint">${s.phase === "flash" ? (s.ok ? "درست!" : "پاسخ درست سبز شد.") : "سریع جواب بدهید؛ کلیدهای ۱ تا ۴
+349	959	"یک مورد از هر ستون را لمس کنید."	else foot = `<div class="sfwrap"><span class="hint">${x.t === "match" ? "یک مورد از هر ستون را لمس کنید." : x.t === "mc" || x.t === "tf" || x.t === "fb" ? "کلید
+350	959	"کلیدهای عددی هم کار می‌کنند."	else foot = `<div class="sfwrap"><span class="hint">${x.t === "match" ? "یک مورد از هر ستون را لمس کنید." : x.t === "mc" || x.t === "tf" || x.t === "fb" ? "کلید
+351	959	"Ctrl+Enter هم می‌فرستد."	else foot = `<div class="sfwrap"><span class="hint">${x.t === "match" ? "یک مورد از هر ستون را لمس کنید." : x.t === "mc" || x.t === "tf" || x.t === "fb" ? "کلید
+352	959	"بررسی پاسخ"	else foot = `<div class="sfwrap"><span class="hint">${x.t === "match" ? "یک مورد از هر ستون را لمس کنید." : x.t === "mc" || x.t === "tf" || x.t === "fb" ? "کلید
+353	959	"بررسی"	else foot = `<div class="sfwrap"><span class="hint">${x.t === "match" ? "یک مورد از هر ستون را لمس کنید." : x.t === "mc" || x.t === "tf" || x.t === "fb" ? "کلید
+354	964	"یک گزینه را انتخاب کنید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+355	964	"جای خالی را پر کنید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+356	964	"درست یا نادرست؟"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+357	964	"حساب کنید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+358	964	"جفت‌ها را پیدا کنید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+359	964	"به ترتیب بچینید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+360	964	"دسته‌بندی کنید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+361	964	"با زبان خودتان توضیح دهید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+362	964	"لغزنده را جابه‌جا کنید"	const KIND = { mc: "یک گزینه را انتخاب کنید", fb: "جای خالی را پر کنید", tf: "درست یا نادرست؟", num: "حساب کنید", match: "جفت‌ها را پیدا کنید", order: "به ترتیب
+363	969	"دوباره، این بار درست"	let h = `<span class="kind">${KIND[x.t]}${retry ? `<span class="retry">دوباره، این بار درست</span>` : ""}</span><h2 class="q">${q}</h2>${x.tb ? tableHTML(x.tb) 
+364	975	"گرد کردن تا {0} قبول است."	h += `<div class="numin"><input id="numin" inputmode="decimal" autocomplete="off" dir="ltr" value="${esc(ui.val)}" ${fb ? "disabled" : ""} aria-label="پاسخ عددی
+365	975	"پاسخ عددی"	h += `<div class="numin"><input id="numin" inputmode="decimal" autocomplete="off" dir="ltr" value="${esc(ui.val)}" ${fb ? "disabled" : ""} aria-label="پاسخ عددی
+366	975	"اعشار با نقطه یا «٫»؛ عدد منفی با علامت منها. ارقام فارسی و انگلیسی هر دو قبول است."	h += `<div class="numin"><input id="numin" inputmode="decimal" autocomplete="off" dir="ltr" value="${esc(ui.val)}" ${fb ? "disabled" : ""} aria-label="پاسخ عددی
+367	979	"{0} جفت اشتباه؛ این تمرین در پایان دوباره می‌آید."	if (ui.err && !fb) h += `<p class="hint">${fa(ui.err)} جفت اشتباه؛ این تمرین در پایان دوباره می‌آید.</p>`;
+368	985	"۲ تا ۴ جمله با زبان خودتان…"	h += `<textarea id="ownin" class="ownin" rows="5" maxlength="1200" placeholder="۲ تا ۴ جمله با زبان خودتان…" aria-label="پاسخ نوشتاری" ${ph !== "ex" ? "disabled
+369	985	"پاسخ نوشتاری"	h += `<textarea id="ownin" class="ownin" rows="5" maxlength="1200" placeholder="۲ تا ۴ جمله با زبان خودتان…" aria-label="پاسخ نوشتاری" ${ph !== "ex" ? "disabled
+370	986	"Claude پاسخ را می‌خواند و می‌گوید کدام نکته‌ها را گفته‌اید."	if (ph === "ex") h += `<p class="hint">مهم معنی است، نه املا. ${AI.state === "ready" ? "Claude پاسخ را می‌خواند و می‌گوید کدام نکته‌ها را گفته‌اید." : "بعد از ف
+371	986	"بعد از فرستادن، پاسخ نمونه را می‌بینید و خودتان می‌سنجید."	if (ph === "ex") h += `<p class="hint">مهم معنی است، نه املا. ${AI.state === "ready" ? "Claude پاسخ را می‌خواند و می‌گوید کدام نکته‌ها را گفته‌اید." : "بعد از ف
+372	986	"مهم معنی است، نه املا. {0} پاسخ نوشتاری انرژی کم نمی‌کند."	if (ph === "ex") h += `<p class="hint">مهم معنی است، نه املا. ${AI.state === "ready" ? "Claude پاسخ را می‌خواند و می‌گوید کدام نکته‌ها را گفته‌اید." : "بعد از ف
+373	987	"Claude در حال خواندن پاسخ شماست…"	if (ph === "grading") h += `<div class="grading"><span class="dots3"><i></i><i></i><i></i></span>Claude در حال خواندن پاسخ شماست…</div>`;
+374	988	"پاسخ نمونه"	if (ph === "self") h += `${ui.note ? `<p class="hint">${esc(ui.note)}</p>` : ""}<div class="panel ownk"><h4>پاسخ نمونه</h4><p>${esc(x.m)}</p><h4>کدام نکته‌ها را
+375	988	"کدام نکته‌ها را گفته‌اید؟"	if (ph === "self") h += `${ui.note ? `<p class="hint">${esc(ui.note)}</p>` : ""}<div class="panel ownk"><h4>پاسخ نمونه</h4><p>${esc(x.m)}</p><h4>کدام نکته‌ها را
+376	988	"برای «کامل» دست‌کم {0} نکته لازم است."	if (ph === "self") h += `${ui.note ? `<p class="hint">${esc(ui.note)}</p>` : ""}<div class="panel ownk"><h4>پاسخ نمونه</h4><p>${esc(x.m)}</p><h4>کدام نکته‌ها را
+377	994	"درست: {0}"	return `<div class="sortrow ${c}"><span>${esc(it[0])}</span><div class="seg">${x.b.map((b, bi) => `<button data-a="sput" data-i="${i}" data-b="${bi}" aria-press
+378	999	"{0}+{1} سکه"	return c.items.map(it => it.k === "coin" ? `<span class="loot-i">${ic("coin")}+${fa(it.n)} سکه</span>` : it.k === "boost" ? `<span class="loot-i lb">${ic("bolt"
+379	999	"{0}ساعت طلایی: ۱۵ دقیقه امتیاز دو برابر"	return c.items.map(it => it.k === "coin" ? `<span class="loot-i">${ic("coin")}+${fa(it.n)} سکه</span>` : it.k === "boost" ? `<span class="loot-i lb">${ic("bolt"
+380	999	"{0}+{1} انرژی"	return c.items.map(it => it.k === "coin" ? `<span class="loot-i">${ic("coin")}+${fa(it.n)} سکه</span>` : it.k === "boost" ? `<span class="loot-i lb">${ic("bolt"
+381	1003	"صندوقچه طلایی"	<div class="loot">${c.open ? lootHTML(c) : `<b>${c.gold ? "صندوقچه طلایی" : "صندوقچه"}</b><span>برای باز کردن لمس کنید</span>`}</div></div>`;
+382	1003	"صندوقچه"	<div class="loot">${c.open ? lootHTML(c) : `<b>${c.gold ? "صندوقچه طلایی" : "صندوقچه"}</b><span>برای باز کردن لمس کنید</span>`}</div></div>`;
+383	1003	"برای باز کردن لمس کنید"	<div class="loot">${c.open ? lootHTML(c) : `<b>${c.gold ? "صندوقچه طلایی" : "صندوقچه"}</b><span>برای باز کردن لمس کنید</span>`}</div></div>`;
+384	1002	"باز کردن صندوقچه"	return `<div class="chestbox ${c.gold ? "gold" : ""} ${c.open ? "open" : ""}" id="chest"><button class="chest" data-a="openchest" ${c.open ? "disabled" : ""} ar
+385	1007	"{0}یک دور دیگر"	if (s.mode === "blitz") return `<button class="btn shine" data-a="blitz">${ic("timer")}یک دور دیگر</button>`;
+386	1008	"{0}تمرین این تالار"	if (!r.pass && s.unit) return `<button class="btn" data-a="upractice" data-u="${s.unit.id}">${ic("dumbbell")}تمرین این تالار</button>`;
+387	1010	"{0}درس بعد"	if (n) return `<button class="btn shine" data-a="nextles">${ic("play")}درس بعد<i class='sep'></i>${esc(clip(n.title, 22))}</button>`;
+388	1011	"{0}آزمون تسلط"	if (m) return `<button class="btn shine" data-a="startm" data-u="${m.id}">${ic("gate")}آزمون تسلط</button>`;
+389	1018	"{0} ستاره از ۳"	if (s.mode === "lesson" || s.mode === "case") h += `<div class="rstars" aria-label="${fa(r.stars)} ستاره از ۳">${[0, 1, 2].map(i => `<svg viewBox="0 0 24 24" cl
+390	1019	"امتیاز رگبار"	else if (s.mode === "blitz") h += `<div class="bigscore"><span>امتیاز رگبار</span><b class="num countup" data-to="${s.score}">${fa(s.score)}</b></div>`;
+391	1025	"رتبه تازه: {0}"	if (r.L1 > r.L0) h += `<div class="lvup" id="lvup"><b>سطح ${fa(r.L1)}!</b><span>${rankOf(r.L1) !== rankOf(r.L0) ? `رتبه تازه: ${esc(rankOf(r.L1))}` : "یک پله با
+392	1025	"یک پله بالاتر رفتید."	if (r.L1 > r.L0) h += `<div class="lvup" id="lvup"><b>سطح ${fa(r.L1)}!</b><span>${rankOf(r.L1) !== rankOf(r.L0) ? `رتبه تازه: ${esc(rankOf(r.L1))}` : "یک پله با
+393	1025	"سطح {0}!"	if (r.L1 > r.L0) h += `<div class="lvup" id="lvup"><b>سطح ${fa(r.L1)}!</b><span>${rankOf(r.L1) !== rankOf(r.L0) ? `رتبه تازه: ${esc(rankOf(r.L1))}` : "یک پله با
+394	1029	"کارت تازه برای کلکسیون"	h += `<div class="reveal"><span class="eyebrow">${r.newCard ? "کارت تازه برای کلکسیون" : "کارت براق شد"}</span><div class="bigcard ${ucls(l.unit)} ${r.stars ===
+395	1029	"کارت براق شد"	h += `<div class="reveal"><span class="eyebrow">${r.newCard ? "کارت تازه برای کلکسیون" : "کارت براق شد"}</span><div class="bigcard ${ucls(l.unit)} ${r.stars ===
+396	1029	"درس {0}"	h += `<div class="reveal"><span class="eyebrow">${r.newCard ? "کارت تازه برای کلکسیون" : "کارت براق شد"}</span><div class="bigcard ${ucls(l.unit)} ${r.stars ===
+397	1029	"{0} براق"	h += `<div class="reveal"><span class="eyebrow">${r.newCard ? "کارت تازه برای کلکسیون" : "کارت براق شد"}</span><div class="bigcard ${ucls(l.unit)} ${r.stars ===
+398	1032	"{0} {1} روز پیاپی"	if (r.streakUp) extra.push(`${ic("sun")} ${fa(st.streak)} روز پیاپی`);
+399	1033	"{0} هدف روزانه کامل شد"	if (r.goalHit) extra.push(`${ic("check")} هدف روزانه کامل شد<i class='sep'></i>+۱۰ سکه`);
+400	1033	"+۱۰ سکه"	if (r.goalHit) extra.push(`${ic("check")} هدف روزانه کامل شد<i class='sep'></i>+۱۰ سکه`);
+401	1034	"{0} مأموریت: {1}"	r.quests.forEach(q => extra.push(`${ic("check")} مأموریت: ${q.t()}<i class='sep'></i>+۱۰ سکه`));
+402	1035	"{0} نشان تازه: {1}"	r.achs.forEach(a => extra.push(`${ic("star8")} نشان تازه: ${a}`));
+403	1036	"{0} رکورد تازه در رگبار"	if (r.record) extra.push(`${ic("crown")} رکورد تازه در رگبار`);
+404	1037	"{0}٪"	h += `<div class="grid3 rtiles"><div class="tile"><b class="num">${fa(r.acc)}٪</b><span>دقت</span></div><div class="tile"><b class="num">${fa(s.maxCombo)}</b><s
+405	1037	"بیشترین پیاپی"	h += `<div class="grid3 rtiles"><div class="tile"><b class="num">${fa(r.acc)}٪</b><span>دقت</span></div><div class="tile"><b class="num">${fa(s.maxCombo)}</b><s
+406	1041	"صندوقچه طلایی گرفتید!"	h += `<div class="chain"><span>زنجیره این نشست</span><div class="cdots">${[1, 2, 3].map(i => `<i class="${k >= i ? "on" : ""}"></i>`).join("")}</div><small>${CH
+407	1041	"{0} درس یا مرور دیگر تا صندوقچه طلایی"	h += `<div class="chain"><span>زنجیره این نشست</span><div class="cdots">${[1, 2, 3].map(i => `<i class="${k >= i ? "on" : ""}"></i>`).join("")}</div><small>${CH
+408	1041	"زنجیره این نشست"	h += `<div class="chain"><span>زنجیره این نشست</span><div class="cdots">${[1, 2, 3].map(i => `<i class="${k >= i ? "on" : ""}"></i>`).join("")}</div><small>${CH
+409	1043	"{0}نقشه"	h += `</div></div><div class="sfoot"><div class="sfwrap end"><button class="btn sec" data-a="endses">${ic("map")}نقشه</button>${nextAction()}</div></div>`;
+410	1074	"خواندن پاسخ با Claude برای این حساب در دسترس نیست."	if (AI_OFF.includes(c)) return "خواندن پاسخ با Claude برای این حساب در دسترس نیست.";
+411	1075	"Claude الان سرش شلوغ است."	if (c === "rate_limited") return "Claude الان سرش شلوغ است.";
+412	1076	"دوباره وارد حساب claude.ai شوید."	if (c === "session_expired") return "دوباره وارد حساب claude.ai شوید.";
+413	1077	"پاسخ Claude قابل خواندن نبود."	if (c === "invalid_json") return "پاسخ Claude قابل خواندن نبود.";
+414	1078	"ارتباط با Claude قطع شد."	return "ارتباط با Claude قطع شد.";
+415	1105	" این بار خودتان بسنجید."	aiFail(e); ui.note = aiErrText(e) + " این بار خودتان بسنجید.";
+416	1117	"{0} از {1}"	<h4>نکته‌های کلیدی<i class='sep'></i>${fa(cov.size)} از ${fa(x.kp.length)}</h4><ul class="klist">${x.kp.map((k, i) => `<li class="${cov.has(i + 1) ? "on" : ""}"
+417	1123	"قیمت سهم"	const LAB_L = { P: "قیمت سهم", E: "EPS پایدار", d: "نسبت تقسیم", g: "رشد سالانه سود", r: "بازده اخزا", k: "صرف ریسک" };
+418	1123	"EPS پایدار"	const LAB_L = { P: "قیمت سهم", E: "EPS پایدار", d: "نسبت تقسیم", g: "رشد سالانه سود", r: "بازده اخزا", k: "صرف ریسک" };
+419	1123	"نسبت تقسیم"	const LAB_L = { P: "قیمت سهم", E: "EPS پایدار", d: "نسبت تقسیم", g: "رشد سالانه سود", r: "بازده اخزا", k: "صرف ریسک" };
+420	1123	"رشد سالانه سود"	const LAB_L = { P: "قیمت سهم", E: "EPS پایدار", d: "نسبت تقسیم", g: "رشد سالانه سود", r: "بازده اخزا", k: "صرف ریسک" };
+421	1123	"بازده اخزا"	const LAB_L = { P: "قیمت سهم", E: "EPS پایدار", d: "نسبت تقسیم", g: "رشد سالانه سود", r: "بازده اخزا", k: "صرف ریسک" };
+422	1123	"صرف ریسک"	const LAB_L = { P: "قیمت سهم", E: "EPS پایدار", d: "نسبت تقسیم", g: "رشد سالانه سود", r: "بازده اخزا", k: "صرف ریسک" };
+423	1125	" ریال"	const fmtV = (k, n) => k === "P" || k === "E" ? fa(n) + " ریال" : fa(n) + (k === "k" ? " واحد" : "٪");
+424	1125	" واحد"	const fmtV = (k, n) => k === "P" || k === "E" ? fa(n) + " ریال" : fa(n) + (k === "k" ? " واحد" : "٪");
+425	1136	"با فاصله بالاتر از بازده لازم"	const vd = m.er >= m.need + 5 ? ["ok", "با فاصله بالاتر از بازده لازم"] : m.er >= m.need ? ["mid", "کمی بالاتر از بازده لازم؛ حاشیه کم"] : m.er >= v.r ? ["mid",
+426	1136	"کمی بالاتر از بازده لازم؛ حاشیه کم"	const vd = m.er >= m.need + 5 ? ["ok", "با فاصله بالاتر از بازده لازم"] : m.er >= m.need ? ["mid", "کمی بالاتر از بازده لازم؛ حاشیه کم"] : m.er >= v.r ? ["mid",
+427	1136	"بالای اخزا ولی کمتر از بازده لازم"	const vd = m.er >= m.need + 5 ? ["ok", "با فاصله بالاتر از بازده لازم"] : m.er >= m.need ? ["mid", "کمی بالاتر از بازده لازم؛ حاشیه کم"] : m.er >= v.r ? ["mid",
+428	1136	"حتی از اخزا کمتر"	const vd = m.er >= m.need + 5 ? ["ok", "با فاصله بالاتر از بازده لازم"] : m.er >= m.need ? ["mid", "کمی بالاتر از بازده لازم؛ حاشیه کم"] : m.er >= v.r ? ["mid",
+429	1141	"بالاتر"	const val = (n, t) => n === null ? `<div class="lv"><span>${t}</span><b>—</b></div>` : `<div class="lv"><span>${t}</span><b class="num">${fa(Math.round(n / 10) 
+430	1141	"پایین‌تر"	const val = (n, t) => n === null ? `<div class="lv"><span>${t}</span><b>—</b></div>` : `<div class="lv"><span>${t}</span><b class="num">${fa(Math.round(n / 10) 
+431	1141	"{0} ریال"	const val = (n, t) => n === null ? `<div class="lv"><span>${t}</span><b>—</b></div>` : `<div class="lv"><span>${t}</span><b class="num">${fa(Math.round(n / 10) 
+432	1141	"{0} از قیمت، {1}٪"	const val = (n, t) => n === null ? `<div class="lv"><span>${t}</span><b>—</b></div>` : `<div class="lv"><span>${t}</span><b class="num">${fa(Math.round(n / 10) 
+433	1142	"بازده نقدی"	return `<div class="lmet">${M("pe", "P/E", r1(m.pe))}${M("ep", "E/P", r1(m.ep) + "٪")}${M("dy", "بازده نقدی", r1(m.dy) + "٪")}${M("pb", "بازگشت سرمایه", m.pb ==
+434	1142	"بازگشت سرمایه"	return `<div class="lmet">${M("pe", "P/E", r1(m.pe))}${M("ep", "E/P", r1(m.ep) + "٪")}${M("dy", "بازده نقدی", r1(m.dy) + "٪")}${M("pb", "بازگشت سرمایه", m.pb ==
+435	1142	"+۳۰ سال"	return `<div class="lmet">${M("pe", "P/E", r1(m.pe))}${M("ep", "E/P", r1(m.ep) + "٪")}${M("dy", "بازده نقدی", r1(m.dy) + "٪")}${M("pb", "بازگشت سرمایه", m.pb ==
+436	1142	" سال"	return `<div class="lmet">${M("pe", "P/E", r1(m.pe))}${M("ep", "E/P", r1(m.ep) + "٪")}${M("dy", "بازده نقدی", r1(m.dy) + "٪")}${M("pb", "بازگشت سرمایه", m.pb ==
+437	1148	"قیمت با بازگشت ۵ ساله"	<div class="lvals">${val(m.v5, "قیمت با بازگشت ۵ ساله")}${val(m.vR, "قیمت هم‌تراز با بازده لازم")}</div>`;
+438	1148	"قیمت هم‌تراز با بازده لازم"	<div class="lvals">${val(m.v5, "قیمت با بازگشت ۵ ساله")}${val(m.vR, "قیمت هم‌تراز با بازده لازم")}</div>`;
+439	1143	"بازده مورد انتظار"	<div class="lexp ${vd[0]} ${goal === "er" ? "goal" : ""}"><div class="lt"><span>بازده مورد انتظار <b class="num">${r1(m.er)}٪</b></span><span class="vd">${vd[1]
+440	1144	"اخزا"	<div class="lbar"><i style="width:${pc(m.er)}%"></i><s style="right:${pc(v.r)}%" title="اخزا"></s><s class="need" style="right:${pc(m.need)}%"></s></div>
+441	1145	"اخزا {0}٪"	<div class="lleg"><span><s></s>اخزا ${fa(v.r)}٪</span><span><s class="need"></s>بازده لازم ${fa(m.need)}٪</span></div></div>
+442	1145	"بازده لازم {0}٪"	<div class="lleg"><span><s></s>اخزا ${fa(v.r)}٪</span><span><s class="need"></s>بازده لازم ${fa(m.need)}٪</span></div></div>
+443	1146	"جمع EPS سال‌به‌سال در برابر قیمت"	<svg class="lchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="جمع EPS سال‌به‌سال در برابر قیمت"><line x1="4" x2="${W - 4}" y1="${Y(v.P).toFixed(1)}" y2="${
+444	1146	"قیمت"	<svg class="lchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="جمع EPS سال‌به‌سال در برابر قیمت"><line x1="4" x2="${W - 4}" y1="${Y(v.P).toFixed(1)}" y2="${
+445	1147	"ستون‌ها: جمع EPS تا هر سال. جایی که از خط قیمت رد می‌شود، سرمایه برگشته است."	<p class="lcap">ستون‌ها: جمع EPS تا هر سال. جایی که از خط قیمت رد می‌شود، سرمایه برگشته است.</p>
+446	1157	"ساده‌شده و آموزشی، با فرمول‌های همین دوره؛ توصیه خرید یا فروش نیست."	${o.ask === false ? "" : `<div class="ltools"><span class="lnote">ساده‌شده و آموزشی، با فرمول‌های همین دوره؛ توصیه خرید یا فروش نیست.</span></div>`}</div>`;
+447	1170	"فروش دوره"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+448	1170	"میلیارد تومان"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+449	1170	"تعداد ماه‌های دوره"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+450	1170	"ماه"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+451	1170	"حاشیه سود FIS"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+452	1170	"سایر درآمدها و غیرعملیاتی سال"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+453	1170	"ارزش بازار"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+454	1170	"میانگین نسبت تقسیم دو سال"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+455	1170	"نرخ درآمد ثابت یا اخزا"	prod: [["S", "فروش دوره", "میلیارد تومان"], ["n", "تعداد ماه‌های دوره", "ماه"], ["m", "حاشیه سود FIS", "٪"], ["o", "سایر درآمدها و غیرعملیاتی سال", "میلیارد توم
+456	1171	"حقوق صاحبان سهام"	hold: [["B", "حقوق صاحبان سهام", "میلیارد تومان"], ["M", "ارزش روز سبد بورسی", "میلیارد تومان"], ["C", "بهای تمام‌شده سبد بورسی", "میلیارد تومان"], ["V", "ارزش 
+457	1171	"ارزش روز سبد بورسی"	hold: [["B", "حقوق صاحبان سهام", "میلیارد تومان"], ["M", "ارزش روز سبد بورسی", "میلیارد تومان"], ["C", "بهای تمام‌شده سبد بورسی", "میلیارد تومان"], ["V", "ارزش 
+458	1171	"بهای تمام‌شده سبد بورسی"	hold: [["B", "حقوق صاحبان سهام", "میلیارد تومان"], ["M", "ارزش روز سبد بورسی", "میلیارد تومان"], ["C", "بهای تمام‌شده سبد بورسی", "میلیارد تومان"], ["V", "ارزش 
+459	1172	"سود خالص همان دوره پارسال"	stop: [["p1", "سود خالص همان دوره پارسال", "میلیارد تومان"], ["p2", "سود خالص این دوره", "میلیارد تومان"], ["s1", "فروش همان سه ماه پارسال", "میلیارد تومان"], [
+460	1172	"سود خالص این دوره"	stop: [["p1", "سود خالص همان دوره پارسال", "میلیارد تومان"], ["p2", "سود خالص این دوره", "میلیارد تومان"], ["s1", "فروش همان سه ماه پارسال", "میلیارد تومان"], [
+461	1172	"فروش همان سه ماه پارسال"	stop: [["p1", "سود خالص همان دوره پارسال", "میلیارد تومان"], ["p2", "سود خالص این دوره", "میلیارد تومان"], ["s1", "فروش همان سه ماه پارسال", "میلیارد تومان"], [
+462	1172	"فروش سه ماه اخیر"	stop: [["p1", "سود خالص همان دوره پارسال", "میلیارد تومان"], ["p2", "سود خالص این دوره", "میلیارد تومان"], ["s1", "فروش همان سه ماه پارسال", "میلیارد تومان"], [
+463	1172	"حاشیه سود فصل قبل"	stop: [["p1", "سود خالص همان دوره پارسال", "میلیارد تومان"], ["p2", "سود خالص این دوره", "میلیارد تومان"], ["s1", "فروش همان سه ماه پارسال", "میلیارد تومان"], [
+464	1172	"حاشیه سود این فصل"	stop: [["p1", "سود خالص همان دوره پارسال", "میلیارد تومان"], ["p2", "سود خالص این دوره", "میلیارد تومان"], ["s1", "فروش همان سه ماه پارسال", "میلیارد تومان"], [
+465	1179	"تولیدی"	const FC_T = { prod: ["تولیدی", "قالب تحلیل"], hold: ["هلدینگ", "P/80%NAV"], stop: ["حد ضرر", "بنیادی"] };
+466	1179	"قالب تحلیل"	const FC_T = { prod: ["تولیدی", "قالب تحلیل"], hold: ["هلدینگ", "P/80%NAV"], stop: ["حد ضرر", "بنیادی"] };
+467	1179	"هلدینگ"	const FC_T = { prod: ["تولیدی", "قالب تحلیل"], hold: ["هلدینگ", "P/80%NAV"], stop: ["حد ضرر", "بنیادی"] };
+468	1179	"حد ضرر"	const FC_T = { prod: ["تولیدی", "قالب تحلیل"], hold: ["هلدینگ", "P/80%NAV"], stop: ["حد ضرر", "بنیادی"] };
+469	1179	"بنیادی"	const FC_T = { prod: ["تولیدی", "قالب تحلیل"], hold: ["هلدینگ", "P/80%NAV"], stop: ["حد ضرر", "بنیادی"] };
+470	1180	"عددهای نمونه: شیفته، پست ۲۱۸۳۶ کانال تلگرام او (خرداد ۱۴۰۵)"	const FC_SRC = { prod: "عددهای نمونه: شیفته، پست ۲۱۸۳۶ کانال تلگرام او (خرداد ۱۴۰۵)", hold: "عددهای نمونه: صبا، پست ۲۲۷۸۴ کانال تلگرام او (شهریور ۱۴۰۵)", stop: 
+471	1180	"عددهای نمونه: صبا، پست ۲۲۷۸۴ کانال تلگرام او (شهریور ۱۴۰۵)"	const FC_SRC = { prod: "عددهای نمونه: شیفته، پست ۲۱۸۳۶ کانال تلگرام او (خرداد ۱۴۰۵)", hold: "عددهای نمونه: صبا، پست ۲۲۷۸۴ کانال تلگرام او (شهریور ۱۴۰۵)", stop: 
+472	1180	"عددهای نمونه ساختگی‌اند، شبیه نمونه‌های کانال او"	const FC_SRC = { prod: "عددهای نمونه: شیفته، پست ۲۱۸۳۶ کانال تلگرام او (خرداد ۱۴۰۵)", hold: "عددهای نمونه: صبا، پست ۲۲۷۸۴ کانال تلگرام او (شهریور ۱۴۰۵)", stop: 
+473	1188	"ارزش فعلی {0}٪ پایین‌تر"	function fcCmp(V, cap) { if (!(cap > 0)) return null; const p = Math.round(Math.abs(V / cap - 1) * 100); return V <= cap ? ["ok", `ارزش فعلی ${fa(p)}٪ پایین‌تر`
+474	1188	"ارزش فعلی {0}٪ بالاتر"	function fcCmp(V, cap) { if (!(cap > 0)) return null; const p = Math.round(Math.abs(V / cap - 1) * 100); return V <= cap ? ["ok", `ارزش فعلی ${fa(p)}٪ پایین‌تر`
+475	1208	" (تعداد ماه‌ها بین ۱ تا ۱۲)"	if (!c) return `<p class="hint">همه خانه‌ها را با عدد پر کنید${m === "prod" ? " (تعداد ماه‌ها بین ۱ تا ۱۲)" : ""}.</p>`;
+476	1208	"همه خانه‌ها را با عدد پر کنید{0}."	if (!c) return `<p class="hint">همه خانه‌ها را با عدد پر کنید${m === "prod" ? " (تعداد ماه‌ها بین ۱ تا ۱۲)" : ""}.</p>`;
+477	1209	" میلیارد تومان"	const B = " میلیارد تومان";
+478	1211	"{0} بالای میانگین {1}٪"	const avg = (v, a, what) => v >= a ? ["ok", `${what} بالای میانگین ${fa(a)}٪`] : ["mid", `${what} زیر میانگین ${fa(a)}٪`];
+479	1211	"{0} زیر میانگین {1}٪"	const avg = (v, a, what) => v >= a ? ["ok", `${what} بالای میانگین ${fa(a)}٪`] : ["mid", `${what} زیر میانگین ${fa(a)}٪`];
+480	1212	"برآورد سال، به روش او"	let h = `<h4 class="fch">برآورد سال، به روش او</h4>`
+481	1213	"فروش برآوردی سال"	+ fcRow("فروش برآوردی سال", fb2(c.Y) + B, "«با همین فرمون»: فروش دوره ÷ ماه‌ها × ۱۲")
+482	1213	"«با همین فرمون»: فروش دوره ÷ ماه‌ها × ۱۲"	+ fcRow("فروش برآوردی سال", fb2(c.Y) + B, "«با همین فرمون»: فروش دوره ÷ ماه‌ها × ۱۲")
+483	1214	"سود عملیاتی FIS"	+ fcRow("سود عملیاتی FIS", fb2(c.op) + B, "حاشیه سود FIS × فروش برآوردی", c.g >= 30 ? ["ok", "حاشیه بالای ۳۰٪: خیلی خوب"] : avg(c.g, 15, "حاشیه"))
+484	1214	"حاشیه سود FIS × فروش برآوردی"	+ fcRow("سود عملیاتی FIS", fb2(c.op) + B, "حاشیه سود FIS × فروش برآوردی", c.g >= 30 ? ["ok", "حاشیه بالای ۳۰٪: خیلی خوب"] : avg(c.g, 15, "حاشیه"))
+485	1214	"حاشیه بالای ۳۰٪: خیلی خوب"	+ fcRow("سود عملیاتی FIS", fb2(c.op) + B, "حاشیه سود FIS × فروش برآوردی", c.g >= 30 ? ["ok", "حاشیه بالای ۳۰٪: خیلی خوب"] : avg(c.g, 15, "حاشیه"))
+486	1214	"حاشیه"	+ fcRow("سود عملیاتی FIS", fb2(c.op) + B, "حاشیه سود FIS × فروش برآوردی", c.g >= 30 ? ["ok", "حاشیه بالای ۳۰٪: خیلی خوب"] : avg(c.g, 15, "حاشیه"))
+487	1215	"سود برآوردی سال"	+ fcRow("سود برآوردی سال", fb2(c.P) + B, "به اضافه سایر درآمدها و غیرعملیاتی")
+488	1215	"به اضافه سایر درآمدها و غیرعملیاتی"	+ fcRow("سود برآوردی سال", fb2(c.P) + B, "به اضافه سایر درآمدها و غیرعملیاتی")
+489	1216	"سود نقدی برآوردی"	+ fcRow("سود نقدی برآوردی", fb2(c.D) + B, "سود برآوردی × میانگین تقسیم", avg(c.d, 53, "تقسیم"));
+490	1216	"سود برآوردی × میانگین تقسیم"	+ fcRow("سود نقدی برآوردی", fb2(c.D) + B, "سود برآوردی × میانگین تقسیم", avg(c.d, 53, "تقسیم"));
+491	1216	"تقسیم"	+ fcRow("سود نقدی برآوردی", fb2(c.D) + B, "سود برآوردی × میانگین تقسیم", avg(c.d, 53, "تقسیم"));
+492	1217	"سود برآوردی صفر یا منفی است؛ در FIS شرکت زیان‌ده امتیاز نمی‌گیرد و نسبت‌ها معنا ندارند."	if (c.P <= 0) return h + `<p class="hint">سود برآوردی صفر یا منفی است؛ در FIS شرکت زیان‌ده امتیاز نمی‌گیرد و نسبت‌ها معنا ندارند.</p>`;
+493	1218	"نسبت‌های آینده‌نگر"	h += `<h4 class="fch">نسبت‌های آینده‌نگر</h4><div class="lmet fc3"><div class="m"><span>P/E</span><b class="num">${fx2(c.pe)}</b></div><div class="m"><span>P/S<
+494	1219	"میانگین کل بازار در پاییز ۱۴۰۴ به گفته او: P/E حدود ۶.۴، P/S حدود ۱، تقسیم ۵۳٪، حاشیه سود FIS ۱۵٪."	+ `<p class="lcap">میانگین کل بازار در پاییز ۱۴۰۴ به گفته او: P/E حدود ۶.۴، P/S حدود ۱، تقسیم ۵۳٪، حاشیه سود FIS ۱۵٪.</p>`.replace(/\d/g, d => FA[d]);
+495	1221	"محدوده‌ها با قاعده‌های عمومی او (ارزش بازار)"	h += `<h4 class="fch">محدوده‌ها با قاعده‌های عمومی او (ارزش بازار)</h4>`;
+496	1222	"سقف خرید با قاعده نرخ بانکی"	if (c.peB) h += fcRow("سقف خرید با قاعده نرخ بانکی", fb2(c.P * c.peB) + B, `P/E خرید ≈ ۱ ÷ ${fa(c.r)}٪ + ۱ = ${fx2(c.peB)}`, fcCmp(c.V, c.P * c.peB));
+497	1222	"P/E خرید ≈ ۱ ÷ {0}٪ + ۱ = {1}"	if (c.peB) h += fcRow("سقف خرید با قاعده نرخ بانکی", fb2(c.P * c.peB) + B, `P/E خرید ≈ ۱ ÷ ${fa(c.r)}٪ + ۱ = ${fx2(c.peB)}`, fcCmp(c.V, c.P * c.peB));
+498	1223	"سقف خرید با «P/D زیر ۵»"	if (c.D > 0) h += fcRow("سقف خرید با «P/D زیر ۵»", fb2(c.D * 5) + B, "سود نقدی برآوردی × ۵", fcCmp(c.V, c.D * 5));
+499	1223	"سود نقدی برآوردی × ۵"	if (c.D > 0) h += fcRow("سقف خرید با «P/D زیر ۵»", fb2(c.D * 5) + B, "سود نقدی برآوردی × ۵", fcCmp(c.V, c.D * 5));
+500	1224	"خرید با اندیکاتور FIS"	h += fcRow("خرید با اندیکاتور FIS", fb2(2 * sum) + B, "میانگین ارزش در P/E ۴ و P/D ۴", fcCmp(c.V, 2 * sum))
+501	1224	"میانگین ارزش در P/E ۴ و P/D ۴"	h += fcRow("خرید با اندیکاتور FIS", fb2(2 * sum) + B, "میانگین ارزش در P/E ۴ و P/D ۴", fcCmp(c.V, 2 * sum))
+502	1225	"فروش با اندیکاتور FIS"	+ fcRow("فروش با اندیکاتور FIS", fb2(4 * sum) + B, "میانگین ارزش در P/E ۸ و P/D ۸", c.V >= 4 * sum ? ["no", "به محدوده فروش رسیده"] : ["ok", "هنوز زیر محدوده فر
+503	1225	"میانگین ارزش در P/E ۸ و P/D ۸"	+ fcRow("فروش با اندیکاتور FIS", fb2(4 * sum) + B, "میانگین ارزش در P/E ۸ و P/D ۸", c.V >= 4 * sum ? ["no", "به محدوده فروش رسیده"] : ["ok", "هنوز زیر محدوده فر
+504	1225	"به محدوده فروش رسیده"	+ fcRow("فروش با اندیکاتور FIS", fb2(4 * sum) + B, "میانگین ارزش در P/E ۸ و P/D ۸", c.V >= 4 * sum ? ["no", "به محدوده فروش رسیده"] : ["ok", "هنوز زیر محدوده فر
+505	1225	"هنوز زیر محدوده فروش"	+ fcRow("فروش با اندیکاتور FIS", fb2(4 * sum) + B, "میانگین ارزش در P/E ۸ و P/D ۸", c.V >= 4 * sum ? ["no", "به محدوده فروش رسیده"] : ["ok", "هنوز زیر محدوده فر
+506	1226	"هدف «سود برآوردی × ۷»"	+ fcRow("هدف «سود برآوردی × ۷»", fb2(c.P * 7) + B, "سقف پتانسیل در ویدیوهایش");
+507	1226	"سقف پتانسیل در ویدیوهایش"	+ fcRow("هدف «سود برآوردی × ۷»", fb2(c.P * 7) + B, "سقف پتانسیل در ویدیوهایش");
+508	1230	"حقوق صاحبان سهام + ارزش روز سبد − بهای تمام‌شده"	let h = fcRow("NAV", fb2(c.N) + B, "حقوق صاحبان سهام + ارزش روز سبد − بهای تمام‌شده") + fcRow("۸۰٪ NAV", fb2(c.n80) + B, "");
+509	1230	"۸۰٪ NAV"	let h = fcRow("NAV", fb2(c.N) + B, "حقوق صاحبان سهام + ارزش روز سبد − بهای تمام‌شده") + fcRow("۸۰٪ NAV", fb2(c.n80) + B, "");
+510	1231	"NAV صفر یا منفی است."	if (c.p80 === null) return h + `<p class="hint">NAV صفر یا منفی است.</p>`;
+511	1232	"ندارد"	h += `<div class="lmet fc3"><div class="m"><span>P/80%NAV</span><b class="num">${fa(Math.round(c.p80 * 100))}٪</b></div><div class="m"><span>P/NAV</span><b clas
+512	1232	"تخفیف به NAV"	h += `<div class="lmet fc3"><div class="m"><span>P/80%NAV</span><b class="num">${fa(Math.round(c.p80 * 100))}٪</b></div><div class="m"><span>P/NAV</span><b clas
+513	1233	"زیر ۱۰۰٪: بازار این هلدینگ را کمتر از ۸۰٪ ارزش دارایی‌هایش قیمت گذاشته است."	+ `<p class="lcap">${c.p80 < 1 ? "زیر ۱۰۰٪: بازار این هلدینگ را کمتر از ۸۰٪ ارزش دارایی‌هایش قیمت گذاشته است." : "بالای ۱۰۰٪: بازار این هلدینگ را بیشتر از ۸۰٪ ا
+514	1233	"بالای ۱۰۰٪: بازار این هلدینگ را بیشتر از ۸۰٪ ارزش دارایی‌هایش قیمت گذاشته است."	+ `<p class="lcap">${c.p80 < 1 ? "زیر ۱۰۰٪: بازار این هلدینگ را کمتر از ۸۰٪ ارزش دارایی‌هایش قیمت گذاشته است." : "بالای ۱۰۰٪: بازار این هلدینگ را بیشتر از ۸۰٪ ا
+515	1233	"برای مقایسه، در پست‌های او: ونیکی ۵۴٪، ومعادن ۶۴٪، شستا ۱۰۸٪، تاپیکو ۱۵۰٪. کنارش تقسیم سود (۷۰ تا ۹۰٪) و مطالبات به دارایی (زیر ۲۰٪) را هم ببینید."	+ `<p class="lcap">${c.p80 < 1 ? "زیر ۱۰۰٪: بازار این هلدینگ را کمتر از ۸۰٪ ارزش دارایی‌هایش قیمت گذاشته است." : "بالای ۱۰۰٪: بازار این هلدینگ را بیشتر از ۸۰٪ ا
+516	1238	"سود خالص"	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+517	1238	"زیان "	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+518	1238	"افت "	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+519	1238	"رشد "	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+520	1238	"در برابر همان دوره پارسال"	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+521	1238	"زیان‌ده شد"	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+522	1238	"افت سود"	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+523	1238	"افت ندارد"	let h = fcRow("سود خالص", loss ? "زیان " + fb2(-c.p2) + B : c.p1 > 0 ? (c.p2 < c.p1 ? "افت " + fa(pct(c.p1, c.p2)) + "٪" : "رشد " + fa(pct(c.p1, c.p2)) + "٪") :
+524	1239	"فروش سه ماهه"	+ fcRow("فروش سه ماهه", c.s1 > 0 ? (sd ? "افت " : "رشد ") + fa(pct(c.s1, c.s2)) + "٪" : "—", "در برابر همان سه ماه پارسال", sd ? ["no", "افت فروش"] : ["ok", "اف
+525	1239	"در برابر همان سه ماه پارسال"	+ fcRow("فروش سه ماهه", c.s1 > 0 ? (sd ? "افت " : "رشد ") + fa(pct(c.s1, c.s2)) + "٪" : "—", "در برابر همان سه ماه پارسال", sd ? ["no", "افت فروش"] : ["ok", "اف
+526	1239	"افت فروش"	+ fcRow("فروش سه ماهه", c.s1 > 0 ? (sd ? "افت " : "رشد ") + fa(pct(c.s1, c.s2)) + "٪" : "—", "در برابر همان سه ماه پارسال", sd ? ["no", "افت فروش"] : ["ok", "اف
+527	1240	"حاشیه سود فصلی"	+ fcRow("حاشیه سود فصلی", fa(c.g2) + "٪", "فصل قبل " + fa(c.g1) + "٪", md ? ["no", "افت حاشیه"] : ["ok", "افت ندارد"]);
+528	1240	"فصل قبل "	+ fcRow("حاشیه سود فصلی", fa(c.g2) + "٪", "فصل قبل " + fa(c.g1) + "٪", md ? ["no", "افت حاشیه"] : ["ok", "افت ندارد"]);
+529	1240	"افت حاشیه"	+ fcRow("حاشیه سود فصلی", fa(c.g2) + "٪", "فصل قبل " + fa(c.g1) + "٪", md ? ["no", "افت حاشیه"] : ["ok", "افت ندارد"]);
+530	1242	"زیان‌ده شدن، روشن‌ترین نشانه حد ضرر بنیادی در روش اوست."	h += `<div class="fcverd ${loss ? "no" : any ? "mid" : "ok"}">${loss ? "زیان‌ده شدن، روشن‌ترین نشانه حد ضرر بنیادی در روش اوست." : any ? "نشانه حد ضرر بنیادی دی
+531	1242	"نشانه حد ضرر بنیادی دیده می‌شود. او عدد آستانه منتشر نکرده؛ نمونه‌های کانالش افت ۴۳ تا ۹۸٪ سود بودند."	h += `<div class="fcverd ${loss ? "no" : any ? "mid" : "ok"}">${loss ? "زیان‌ده شدن، روشن‌ترین نشانه حد ضرر بنیادی در روش اوست." : any ? "نشانه حد ضرر بنیادی دی
+532	1242	"نشانه حد ضرر بنیادی دیده نمی‌شود. افت قیمت به‌تنهایی دلیل فروش نیست."	h += `<div class="fcverd ${loss ? "no" : any ? "mid" : "ok"}">${loss ? "زیان‌ده شدن، روشن‌ترین نشانه حد ضرر بنیادی در روش اوست." : any ? "نشانه حد ضرر بنیادی دی
+533	1243	"قاعده‌ای که در کانالش نوشته: سهمی که حد ضرر بنیادی فعال کند به طلا تبدیل می‌شود، یا به سهمی که گزارش عالی داشته. اول ببینید افت موقتی است یا ماندگار (یک‌باره، فصلی یا ساختاری)."	if (any) h += `<p class="lcap">قاعده‌ای که در کانالش نوشته: سهمی که حد ضرر بنیادی فعال کند به طلا تبدیل می‌شود، یا به سهمی که گزارش عالی داشته. اول ببینید افت م
+534	1250	"عددهای نمونه"	<div class="fcbar"><span class="lnote">${FC_SRC[m]}</span><button class="link" data-a="fcex">عددهای نمونه</button></div>
+535	1252	"قاعده‌های عمومی ویدیوها و کانال دکتر خسروانی، ساده‌شده برای تمرین. آستانه‌های امتیاز FIS منتشر نشده‌اند. توصیه خرید یا فروش نیست."	<div class="ltools"><span class="lnote">قاعده‌های عمومی ویدیوها و کانال دکتر خسروانی، ساده‌شده برای تمرین. آستانه‌های امتیاز FIS منتشر نشده‌اند. توصیه خرید یا ف
+536	1254	"{0} ماشین‌حساب FIS"	function fcModal() { modal(`<h3>${ic("calc")} ماشین‌حساب FIS</h3><p class="sub">عددهای کدال را بدهید؛ قالبی را که او در کانالش به کار می‌برد حساب می‌کند.</p><di
+537	1254	"عددهای کدال را بدهید؛ قالبی را که او در کانالش به کار می‌برد حساب می‌کند."	function fcModal() { modal(`<h3>${ic("calc")} ماشین‌حساب FIS</h3><p class="sub">عددهای کدال را بدهید؛ قالبی را که او در کانالش به کار می‌برد حساب می‌کند.</p><di
+538	1270	"چیزی پیدا نشد."	if (!rows.length) return `<p class="hint">چیزی پیدا نشد. </p>`;
+539	1274	"{0} واژه‌نامه"	modal(`<h3>${ic("book")} واژه‌نامه</h3><p class="sub">${fa(GLOSS.length)} واژه از همه تالارها</p>
+540	1274	"{0} واژه از همه تالارها"	modal(`<h3>${ic("book")} واژه‌نامه</h3><p class="sub">${fa(GLOSS.length)} واژه از همه تالارها</p>
+541	1275	"جستجو: EPS، اخزا، رقیق‌سازی…"	<label class="gsearch">${ic("search")}<input id="gq" type="search" placeholder="جستجو: EPS، اخزا، رقیق‌سازی…" value="${esc(q)}" autocomplete="off" aria-label="ج
+542	1275	"جستجو در واژه‌نامه"	<label class="gsearch">${ic("search")}<input id="gq" type="search" placeholder="جستجو: EPS، اخزا، رقیق‌سازی…" value="${esc(q)}" autocomplete="off" aria-label="ج
+543	1287	" (حل‌شده)"	return `<div class="nwrap ${co && !done ? "bq" : ""}" style="--x:${OFFS[(u.lessons.length + 1) % 8]}px">${co && !done ? `<span class="here boss">پرونده ویژه</sp
+544	1287	"پرونده ویژه: {0}{1}"	return `<div class="nwrap ${co && !done ? "bq" : ""}" style="--x:${OFFS[(u.lessons.length + 1) % 8]}px">${co && !done ? `<span class="here boss">پرونده ویژه</sp
+545	1287	"پرونده: {0}"	return `<div class="nwrap ${co && !done ? "bq" : ""}" style="--x:${OFFS[(u.lessons.length + 1) % 8]}px">${co && !done ? `<span class="here boss">پرونده ویژه</sp
+546	1291	"پرونده ویژه بعد از تمام شدن همه درس‌های «{0}» باز می‌شود."	if (!caseOpen(c)) { toast(`پرونده ویژه بعد از تمام شدن همه درس‌های «${u.title}» باز می‌شود.`); return; }
+547	1295	"تمرین دوباره<i class='sep'></i>+۱۰ امتیاز"	<div class="facts"><span class="chip">${fa(c.docs.length)} سند</span><span class="chip">${fa(c.steps.length)} مرحله</span><span class="chip">${done ? "تمرین دوب
+548	1295	"+۳۰ امتیاز<i class='sep'></i>+۲۰ سکه<i class='sep'></i>صندوقچه طلایی"	<div class="facts"><span class="chip">${fa(c.docs.length)} سند</span><span class="chip">${fa(c.steps.length)} مرحله</span><span class="chip">${done ? "تمرین دوب
+549	1293	"پرونده ویژه تالار {0}"	modal(`<div class="casehead">${oct(ic("case"), "xl pom")}<div><span class="eyebrow">پرونده ویژه تالار ${fa(u.n + 1)}</span><h3>${esc(c.title)}</h3><p class="sub
+550	1293	"{0}؛ همه نام‌ها و عددها ساختگی‌اند"	modal(`<div class="casehead">${oct(ic("case"), "xl pom")}<div><span class="eyebrow">پرونده ویژه تالار ${fa(u.n + 1)}</span><h3>${esc(c.title)}</h3><p class="sub
+551	1295	"{0} سند"	<div class="facts"><span class="chip">${fa(c.docs.length)} سند</span><span class="chip">${fa(c.steps.length)} مرحله</span><span class="chip">${done ? "تمرین دوب
+552	1295	"{0} مرحله"	<div class="facts"><span class="chip">${fa(c.docs.length)} سند</span><span class="chip">${fa(c.steps.length)} مرحله</span><span class="chip">${done ? "تمرین دوب
+553	1296	"انرژی کم نمی‌شود. اسناد را هر وقت خواستید با دکمه «اسناد» بالای صفحه دوباره ببینید."	<p class="hint">انرژی کم نمی‌شود. اسناد را هر وقت خواستید با دکمه «اسناد» بالای صفحه دوباره ببینید.</p>
+554	1297	"{0}باز کردن پرونده"	<div class="acts"><button class="btn wide shine" data-a="startcase" data-c="${c.id}">${ic("case")}باز کردن پرونده</button><button class="btn sec wide" data-a="c
+555	1300	"؛ همه نام‌ها و عددها ساختگی‌اند."	begin({ mode: "case", cs: c, unit: UNIT_BY[c.u], title: `پرونده: ${c.title}`, cards: [card(`پرونده: ${c.title}`, [c.brief, c.who + "؛ همه نام‌ها و عددها ساختگی‌
+556	1303	"{0} اسناد پرونده"	function docsModal() { const c = SES.cs; modal(`<h3>${ic("case")} اسناد پرونده</h3><p class="sub">${esc(c.title)}</p>${c.docs.map(docHTML).join("")}<div class="
+557	1303	"برگشت به پرونده"	function docsModal() { const c = SES.cs; modal(`<h3>${ic("case")} اسناد پرونده</h3><p class="sub">${esc(c.title)}</p>${c.docs.map(docHTML).join("")}<div class="
+558	1306	"آماده"	<div class="clist">${CASES.map(c => { const u = UNIT_BY[c.u], o = caseOpen(c), d = caseDone(c); return `<button class="crow2 ${ucls(u)} ${o ? "" : "off"}" data-
+559	1305	"{0}پرونده‌های ویژه"	return `<div class="panel"><h3>${ic("case")}پرونده‌های ویژه<span class="chip">${fa(casesSolved())} از ${fa(CASES.length)}</span></h3><p>هر تالار یک پرونده ویژه 
+560	1305	"هر تالار یک پرونده ویژه دارد: یک شرکت ساختگی با گزارش‌های شبیه کدال. بعد از درس‌های هر تالار باز می‌شود."	return `<div class="panel"><h3>${ic("case")}پرونده‌های ویژه<span class="chip">${fa(casesSolved())} از ${fa(CASES.length)}</span></h3><p>هر تالار یک پرونده ویژه 
+561	1326	"امتیاز روزانه این هفته در برابر هفته قبل"	return `<svg class="chart wk" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="امتیاز روزانه این هفته در برابر هفته قبل"><line x1="0" x2="${W}" y1="1
+562	1326	"این هفته"	return `<svg class="chart wk" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="امتیاز روزانه این هفته در برابر هفته قبل"><line x1="0" x2="${W}" y1="1
+563	1326	"هفته قبل"	return `<svg class="chart wk" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="امتیاز روزانه این هفته در برابر هفته قبل"><line x1="0" x2="${W}" y1="1
+564	1333	"{0} امتیاز جلوتر از خودِ هفته قبل‌تان."	<p>${last ? (diff >= 0 ? `${fa(diff)} امتیاز جلوتر از خودِ هفته قبل‌تان.` : `${fa(-diff)} امتیاز تا رسیدن به خودِ هفته قبل‌تان.`) : "هفته قبل امتیازی نداشتید؛ ا
+565	1333	"{0} امتیاز تا رسیدن به خودِ هفته قبل‌تان."	<p>${last ? (diff >= 0 ? `${fa(diff)} امتیاز جلوتر از خودِ هفته قبل‌تان.` : `${fa(-diff)} امتیاز تا رسیدن به خودِ هفته قبل‌تان.`) : "هفته قبل امتیازی نداشتید؛ ا
+566	1333	"هفته قبل امتیازی نداشتید؛ این هفته رکورد بزنید."	<p>${last ? (diff >= 0 ? `${fa(diff)} امتیاز جلوتر از خودِ هفته قبل‌تان.` : `${fa(-diff)} امتیاز تا رسیدن به خودِ هفته قبل‌تان.`) : "هفته قبل امتیازی نداشتید؛ ا
+567	1335	" همین هفته است!"	<div class="panel row"><div><h3>${ic("crown")}رکورد هفتگی شما</h3><p>${best ? `بهترین هفته تا امروز: ${fa(best)} امتیاز.${mine && mine >= best ? " همین هفته است
+568	1335	"بهترین هفته تا امروز: {0} امتیاز.{1}"	<div class="panel row"><div><h3>${ic("crown")}رکورد هفتگی شما</h3><p>${best ? `بهترین هفته تا امروز: ${fa(best)} امتیاز.${mine && mine >= best ? " همین هفته است
+569	1335	"هنوز رکوردی ندارید."	<div class="panel row"><div><h3>${ic("crown")}رکورد هفتگی شما</h3><p>${best ? `بهترین هفته تا امروز: ${fa(best)} امتیاز.${mine && mine >= best ? " همین هفته است
+570	1335	"{0} هفته از هفته قبلش بهتر بوده‌اید."	<div class="panel row"><div><h3>${ic("crown")}رکورد هفتگی شما</h3><p>${best ? `بهترین هفته تا امروز: ${fa(best)} امتیاز.${mine && mine >= best ? " همین هفته است
+571	1331	"هر هفته از شنبه تا جمعه. امتیاز هر درس، مرور، رگبار، پرونده و کار واقعی این هفته جمع می‌شود. رقیب شما فقط خودِ هفته قبل‌تان است."	return `<section class="page"><h2>هفته من</h2><p class="lead">هر هفته از شنبه تا جمعه. امتیاز هر درس، مرور، رگبار، پرونده و کار واقعی این هفته جمع می‌شود. رقیب 
+572	1332	"{0} روز مانده"	<div class="panel lgme">${oct(ic("trophy"), "xl lv")}<div><span class="eyebrow">این هفته<i class='sep'></i>${fa(left)} روز مانده</span><div class="lgxp"><b clas
+573	1334	"{0}شما در برابر خودِ هفته قبل"	<div class="panel"><h3>${ic("sun")}شما در برابر خودِ هفته قبل</h3>${weekChart(wk)}</div>
+574	1335	"{0}رکورد هفتگی شما"	<div class="panel row"><div><h3>${ic("crown")}رکورد هفتگی شما</h3><p>${best ? `بهترین هفته تا امروز: ${fa(best)} امتیاز.${mine && mine >= best ? " همین هفته است
+575	1347	"+{0} امتیاز و +{1} سکه برای کار واقعی"	toast(`+${fa(x)} امتیاز و +${fa(g)} سکه برای کار واقعی`); got.forEach(t => setTimeout(() => toast(`نشان تازه: ${t}`), 700));
+576	1347	"نشان تازه: {0}"	toast(`+${fa(x)} امتیاز و +${fa(g)} سکه برای کار واقعی`); got.forEach(t => setTimeout(() => toast(`نشان تازه: ${t}`), 700));
+577	1383	" و ۱۵ دقیقه ساعت طلایی"	closeModal(); renderAll(); toast(`+${fa(GIFT[d])} سکه${d === 6 ? " و ۱۵ دقیقه ساعت طلایی" : ""}`); break;
+578	1383	"+{0} سکه{1}"	closeModal(); renderAll(); toast(`+${fa(GIFT[d])} سکه${d === 6 ? " و ۱۵ دقیقه ساعت طلایی" : ""}`); break;
+579	1386	" ستاره"	case "cardinfo": { const l = LESSON_BY[b.dataset.l], s = starsOf(l); toast(`${l.title}: ${s ? fa(s) + " ستاره" + (s === 3 ? "، براق" : "") : "هنوز باز نشده"}`);
+580	1386	"، براق"	case "cardinfo": { const l = LESSON_BY[b.dataset.l], s = starsOf(l); toast(`${l.title}: ${s ? fa(s) + " ستاره" + (s === 3 ? "، براق" : "") : "هنوز باز نشده"}`);
+581	1386	"هنوز باز نشده"	case "cardinfo": { const l = LESSON_BY[b.dataset.l], s = starsOf(l); toast(`${l.title}: ${s ? fa(s) + " ستاره" + (s === 3 ? "، براق" : "") : "هنوز باز نشده"}`);
+582	1387	"انرژی پر شد."	case "buyhearts": if (st.gems >= COST_HEARTS && st.hearts < MAXH) { st.gems -= COST_HEARTS; addHeart(MAXH); save(); toast("انرژی پر شد."); closeModal(); renderA
+583	1389	"یک سپر روز خریدید."	case "buyfreeze": if (st.gems >= COST_FREEZE && st.freezes < MAX_FREEZE) { st.gems -= COST_FREEZE; st.freezes++; save(); toast("یک سپر روز خریدید."); renderAll(
+584	1391	"همه پیشرفت پاک شد."	case "reset": if (!resetArmed) { resetArmed = true; renderAll(); } else { resetArmed = false; const g = st.goal, th = st.theme, sm = st.simple; st = DEF(); st.o
+585	1410	"پرونده"	modal(`<h3>از ${isTest() ? "آزمون" : SES.mode === "case" ? "پرونده" : "درس"} خارج می‌شوید؟</h3><p>پیشرفت همین جلسه از بین می‌رود.${SES.mode === "lesson" ? " انر
+586	1410	" انرژی‌ای که مصرف شده برنمی‌گردد."	modal(`<h3>از ${isTest() ? "آزمون" : SES.mode === "case" ? "پرونده" : "درس"} خارج می‌شوید؟</h3><p>پیشرفت همین جلسه از بین می‌رود.${SES.mode === "lesson" ? " انر
+587	1410	"از {0} خارج می‌شوید؟"	modal(`<h3>از ${isTest() ? "آزمون" : SES.mode === "case" ? "پرونده" : "درس"} خارج می‌شوید؟</h3><p>پیشرفت همین جلسه از بین می‌رود.${SES.mode === "lesson" ? " انر
+588	1410	"پیشرفت همین جلسه از بین می‌رود.{0}"	modal(`<h3>از ${isTest() ? "آزمون" : SES.mode === "case" ? "پرونده" : "درس"} خارج می‌شوید؟</h3><p>پیشرفت همین جلسه از بین می‌رود.${SES.mode === "lesson" ? " انر
+589	1410	"ادامه می‌دهم"	modal(`<h3>از ${isTest() ? "آزمون" : SES.mode === "case" ? "پرونده" : "درس"} خارج می‌شوید؟</h3><p>پیشرفت همین جلسه از بین می‌رود.${SES.mode === "lesson" ? " انر

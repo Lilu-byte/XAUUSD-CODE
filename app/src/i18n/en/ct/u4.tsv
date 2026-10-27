@@ -1,0 +1,234 @@
+0	Codal 3: Notes and Reading a Page
+1	10 key notes, healthy and unhealthy patterns, reading a real report line by line
+2	Sections 3.9 to 3.11
+3	Header first: issuer, period length, audited, consolidated, unit of amounts
+4	Figures in million rials, EPS in rials
+5	Comparison with the same period last year, cumulative from the start of the fiscal year
+6	Brackets = negative; the sign of the percent change = effect on profit
+7	Work out the margins yourself; they aren’t on the page
+8	“Other” above operating profit ≠ non-operating at the bottom of the page
+9	EPS = net profit ÷ (capital ÷ 1,000)
+10	Funds: the measure is NAV per unit, not growth in net assets
+11	Reading “(46)” as a cost reduction
+12	Forgetting the million-rial unit
+13	Comparing a 9-month report with a 6-month one
+14	Not reading the restatement note
+15	Ignoring unregistered capital
+16	Assuming a saved page contains every tab
+17	The 10 Key Notes
+18	Always Read These 10 Notes
+19	Revenue by product, domestic/export and major customers
+20	Cost of sales: materials, wages, energy, overhead
+21	Related-party transactions
+22	Trade receivables and their age
+23	Inventory and write-down provisions
+24	Borrowings: rate, maturity, foreign-currency or rial
+25	Contingent liabilities and capital commitments
+26	Events after the balance sheet date
+27	Match each question to the note that answers it.
+28	Does the company depend on one customer?
+29	How large is energy’s share of costs?
+30	Does it have foreign-currency loans?
+31	Borrowings
+32	Has it guaranteed a group company’s loan?
+33	Contingent liabilities
+34	Each analytical question has a specific note.
+35	Sales grew 20% but receivables grew 70%. What does it mean?
+36	Credit sales to weak customers; low profit quality
+37	Collections got faster and cash sales increased
+38	The company has piled up a lot of cash
+39	Receivables growing faster than sales is a warning sign.
+40	Where do you see product sales to a group company below market price?
+41	The related-party transactions note
+42	The company’s monthly activity report, in the selling price column
+43	The ordinary general meeting invitation
+44	This note is where value transfers hide.
+45	Which note has projects’ percent complete and remaining cost?
+46	Inventory and materials
+47	Other operating income
+48	Along with the interpretive report.
+49	The note on “events after the balance sheet date” isn’t worth reading because it concerns the next period.
+50	Important events after the period ends (like an accident or a tax ruling) are there.
+51	Which note has deposit interest, translation gains and asset sales?
+52	Cost of goods sold
+53	Borrowings received
+54	Where one-off gains go.
+55	What Works and What Doesn’t
+56	Healthy vs. Unhealthy Patterns
+57	Healthy
+58	Unhealthy
+59	Operating profit above 80% of net profit, year after year
+60	A large gain from selling land, shares or currency translation
+61	A stable or improving margin
+62	A steadily falling margin that the interpretive report ignores
+63	Operating cash flow close to or above profit
+64	High profit with growing receivables and debt
+65	Clear notes, an unqualified opinion
+66	Murky related-party deals, repeated qualifications
+67	Capital increases for capacity with a record of on-time delivery
+68	Repeated capital increases to “fix the financial structure”
+69	Timely publication, few corrections
+70	Late publication, repeated corrections, frequent auditor changes
+71	Is each pattern healthy or unhealthy?
+72	85% of net profit from operations, 5 years in a row
+73	Operating cash flow equal to net profit
+74	One capital increase in 5 years for a new line that started on time
+75	Half the profit from selling land
+76	Three auditors in three years
+77	A capital increase every year to “fix the financial structure”
+78	A healthy pattern is repeatable and transparent.
+79	Gross margin has fallen for 6 quarters in a row and the interpretive report doesn’t mention it at all. Your assessment?
+80	An unhealthy pattern: a steadily falling margin and silent management
+81	It doesn’t matter, because sales grew every quarter and market share rose
+82	A sign of investing for future growth
+83	Silence about a problem is information in itself.
+84	Operating profit consistently above 80% of net profit is a sign of profit quality.
+85	The profit comes from the company’s main business.
+86	Explain why trade receivables growing much faster than sales is a warning sign.
+87	It means a larger share of sales is on credit and the money hasn’t arrived; profit is recorded but not turned into cash. The customer may be a bad payer or the sales may be to group companies, and part of the receivables may never be collected.
+88	Credit or uncollected sales have increased
+89	Profit is recorded but not turned into cash (low profit quality)
+90	Risk of bad debts or sales to related parties
+91	Profit whose cash hasn’t arrived isn’t complete profit yet.
+92	Header, Columns and Signs
+93	Read the Header Before Any Number
+94	Title: the report type and period length. Figures are cumulative from the start of the fiscal year, not just the last three months.
+95	Not every company’s fiscal year ends in Esfand. A fiscal year ending 09/30 → “9 months to 1405/06/31” means Dey 1404 to Shahrivar 1405.
+96	Unregistered capital above zero means a capital increase is on the way.
+97	Industry code to find peers; issuer status: exchange, Farabourse or base market; audited or not; consolidated or separate.
+98	Unit: “million rials”. 4,814,954 million rials ≈ 4.8 thousand billion rials ≈ 481 billion tomans. EPS is always in rials.
+99	Saving the page keeps only the open tab; for your archive download the Excel or PDF.
+100	Columns and Signs
+101	The comparison is with the same period last year, not the previous quarter. Last three months = 9-month minus 6-month.
+102	Brackets mean negative: (1,825,415) means a cost.
+103	The sign of the “percent change” is the effect on profit: cost of sales down 41% → “41” (good for profit); administrative expenses up 46% → “(46)”.
+104	“--” means the sign changed (loss to profit or the reverse); a percentage is meaningless.
+105	“Restated” means last year’s figures were corrected; read its note.
+106	Margins aren’t on the page; work them out yourself.
+107	In the percent change column next to “selling, general and administrative expenses” it says “(46)”. Meaning?
+108	The expense rose 46%, which hurts profit
+109	The expense fell 46%, which helps profit
+110	Revenue fell 46% and the expense stayed the same
+111	The sign shows the effect on profit, not the direction of the number.
+112	Next to cost of sales it says “41” without brackets, and the cost went from 3,088,363 to 1,825,415. Meaning?
+113	Cost of sales fell 41%; good for profit
+114	Cost of sales rose 41%; bad for profit and margin
+115	Sales grew 41%
+116	A lower cost = a positive effect on profit, no brackets.
+117	The percent change column shows “--”. Meaning?
+118	The sign changed (e.g. from loss to profit); a percentage is meaningless
+119	The previous period’s data isn’t on Codal and the company hasn’t published it yet
+120	The change was zero and the figure stayed the same
+121	Like non-operating EPS going from (25) to 9.
+122	Sales of “4,814,954” in million rials is roughly how many billion tomans?
+123	billion tomans
+124	4,814,954 million rials = 4,815 billion rials = about 481 billion tomans.
+125	A company’s fiscal year ends 09/30. What period does the report “9 months to 1405/06/31” cover?
+126	Dey 1404 to Shahrivar 1405
+127	Farvardin to Azar 1405
+128	Tir to Shahrivar 1405
+129	Figures are cumulative from the start of the fiscal year.
+130	You want only the last three months’ results. What do you do?
+131	Subtract the 6-month report from the 9-month one
+132	Divide the 9-month figures by 3
+133	Compare the 9-month report with the 6-month one
+134	Comparing 9-month with 6-month figures is a common mistake.
+135	In the header, unregistered capital is above zero. Meaning?
+136	A capital increase is on the way; work out future EPS with the new share count
+137	The company has accumulated losses under Article 141; a capital reduction is coming and the stock should be sold
+138	The ticker is halted until the capital is registered and can’t be traded
+139	Ignoring unregistered capital is a common mistake.
+140	The “restated” column means last year’s figures were corrected after first publication.
+141	Big growth sometimes comes only from last year’s number shrinking; read its note.
+142	When you save a Codal page, every tab (income statement, balance sheet, etc.) stays in the file.
+143	Only the open tab is saved; download the PDF or Excel.
+144	A Real Report, Line by Line
+145	Income Statement, 6 Months to 1405/06/31
+146	These figures come from a real Codal report shared in this project (company name unknown). Use this table in this lesson’s exercises.
+147	Item (million rials)
+148	6 months 1405
+149	6 months 1404 (restated)
+150	Percent change
+151	Other expenses
+152	Finance costs
+153	Current-year tax
+154	Prior-year tax
+155	Operating / non-operating EPS (rials)
+156	Basic earnings per share (rials)
+157	Capital
+158	Key Lines
+159	“Other expenses” above operating profit (such as unabsorbed production costs) differ from “other non-operating income” at the bottom of the page.
+160	Prior-year tax = the difference on old assessments; if it repeats, the tax provision is too low.
+161	Remove discontinued operations from sustainable profit.
+162	Number of shares = capital (million rials) ÷ 1,000 rials par value.
+163	From the table: what is the gross margin for the 6 months of 1405 in percent?
+164	2,989,539 ÷ 4,814,954 = 62.1% (last year 33.6%).
+165	What is the operating margin for the 6 months of 1405 in percent?
+166	2,100,541 ÷ 4,814,954 = 43.6% (last year 20.8%).
+167	What is the effective tax rate (current + prior-year tax ÷ profit before tax) in percent?
+168	(8,357 + 8,881) ÷ 2,139,135 = 0.8%. The statutory rate is 25%, so it has an exemption. Until when?
+169	Capital is 4,500,000 million rials. How many million shares are there?
+170	million shares
+171	4,500,000 ÷ 1,000 rials par value = 4,500 million shares.
+172	Check the EPS: net profit 2,121,897 million rials ÷ 4,500 million shares = ? (rials)
+173	rials
+174	2,121,897 ÷ 4,500 ≈ 472 rials.
+175	Sales grew only 3.5% but net profit grew 149%. Where did most of this growth come from?
+176	The 41% drop in cost of sales
+177	Lower administrative expenses
+178	Gross margin went from 34% to 62%; until the reason is clear, don’t assume the profit is sustainable.
+179	How do “other expenses” above operating profit differ from “other non-operating income and expenses”?
+180	The first relates to operations (like unabsorbed production costs); the second is non-operating items
+181	No difference; both are one-off items removed from sustainable profit
+182	The first is always one-off and non-operating; the second is recurring production costs
+183	Read each one’s note separately.
+184	Of the 472-rial EPS, 463 rials is operating. What does this say about profit quality?
+185	The non-operating part is small; in that respect quality is good
+186	Most of the profit came from one-off items and its quality is low
+187	Nothing; only net profit matters
+188	The larger the operating share, the better. The open questions are elsewhere (cost of sales and tax).
+189	“Prior-year tax” repeats every year. What does it mean?
+190	The tax provision is too low and there are disputes with the tax authority
+191	The company is tax-exempt and this line is just a refund
+192	The company overpays tax every year and gets the money back
+193	Repeated “prior years” = an insufficient tax provision.
+194	Funds and the 10-Minute Routine
+195	Fund Reports Look Different
+196	A fund has no sales or cost of sales; it has three statements: net assets, profit and loss, and changes in net assets.
+197	Net assets also grow when new money comes in, so they aren’t a measure of return. The measure is NAV per unit.
+198	Payable to fund pillars = fees for the manager, custodian, auditor and market maker; the investor’s real cost.
+199	Three questions are enough: NAV-per-unit return against the index? Fees as a percent of assets? What stocks does it hold?
+200	The 10-Minute Routine for Every Page
+201	1. Header: issuer, period, audited, consolidated, unit, unregistered capital
+202	2. Compare revenue growth with inflation
+203	3. Gross and operating margins for both years
+204	4. Separate the “other” items above and the non-operating items below
+205	5. Effective tax rate
+206	6. Check EPS against capital and see its operating share
+207	7. The restatement note
+208	8. Write three questions for the notes and the monthly report; don’t conclude before you have answers
+209	The best measure of an equity fund’s return?
+210	NAV-per-unit return against the overall index
+211	Growth in the fund’s net assets, including new money brought in by investors
+212	The number of stocks in the portfolio
+213	Net assets also grow when new money comes in.
+214	A fund’s net assets went from 6,454,615 to 18,123,599; so investors earned 180%.
+215	Most of that growth may come from issuing new units. Look at NAV per unit.
+216	What is “payable to fund pillars”?
+217	Fees for the manager, custodian, auditor and market maker
+218	Dividends receivable from portfolio companies
+219	Unsettled purchases of bonds and shares
+220	The investor’s real cost.
+221	Put the 10-minute routine in order.
+222	Read the header
+223	Compare revenue growth with inflation
+224	Work out the gross and operating margins
+225	Separate the “other” and non-operating items
+226	Effective tax rate
+227	Check EPS against capital
+228	And finally the restatement note and three questions for the notes.
+229	The last step of the 10-minute routine?
+230	Write three questions for the notes and the monthly report; don’t conclude before you have answers
+231	If quarterly EPS grew, buy the stock the same day with a stepped plan
+232	Look at the price chart to find the entry time once the trend is confirmed
+233	Drawing a hasty conclusion from one page is dangerous.

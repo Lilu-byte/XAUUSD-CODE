@@ -1,0 +1,228 @@
+0	Codal 1: Reports and Financial Statements
+1	Search, report types, the three financial statements, the auditor’s report
+2	Sections 3.1 to 3.3
+3	Search by ticker + filter by announcement type and date
+4	Decision-making information is in three places: monthly reports, notes, the auditor’s report
+5	Operating profit is the core; “other income” is where one-offs go
+6	Compare operating cash flow with net profit
+7	Read the auditor’s report and its qualifications first
+8	A revaluation surplus is an accounting number, not money
+9	Looking only at earnings per share
+10	Not reading the notes and the auditor’s report
+11	Confusing the rights ticker with the main ticker
+12	Ignoring repeated corrections
+13	Dr. Khosravani’s blog (Persian): The auditor’s report and the duties of listed companies
+14	Finding a Company and the Report Types
+15	Searching on Codal
+16	Type the ticker or company name in the search box and pick it from the list. Watch out for rights tickers (suffix “ح”) and similar tickers.
+17	Advanced search: announcement type, date range, audited/unaudited, consolidated/separate (check the exact filter names on the site; please check).
+18	Each announcement has a web version, a PDF and sometimes an Excel file. Take numbers from Excel or the web tables; notes and the auditor’s report usually from the PDF.
+19	A “correction” means the previous version had an error; repeated corrections are a sign of disclosure quality.
+20	The publication date and time matter: publishing late, or only on the last day of the deadline with bad numbers, is a pattern for some issuers.
+21	Report Types (timings approximate; please check)
+22	Report
+23	Published
+24	Importance
+25	Monthly activity
+26	About 10 days after the month
+27	Very high: the earliest operating data
+28	Interim 3, 6, 9-month
+29	Usually 30 days; the audited 6-month about 60 days
+30	Very high
+31	Audited annual
+32	Before the general meeting, at most 4 months after the fiscal year
+33	Management’s interpretive report
+34	With the interim and annual reports
+35	High; replaces the old EPS forecast
+36	Material information, types A and B
+37	Immediately
+38	Varies
+39	Board’s report to the general meeting
+40	Before the general meeting
+41	Medium
+42	Capital increase
+43	Step by step
+44	High
+45	Annual ordinary general meeting
+46	At most 4 months after the fiscal year
+47	High (DPS)
+48	What is a ticker with the suffix “ح” in the search results?
+49	That company’s rights (pre-emptive right)
+50	The company’s main ticker
+51	An investment fund
+52	Rights have their own ticker; before reading a report make sure you opened the right issuer.
+53	A company issued four “corrections” to its monthly report in one year. What does this say?
+54	Weak disclosure quality; a risk factor in itself
+55	The company is very transparent and fixes its mistakes quickly
+56	Nothing special; corrections are routine for every company
+57	A correction means the previous version had an error; repeating it is a bad sign.
+58	Which version do you usually read the notes and the auditor’s report from?
+59	The PDF file
+60	Only the web table
+61	The tsetmc chart
+62	Enter numbers from Excel or the web; the text of the notes is in the PDF.
+63	What is a company’s earliest operating data on Codal?
+64	The monthly activity report
+65	The annual financial statements
+66	The board’s report
+67	The monthly report comes out about 10 days after each month ends.
+68	Match each report to its approximate publication time.
+69	Material information
+70	Immediately when it happens
+71	Unaudited interim
+72	Usually about 30 days
+73	Timings are approximate; check the current version of the rules.
+74	Which report replaced the old “earnings per share forecast”?
+75	The general meeting invitation
+76	The production plan, projects, material prices and risks are in the interpretive report.
+77	Publishing a report with bad numbers on the last day of the legal deadline is a pattern for some issuers and worth noting.
+78	The publication date and time are information in themselves.
+79	The Income Statement
+80	The Profit and Loss Chain
+81	Operating revenue → cost of sales → gross profit → selling, general and administrative expenses → operating profit → finance costs and “other non-operating income and expenses” → tax → net profit.
+82	Operating profit is the core of the analysis.
+83	“Other income” is where one-off gains go.
+84	Put the income statement lines in order from top to bottom.
+85	Operating revenue
+86	Cost of sales
+87	Gross profit
+88	Selling, general and administrative expenses
+89	Operating profit
+90	Profit before tax
+91	Net profit
+92	Operating profit comes before financial and non-operating items.
+93	Which line is the core of FIS analysis?
+94	Investment income
+95	Operating profit comes from the company’s main business and is more likely to repeat.
+96	Where does the gain from selling a plot of land usually appear in the income statement?
+97	Other non-operating income and expenses
+98	Operating revenue, next to sales
+99	As a reduction in the cost of goods sold
+100	This section is where one-off gains go.
+101	Gross profit = operating revenue minus ___
+102	Tax
+103	Finance costs
+104	Gross margin = gross profit ÷ revenue.
+105	If net profit grows, the company’s operations must have improved.
+106	The growth may have come from one-off other income or lower tax. Look at operating profit first.
+107	Revenue 10,000 and cost of sales 7,000. What is the gross margin in percent?
+108	Explain why operating profit matters more than net profit for FIS.
+109	Operating profit comes from the company’s main business and is likely to repeat next year. Net profit may include one-off items such as a land sale or a currency translation gain. For sustainable profit these items must be set aside.
+110	Operating profit comes from the main business and repeats
+111	Net profit may include one-off or non-operating items
+112	For sustainable profit, one-off items are set aside
+113	First see where the profit came from, then believe its size.
+114	Balance Sheet, Cash Flow and Equity
+115	Statement of Financial Position (Balance Sheet)
+116	Inventory and trade receivables
+117	Borrowings (bank debt)
+118	Customer advances: a sign of demand
+119	Retained earnings: the source of capital increases and future dividends
+120	Assets under construction: projects in progress
+121	Cash Flow and Equity
+122	Cash flow: operating cash flow (CFO), purchases of fixed assets (CAPEX), dividends paid, borrowings.
+123	If net profit is high but operating cash flow has been below it for years, the profit is stuck in receivables or inventory.
+124	Changes in equity: capital increases, approved dividends, revaluation surplus, legal reserve.
+125	A revaluation surplus is an accounting number, not money.
+126	What does growth in “customer advances” on the balance sheet usually signal?
+127	Strong demand; customers paid before delivery
+128	An operating loss and a cash shortage at the company
+129	More bank borrowing for working capital
+130	Customer advances mean customers are queuing up.
+131	Net profit has been high for three years in a row but operating cash flow is far below it each year. What does that mean?
+132	The profit is stuck in receivables or inventory
+133	The company is very liquid and the profit is reliable
+134	Depreciation is high and real cash exceeds profit
+135	Profit that doesn’t turn into cash never reaches shareholders.
+136	A revaluation surplus is cash that came into the company.
+137	It only raises the book value of assets; no money comes in.
+138	Match each item to its financial statement.
+139	Customer advances
+140	Balance sheet
+141	Cash from operations
+142	Cash flow statement
+143	Revaluation surplus
+144	Statement of changes in equity
+145	Income statement
+146	Each question has a specific place.
+147	Where on the balance sheet do you see projects in progress?
+148	Assets under construction
+149	Retained earnings and reserves
+150	Customer advances
+151	Its note gives the percent complete and the remaining cost.
+152	Which statement do you read CAPEX from?
+153	The cash flow statement (purchases of fixed assets)
+154	The income statement (depreciation expense)
+155	The monthly activity report (production)
+156	CAPEX is the money spent on fixed assets.
+157	The Auditor’s Report and Iranian Standards
+158	Four Types of Opinion
+159	Opinion
+160	Meaning
+161	Response
+162	Unqualified
+163	No material issue found
+164	Continue the analysis
+165	Qualified
+166	A material but limited issue
+167	Estimate the effect of each item
+168	Adverse
+169	The statements are misleading overall
+170	Remove from the list
+171	Disclaimer of opinion
+172	There wasn’t enough evidence
+173	Qualified Opinions Are Common in Iran
+174	Read the qualification items one by one: insufficient tax provision, old receivables, obsolete inventory, guarantees.
+175	What matters is the amount and nature of the items, not just that they exist.
+176	Difference from IFRS
+177	Reporting under Iranian accounting standards (issued by the Audit Organization); some large companies also publish an IFRS version (check the scope).
+178	No inflation adjustment.
+179	Revaluation with a tax incentive, followed by a capital increase.
+180	“Separate” and “consolidated” statements side by side; the Iranian market focuses mostly on the separate ones.
+181	Duties of a Listed Company
+182	From his note in Bahman 1398 (February 2020) (the rules may have changed; please check):
+183	Financial statements with the auditor’s report, at the time of public release and within the disclosure deadline.
+184	A loss-making year: the reasons for the loss and the plan ahead within 15 days of the auditor’s report.
+185	Expansion projects: a progress report every 6 months (cost, percent complete, funding, start-up date, effect on profit).
+186	An “adverse” opinion or a “disclaimer”: the ticker is halted until the issues are resolved.
+187	Covered by Article 141 (accumulated losses above half the capital): if it doesn’t get out within a year, the stock goes to the unofficial board.
+188	The auditor’s opinion increases the credibility of the financial statements.
+189	Blog (Persian), “The independent auditor’s and statutory inspector’s report and the duties of companies listed on the exchanges”, Bahman 1398 (February 2020)
+190	Match each opinion to the right response.
+191	Found no issue; continue the analysis
+192	A limited issue; estimate each item’s effect
+193	The statements are misleading; exit
+194	There wasn’t enough evidence; exit
+195	Adverse and disclaimer mean the numbers can’t be relied on.
+196	The auditor’s opinion is “qualified”. Your first step?
+197	Read the qualification items and weigh the amount and nature of each
+198	Remove the stock from the buy list immediately
+199	Ignore it; almost every report is qualified
+200	Qualified opinions are common in Iran; the items’ rial effect is what matters.
+201	A disclaimer of opinion means the auditor found no problem.
+202	It means the auditor didn’t get enough evidence; remove it from your list.
+203	Which practical difference between Iranian standards and IFRS is mentioned in the text?
+204	Financial statements are not adjusted for inflation
+205	Companies never publish consolidated statements
+206	Depreciation isn’t recorded
+207	Along with revaluation under a tax incentive and the market’s focus on separate statements.
+208	Which qualification items should you take more seriously?
+209	Serious
+210	Less important
+211	A tax provision below what’s needed
+212	Old, stagnant receivables from the major shareholder
+213	A guarantee for a group company’s loan
+214	A minor classification difference with no effect on profit
+215	Items that directly reduce profit or equity are the important ones.
+216	A company closed the year with a loss. According to his note, within how long after the auditor’s report must it give the reasons and its plan?
+217	15 days
+218	6 months
+219	8 months
+220	Read this report and follow up in later periods on whether it was carried out.
+221	How often is the progress report on expansion projects published?
+222	Every 6 months
+223	Every week
+224	Only when the project is finished
+225	These reports show delays and cost overruns early.
+226	An “adverse” opinion or a “disclaimer” from the auditor leads to a trading halt.
+227	Until the issues that caused that report are resolved.
