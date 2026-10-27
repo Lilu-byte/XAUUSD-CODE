@@ -1,0 +1,30 @@
+{
+ "pair_realized": {
+  "per_day": 4.68,
+  "max_dd": -285.0,
+  "losing_months": "6/18",
+  "rule_alone": 0.0
+ },
+ "pair_mtm": {
+  "per_day": 4.68,
+  "max_dd": -245.0,
+  "losing_months": "5/18",
+  "rule_alone": 0.0
+ },
+ "pair_mtm_plus_a": {
+  "per_day": 7.47,
+  "max_dd": -432.0,
+  "losing_months": "7/18",
+  "rule_alone": 2.78
+ },
+ "pair_mtm_plus_e": {
+  "per_day": 8.81,
+  "max_dd": -536.0,
+  "losing_months": "9/18",
+  "rule_alone": 4.13
+ },
+ "multi_day_trades": {
+  "allagree": 82,
+  "asiabreak": 2
+ }
+}

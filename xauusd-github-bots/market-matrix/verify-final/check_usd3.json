@@ -1,0 +1,23 @@
+{
+ "ret_roundedFalse": [
+  "H1|Range Osc +/-100 breakout, exit at 0|long only"
+ ],
+ "ret_roundedTrue": [
+  "H1|Range Osc +/-100 breakout, exit at 0|long only",
+  "H4|MA stack 20/50/200|long only",
+  "H4|MACD line sign|long only"
+ ],
+ "usd_roundedFalse": [
+  "H1|Swing VWAP direction|long only",
+  "H1|MACD line sign|long only",
+  "H1|Range Osc +/-100 breakout, exit at 0|long only",
+  "H4|MA stack 20/50/200|long only"
+ ],
+ "usd_roundedTrue": [
+  "H1|Swing VWAP direction|long only",
+  "H1|MACD line sign|long only",
+  "H1|Range Osc +/-100 breakout, exit at 0|long only",
+  "H4|MA stack 20/50/200|long only",
+  "H4|MACD line sign|long only"
+ ]
+}

@@ -1,0 +1,50 @@
+1) hi == lo (every candle at one price)
+  one candle h==l, rows=60   : rows 60 base 4030.370000 step 0.000166667 | non-zero rows [0] | POC row 0 px 4030.37008 | VA rows 0..0 VAL 4030.37000 VAH 4030.37017 | share 100.00%
+  one candle h==l, size=0.50 : rows 1 base 4030.000000 step 0.5 | non-zero rows [0] | POC row 0 px 4030.25000 | VA rows 0..0 VAL 4030.00000 VAH 4030.50000 | share 100.00%
+  two candles at 4030.00, size=1.00: rows 1 base 4030.000000 step 1 | non-zero rows [0] | POC row 0 px 4030.50000 | VA rows 0..0 VAL 4030.00000 VAH 4031.00000 | share 100.00%
+  two candles at 4030.00, rows=24  : rows 24 base 4030.000000 step 0.000416667 | non-zero rows [0] | POC row 0 px 4030.00021 | VA rows 0..0 VAL 4030.00000 VAH 4030.00042 | share 100.00%
+
+2) candles with high == low inside a wider range (point masses)
+  {'InpRows': 20}: 4005.00 point mass -> row 10 (rl 4005.0000), 4002.50 -> row 5 (rl 4002.5000); max|port-ref| 0.00e+00
+  {'InpRowSize': 0.5}: 4005.00 point mass -> row 10 (rl 4005.0000), 4002.50 -> row 5 (rl 4002.5000); max|port-ref| 0.00e+00
+  {'InpRowSize': 1.0}: 4005.00 point mass -> row 5 (rl 4005.0000), 4002.50 -> row 2 (rl 4002.0000); max|port-ref| 0.00e+00
+  row-count mode: a price exactly on a row bound goes to the row ABOVE (k) by the code's rule; floating RowOf put it in another row in 58207 of 225732 cases (25.79%), e.g. [(2430.56, 2434.56, 40, 1, 2430.66, 0), (2430.56, 2434.56, 40, 6, 2431.16, 5), (2430.56, 2434.56, 40, 11, 2431.66, 10)]
+
+3) candle whose high is exactly on a row boundary
+  size=0.50: base 3999.0 rows 8; row 4 (4001.00-4001.50) port 0.125 ref np.float64(0.1250000000000001); rows 2,3 port 50.125000,50.125000
+  same candle under the discrete price-level model: row 4 gets 1.1148 (1 of 101 cent levels of 100 ticks + the 1-tick candle)
+  row-count mode, high on a bound: the row above got a non-zero share in 212 of 2769 cases, max share 9.09e-11
+
+4) top row (price == hi)
+  {'InpRowSize': 0.5}: rows 20 top bound 4010.00; point mass at hi -> row 19 (top row 19); top row port 55.0000 ref 55.0000
+  {'InpRowSize': 1.0}: rows 10 top bound 4010.00; point mass at hi -> row 9 (top row 9); top row port 60.0000 ref 60.0000
+  {'InpRows': 20}: rows 20 top bound 4010.00; point mass at hi -> row 19 (top row 19); top row port 55.0000 ref 55.0000
+
+5) row-size alignment: base = MathFloor(lo/step)*step versus the exact multiple of step at or below lo
+  step  0.05: base one step too low in 26989 of 400001 prices; base above lo (by rounding) in 5011
+  step  0.10: base one step too low in 13495 of 400001 prices; base above lo (by rounding) in 2505
+  step  0.20: base one step too low in 6747 of 400001 prices; base above lo (by rounding) in 1253
+  step  0.25: base one step too low in 0 of 400001 prices; base above lo (by rounding) in 0
+  step  0.50: base one step too low in 0 of 400001 prices; base above lo (by rounding) in 0
+  step  1.00: base one step too low in 0 of 400001 prices; base above lo (by rounding) in 0
+  step  2.50: base one step too low in 0 of 400001 prices; base above lo (by rounding) in 0
+  step  5.00: base one step too low in 0 of 400001 prices; base above lo (by rounding) in 0
+  step 10.00: base one step too low in 0 of 400001 prices; base above lo (by rounding) in 0
+
+6) rows capped at 2000
+  M5 Jan 2026 (lo 4309.97 hi 5598.03) size=0.5: rows 2000 step 0.644030 base 4309.97 capped True -> POC 4615.5622 VAL 4309.9700 VAH 5028.0634
+  M5 Jan 2026 (lo 4309.97 hi 5598.03) size=0.65: rows 1983 step 0.650000 base 4309.50 capped False -> POC 4615.9750 VAL 4309.5000 VAH 5028.4000
+  M5 Jan 2026 (lo 4309.97 hi 5598.03) size=1.0: rows 1290 step 1.000000 base 4309.00 capped False -> POC 4615.5000 VAL 4310.0000 VAH 5028.0000
+  row size 1e-06 on a $300 range: MathCeil(...) = 3e+08 rows (fits in int, capped to 2000)
+  row size 1e-07 on a $300 range: MathCeil(...) = 3e+09 rows > INT_MAX: the (int) cast on line 294 is out of range before the 2000 cap is tested
+
+7) range of 1 candle (source TF == chart TF), 60 rows
+  POC row 29 (nearest the middle under the tie rule): 98.7%; |POC-29.5| > 5 rows: 0.2%
+  relative spread between rows that should be equal: median 0.00e+00, max 5.81e-11 (POC tie tolerance is 1e-12)
+  value area: 42 rows every time? True; centre of VA minus centre of grid, rows: min -9.0 max +9.0; centred within 1 row: 0.0%
+  overlaps in row units ((p-base)/step) instead of prices: max relative spread 7.35e-15; POC row 29: 100.0%
+
+8) up/down split: a candle with close == open counts as up (line 312)
+  M1: doji candles 373 of 100000, 0.30% of tick volume
+  M5: doji candles 249 of 100105, 0.13% of tick volume
+  H1: doji candles 139 of 60000, 0.14% of tick volume

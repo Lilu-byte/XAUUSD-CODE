@@ -1,0 +1,386 @@
+{
+ "D1 c_MACD_line": {
+  "train": {
+   "per_day": 0.083,
+   "sharpe_ret": 0.3,
+   "sharpe_usd": 0.13,
+   "max_dd": -703.0,
+   "total": 229.0,
+   "losing_months": "60/129",
+   "days": 2756
+  },
+  "test": {
+   "per_day": 0.894,
+   "sharpe_ret": 0.69,
+   "sharpe_usd": 0.55,
+   "max_dd": -774.0,
+   "total": 2484.0,
+   "losing_months": "50/130",
+   "days": 2780
+  },
+  "train_scaled_swap": {
+   "per_day": 0.156,
+   "sharpe_ret": 0.45,
+   "sharpe_usd": 0.25,
+   "max_dd": -661.0,
+   "total": 431.0,
+   "losing_months": "58/129",
+   "days": 2756
+  },
+  "2022_26": {
+   "per_day": 1.835,
+   "sharpe_ret": 1.04,
+   "sharpe_usd": 0.79,
+   "max_dd": -774.0,
+   "total": 2261.0,
+   "losing_months": "16/58",
+   "days": 1232
+  },
+  "common": {
+   "per_day": 3.097,
+   "sharpe_ret": 1.01,
+   "sharpe_usd": 0.81,
+   "max_dd": -774.0,
+   "total": 1158.0,
+   "losing_months": "4/18",
+   "days": 374
+  },
+  "test_trades": 44,
+  "test_win_pct": 43.2,
+  "test_realized_per_day": 0.894
+ },
+ "D1 b_hold": {
+  "train": {
+   "per_day": 0.053,
+   "sharpe_ret": 0.28,
+   "sharpe_usd": 0.06,
+   "max_dd": -1043.0,
+   "total": 145.0,
+   "losing_months": "61/129",
+   "days": 2756
+  },
+  "test": {
+   "per_day": 0.951,
+   "sharpe_ret": 0.7,
+   "sharpe_usd": 0.49,
+   "max_dd": -1458.0,
+   "total": 2643.0,
+   "losing_months": "62/130",
+   "days": 2780
+  },
+  "train_scaled_swap": {
+   "per_day": 0.182,
+   "sharpe_ret": 0.47,
+   "sharpe_usd": 0.21,
+   "max_dd": -915.0,
+   "total": 503.0,
+   "losing_months": "61/129",
+   "days": 2756
+  },
+  "2022_26": {
+   "per_day": 1.745,
+   "sharpe_ret": 0.91,
+   "sharpe_usd": 0.64,
+   "max_dd": -1458.0,
+   "total": 2149.0,
+   "losing_months": "24/58",
+   "days": 1232
+  },
+  "common": {
+   "per_day": 2.247,
+   "sharpe_ret": 0.73,
+   "sharpe_usd": 0.5,
+   "max_dd": -1458.0,
+   "total": 841.0,
+   "losing_months": "7/18",
+   "days": 374
+  },
+  "test_trades": 0,
+  "test_win_pct": null,
+  "test_realized_per_day": 1.006
+ },
+ "H4 a_MA_stack": {
+  "train": {
+   "per_day": 0.174,
+   "sharpe_ret": 0.44,
+   "sharpe_usd": 0.47,
+   "max_dd": -215.0,
+   "total": 329.0,
+   "losing_months": "35/88",
+   "days": 1893
+  },
+  "test": {
+   "per_day": 1.445,
+   "sharpe_ret": 1.2,
+   "sharpe_usd": 1.07,
+   "max_dd": -452.0,
+   "total": 1781.0,
+   "losing_months": "17/58",
+   "days": 1232
+  },
+  "train_scaled_swap": {
+   "per_day": 0.176,
+   "sharpe_ret": 0.45,
+   "sharpe_usd": 0.47,
+   "max_dd": -215.0,
+   "total": 333.0,
+   "losing_months": "35/88",
+   "days": 1893
+  },
+  "2022_26": {
+   "per_day": 1.445,
+   "sharpe_ret": 1.2,
+   "sharpe_usd": 1.07,
+   "max_dd": -452.0,
+   "total": 1781.0,
+   "losing_months": "17/58",
+   "days": 1232
+  },
+  "common": {
+   "per_day": 2.769,
+   "sharpe_ret": 1.42,
+   "sharpe_usd": 1.29,
+   "max_dd": -452.0,
+   "total": 1036.0,
+   "losing_months": "6/18",
+   "days": 374
+  },
+  "test_trades": 167,
+  "test_win_pct": 37.7,
+  "test_realized_per_day": 1.453
+ },
+ "H4 b_hold": {
+  "train": {
+   "per_day": 0.109,
+   "sharpe_ret": 0.17,
+   "sharpe_usd": 0.13,
+   "max_dd": -407.0,
+   "total": 207.0,
+   "losing_months": "49/88",
+   "days": 1893
+  },
+  "test": {
+   "per_day": 1.745,
+   "sharpe_ret": 0.91,
+   "sharpe_usd": 0.64,
+   "max_dd": -1458.0,
+   "total": 2149.0,
+   "losing_months": "24/58",
+   "days": 1232
+  },
+  "train_scaled_swap": {
+   "per_day": 0.132,
+   "sharpe_ret": 0.21,
+   "sharpe_usd": 0.16,
+   "max_dd": -407.0,
+   "total": 251.0,
+   "losing_months": "49/88",
+   "days": 1893
+  },
+  "2022_26": {
+   "per_day": 1.745,
+   "sharpe_ret": 0.91,
+   "sharpe_usd": 0.64,
+   "max_dd": -1458.0,
+   "total": 2149.0,
+   "losing_months": "24/58",
+   "days": 1232
+  },
+  "common": {
+   "per_day": 2.247,
+   "sharpe_ret": 0.73,
+   "sharpe_usd": 0.5,
+   "max_dd": -1458.0,
+   "total": 841.0,
+   "losing_months": "7/18",
+   "days": 374
+  },
+  "test_trades": 0,
+  "test_win_pct": null,
+  "test_realized_per_day": 1.858
+ },
+ "H1 d_RangeOsc_break": {
+  "train": {
+   "per_day": 0.355,
+   "sharpe_ret": 0.72,
+   "sharpe_usd": 0.69,
+   "max_dd": -163.0,
+   "total": 420.0,
+   "losing_months": "22/55",
+   "days": 1184
+  },
+  "test": {
+   "per_day": 1.235,
+   "sharpe_ret": 0.95,
+   "sharpe_usd": 0.75,
+   "max_dd": -716.0,
+   "total": 1522.0,
+   "losing_months": "27/58",
+   "days": 1232
+  },
+  "train_scaled_swap": {
+   "per_day": 0.355,
+   "sharpe_ret": 0.72,
+   "sharpe_usd": 0.69,
+   "max_dd": -163.0,
+   "total": 420.0,
+   "losing_months": "22/55",
+   "days": 1184
+  },
+  "2022_26": {
+   "per_day": 1.235,
+   "sharpe_ret": 0.95,
+   "sharpe_usd": 0.75,
+   "max_dd": -716.0,
+   "total": 1522.0,
+   "losing_months": "27/58",
+   "days": 1232
+  },
+  "common": {
+   "per_day": 1.895,
+   "sharpe_ret": 0.86,
+   "sharpe_usd": 0.7,
+   "max_dd": -716.0,
+   "total": 709.0,
+   "losing_months": "9/18",
+   "days": 374
+  },
+  "test_trades": 309,
+  "test_win_pct": 40.5,
+  "test_realized_per_day": 1.247
+ },
+ "H1 e_all_5of7": {
+  "train": {
+   "per_day": -0.008,
+   "sharpe_ret": -0.04,
+   "sharpe_usd": -0.02,
+   "max_dd": -259.0,
+   "total": -10.0,
+   "losing_months": "34/55",
+   "days": 1184
+  },
+  "test": {
+   "per_day": 1.927,
+   "sharpe_ret": 1.36,
+   "sharpe_usd": 1.39,
+   "max_dd": -397.0,
+   "total": 2374.0,
+   "losing_months": "26/58",
+   "days": 1232
+  },
+  "train_scaled_swap": {
+   "per_day": -0.008,
+   "sharpe_ret": -0.04,
+   "sharpe_usd": -0.02,
+   "max_dd": -259.0,
+   "total": -10.0,
+   "losing_months": "34/55",
+   "days": 1184
+  },
+  "2022_26": {
+   "per_day": 1.927,
+   "sharpe_ret": 1.36,
+   "sharpe_usd": 1.39,
+   "max_dd": -397.0,
+   "total": 2374.0,
+   "losing_months": "26/58",
+   "days": 1232
+  },
+  "common": {
+   "per_day": 4.103,
+   "sharpe_ret": 1.88,
+   "sharpe_usd": 1.87,
+   "max_dd": -397.0,
+   "total": 1535.0,
+   "losing_months": "8/18",
+   "days": 374
+  },
+  "test_trades": 978,
+  "test_win_pct": 30.2,
+  "test_realized_per_day": 1.938
+ },
+ "H1 b_hold": {
+  "train": {
+   "per_day": 0.296,
+   "sharpe_ret": 0.42,
+   "sharpe_usd": 0.34,
+   "max_dd": -407.0,
+   "total": 350.0,
+   "losing_months": "30/55",
+   "days": 1184
+  },
+  "test": {
+   "per_day": 1.745,
+   "sharpe_ret": 0.91,
+   "sharpe_usd": 0.64,
+   "max_dd": -1458.0,
+   "total": 2149.0,
+   "losing_months": "24/58",
+   "days": 1232
+  },
+  "train_scaled_swap": {
+   "per_day": 0.296,
+   "sharpe_ret": 0.42,
+   "sharpe_usd": 0.34,
+   "max_dd": -407.0,
+   "total": 350.0,
+   "losing_months": "30/55",
+   "days": 1184
+  },
+  "2022_26": {
+   "per_day": 1.745,
+   "sharpe_ret": 0.91,
+   "sharpe_usd": 0.64,
+   "max_dd": -1458.0,
+   "total": 2149.0,
+   "losing_months": "24/58",
+   "days": 1232
+  },
+  "common": {
+   "per_day": 2.247,
+   "sharpe_ret": 0.73,
+   "sharpe_usd": 0.5,
+   "max_dd": -1458.0,
+   "total": 841.0,
+   "losing_months": "7/18",
+   "days": 374
+  },
+  "test_trades": 0,
+  "test_win_pct": null,
+  "test_realized_per_day": 1.933
+ },
+ "pair_alone": {
+  "per_day": 4.68,
+  "max_dd": -285.0,
+  "losing_months": "6/18",
+  "rule_alone": 0.0
+ },
+ "pair_plus_a": {
+  "per_day": 7.47,
+  "max_dd": -441.0,
+  "losing_months": "7/18",
+  "rule_alone": 2.78
+ },
+ "pair_plus_e": {
+  "per_day": 8.81,
+  "max_dd": -525.0,
+  "losing_months": "9/18",
+  "rule_alone": 4.13
+ },
+ "pair_plus_d": {
+  "per_day": 6.59,
+  "max_dd": -671.0,
+  "losing_months": "9/18",
+  "rule_alone": 1.91
+ },
+ "pair_plus_c": {
+  "per_day": 7.93,
+  "max_dd": -794.0,
+  "losing_months": "6/18",
+  "rule_alone": 3.24
+ },
+ "pair_last_trade": {
+  "allagree": "2026-08-26 06:45:00",
+  "asiabreak": "2026-10-07 12:09:00"
+ }
+}

@@ -1,0 +1,5 @@
+mql5_shim.h:95:58: warning: conversion to 'long unsigned int' from 'int' may change the sign of the result [-Wsign-conversion]
+217:90: warning: conversion from 'long int' to 'double' may change value [-Wconversion]
+218:85: warning: conversion from 'long int' to 'double' may change value [-Wconversion]
+mql5_shim.h:16:35: warning: conversion to 'std::vector<MqlRates, std::allocator<MqlRates> >::size_type' {aka 'long unsigned int'} from 'int' may change the sign of the result [-Wsign-conversion]
+mql5_shim.h:16:35: warning: conversion to 'std::vector<double, std::allocator<double> >::size_type' {aka 'long unsigned int'} from 'int' may change the sign of the result [-Wsign-conversion]

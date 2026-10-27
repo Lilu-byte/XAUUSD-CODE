@@ -1,0 +1,3 @@
+version,train_per_day,test_per_day,test_dd,test_win,test_trades_yr,beats_random_test,common_alone,common_with_pair,with_pair_dd,with_pair_losing,pair,pair_dd,pair_losing,corr_daily,corr_monthly,max_open,y2016,y2017,y2018,y2019,y2020,y2021,y2022,y2023,y2024,y2025,y2026
+pick,0.17,0.8,-601,26.7,27.6,60,1.57,6.26,-534,10/18,4.68,-285,6/18,0.01,0.72,3,0.99,-0.06,-0.02,0.14,0.49,-0.03,-0.89,0.05,1.19,4.2,-1.0
+alt,0.1,-0.01,-406,39.4,14.5,79,-0.06,4.62,-320,7/18,4.68,-285,6/18,-0.03,-0.12,2,1.25,0.06,-0.01,0.02,0.09,-0.16,-0.6,0.21,0.35,0.38,-0.51

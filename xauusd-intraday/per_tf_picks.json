@@ -1,0 +1,7 @@
+{
+ "M5": "trend: EMA20/80 cross (long only)",
+ "M15": "breakout: 100-bar channel (long only)",
+ "M30": "trend: EMA50/200 cross (long only)",
+ "H1": "trend: EMA20/80 cross (long only)",
+ "H4": "trend: EMA10/40 cross (long only)"
+}

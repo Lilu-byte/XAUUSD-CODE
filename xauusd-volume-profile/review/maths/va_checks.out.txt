@@ -1,0 +1,2 @@
+value area at 1..100%: 135 profiles, failures (share < pct, last row unneeded, or port != independent greedy) 0
+greedy steps on real M1 profiles: 2242; steps where the two candidate rows tie within 1e-9: 0

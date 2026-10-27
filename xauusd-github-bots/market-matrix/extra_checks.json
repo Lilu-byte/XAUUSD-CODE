@@ -1,0 +1,14 @@
+{
+ "H4 MA stack 20/50/200 long only": {
+  "beats_shifted_train_pct": 96.0,
+  "beats_shifted_test_pct": 100.0
+ },
+ "H4 MACD line sign long only": {
+  "beats_shifted_train_pct": 75.0,
+  "beats_shifted_test_pct": 89.0
+ },
+ "H1 Range Osc +/-100 breakout, exit at 0 long only": {
+  "beats_shifted_train_pct": 98.0,
+  "beats_shifted_test_pct": 90.0
+ }
+}

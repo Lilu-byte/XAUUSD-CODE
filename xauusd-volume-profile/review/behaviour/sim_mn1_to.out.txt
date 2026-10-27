@@ -1,0 +1,5 @@
+2026-01 candle: profile ends 2026-01-30 23:59:59, candle really ends 2026-01-31 23:59:59 -> misses 1 day(s)
+2026-02 candle: profile ends 2026-03-02 23:59:59, candle really ends 2026-02-28 23:59:59 -> adds 2 day(s)
+2026-04 candle: profile ends 2026-04-30 23:59:59, candle really ends 2026-04-30 23:59:59 -> adds 0 day(s)
+2026-07 candle: profile ends 2026-07-30 23:59:59, candle really ends 2026-07-31 23:59:59 -> misses 1 day(s)
+2028-02 candle: profile ends 2028-03-01 23:59:59, candle really ends 2028-02-29 23:59:59 -> adds 1 day(s)

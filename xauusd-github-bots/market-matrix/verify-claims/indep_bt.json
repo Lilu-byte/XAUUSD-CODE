@@ -1,0 +1,327 @@
+{
+ "H4 | MA stack 20/50/200 | long only | MT5 train": {
+  "per_day": 0.18,
+  "sharpe": 0.45,
+  "max_dd": -215.0,
+  "total": 333.0
+ },
+ "H4 | MA stack 20/50/200 | long only | MT5 test": {
+  "per_day": 1.45,
+  "sharpe": 1.2,
+  "max_dd": -452.0,
+  "total": 1781.0
+ },
+ "H4 | MA stack 20/50/200 | long+short | MT5 train": {
+  "per_day": 0.01,
+  "sharpe": -0.07,
+  "max_dd": -304.0,
+  "total": 13.0
+ },
+ "H4 | MA stack 20/50/200 | long+short | MT5 test": {
+  "per_day": 0.88,
+  "sharpe": 0.56,
+  "max_dd": -941.0,
+  "total": 1085.0
+ },
+ "H4 | MACD line sign | long only | MT5 train": {
+  "per_day": 0.09,
+  "sharpe": 0.21,
+  "max_dd": -296.0,
+  "total": 175.0
+ },
+ "H4 | MACD line sign | long only | MT5 test": {
+  "per_day": 1.48,
+  "sharpe": 0.97,
+  "max_dd": -1130.0,
+  "total": 1828.0
+ },
+ "H4 | MACD line sign | long+short | MT5 train": {
+  "per_day": -0.04,
+  "sharpe": -0.04,
+  "max_dd": -512.0,
+  "total": -77.0
+ },
+ "H4 | MACD line sign | long+short | MT5 test": {
+  "per_day": 1.12,
+  "sharpe": 0.49,
+  "max_dd": -1231.0,
+  "total": 1375.0
+ },
+ "H4 | Range Osc +/-100 breakout, exit at 0 | long only | MT5 train": {
+  "per_day": -0.09,
+  "sharpe": -0.08,
+  "max_dd": -416.0,
+  "total": -162.0
+ },
+ "H4 | Range Osc +/-100 breakout, exit at 0 | long only | MT5 test": {
+  "per_day": 1.54,
+  "sharpe": 1.04,
+  "max_dd": -1020.0,
+  "total": 1892.0
+ },
+ "H4 | Range Osc +/-100 breakout, exit at 0 | long+short | MT5 train": {
+  "per_day": -0.09,
+  "sharpe": -0.08,
+  "max_dd": -427.0,
+  "total": -162.0
+ },
+ "H4 | Range Osc +/-100 breakout, exit at 0 | long+short | MT5 test": {
+  "per_day": 1.48,
+  "sharpe": 0.7,
+  "max_dd": -1114.0,
+  "total": 1826.0
+ },
+ "H4 | RSI 30/70 reversal, exit at 50 | long only | MT5 train": {
+  "per_day": -0.0,
+  "sharpe": -0.0,
+  "max_dd": -203.0,
+  "total": -8.0
+ },
+ "H4 | RSI 30/70 reversal, exit at 50 | long only | MT5 test": {
+  "per_day": 0.84,
+  "sharpe": 0.88,
+  "max_dd": -260.0,
+  "total": 1040.0
+ },
+ "H4 | RSI 30/70 reversal, exit at 50 | long+short | MT5 train": {
+  "per_day": -0.06,
+  "sharpe": -0.15,
+  "max_dd": -360.0,
+  "total": -104.0
+ },
+ "H4 | RSI 30/70 reversal, exit at 50 | long+short | MT5 test": {
+  "per_day": 0.23,
+  "sharpe": 0.07,
+  "max_dd": -1013.0,
+  "total": 284.0
+ },
+ "H4 | Hold | long only | MT5 train": {
+  "per_day": 0.13,
+  "sharpe": 0.21,
+  "max_dd": -407.0,
+  "total": 251.0
+ },
+ "H4 | Hold | long only | MT5 test": {
+  "per_day": 1.74,
+  "sharpe": 0.91,
+  "max_dd": -1458.0,
+  "total": 2149.0
+ },
+ "H1 | MA stack 20/50/200 | long only | MT5 train": {
+  "per_day": -0.22,
+  "sharpe": -0.59,
+  "max_dd": -307.0,
+  "total": -257.0
+ },
+ "H1 | MA stack 20/50/200 | long only | MT5 test": {
+  "per_day": 1.09,
+  "sharpe": 0.95,
+  "max_dd": -610.0,
+  "total": 1348.0
+ },
+ "H1 | MA stack 20/50/200 | long+short | MT5 train": {
+  "per_day": -0.4,
+  "sharpe": -0.85,
+  "max_dd": -513.0,
+  "total": -473.0
+ },
+ "H1 | MA stack 20/50/200 | long+short | MT5 test": {
+  "per_day": 0.41,
+  "sharpe": 0.09,
+  "max_dd": -624.0,
+  "total": 500.0
+ },
+ "H1 | MACD line sign | long only | MT5 train": {
+  "per_day": 0.22,
+  "sharpe": 0.35,
+  "max_dd": -238.0,
+  "total": 261.0
+ },
+ "H1 | MACD line sign | long only | MT5 test": {
+  "per_day": 1.86,
+  "sharpe": 1.14,
+  "max_dd": -811.0,
+  "total": 2286.0
+ },
+ "H1 | MACD line sign | long+short | MT5 train": {
+  "per_day": 0.04,
+  "sharpe": -0.09,
+  "max_dd": -455.0,
+  "total": 43.0
+ },
+ "H1 | MACD line sign | long+short | MT5 test": {
+  "per_day": 1.86,
+  "sharpe": 0.64,
+  "max_dd": -1055.0,
+  "total": 2293.0
+ },
+ "H1 | Range Osc +/-100 breakout, exit at 0 | long only | MT5 train": {
+  "per_day": 0.35,
+  "sharpe": 0.72,
+  "max_dd": -163.0,
+  "total": 420.0
+ },
+ "H1 | Range Osc +/-100 breakout, exit at 0 | long only | MT5 test": {
+  "per_day": 1.24,
+  "sharpe": 0.95,
+  "max_dd": -716.0,
+  "total": 1522.0
+ },
+ "H1 | Range Osc +/-100 breakout, exit at 0 | long+short | MT5 train": {
+  "per_day": 0.28,
+  "sharpe": 0.32,
+  "max_dd": -207.0,
+  "total": 333.0
+ },
+ "H1 | Range Osc +/-100 breakout, exit at 0 | long+short | MT5 test": {
+  "per_day": 0.73,
+  "sharpe": 0.32,
+  "max_dd": -874.0,
+  "total": 894.0
+ },
+ "H1 | RSI 30/70 reversal, exit at 50 | long only | MT5 train": {
+  "per_day": -0.06,
+  "sharpe": -0.15,
+  "max_dd": -234.0,
+  "total": -73.0
+ },
+ "H1 | RSI 30/70 reversal, exit at 50 | long only | MT5 test": {
+  "per_day": 0.31,
+  "sharpe": 0.22,
+  "max_dd": -400.0,
+  "total": 377.0
+ },
+ "H1 | RSI 30/70 reversal, exit at 50 | long+short | MT5 train": {
+  "per_day": -0.45,
+  "sharpe": -0.94,
+  "max_dd": -539.0,
+  "total": -530.0
+ },
+ "H1 | RSI 30/70 reversal, exit at 50 | long+short | MT5 test": {
+  "per_day": -0.55,
+  "sharpe": -0.55,
+  "max_dd": -1306.0,
+  "total": -672.0
+ },
+ "H1 | Hold | long only | MT5 train": {
+  "per_day": 0.3,
+  "sharpe": 0.42,
+  "max_dd": -407.0,
+  "total": 350.0
+ },
+ "H1 | Hold | long only | MT5 test": {
+  "per_day": 1.74,
+  "sharpe": 0.91,
+  "max_dd": -1458.0,
+  "total": 2149.0
+ },
+ "oanda_vol_sum": 0.0,
+ "H4 | MA stack 20/50/200 | long only | OANDA 2007-16": {
+  "per_day": 0.18,
+  "sharpe": 0.42,
+  "max_dd": -183.0,
+  "total": 453.0
+ },
+ "H4 | MA stack 20/50/200 | long+short | OANDA 2007-16": {
+  "per_day": 0.19,
+  "sharpe": 0.19,
+  "max_dd": -248.0,
+  "total": 473.0
+ },
+ "H4 | MACD line sign | long only | OANDA 2007-16": {
+  "per_day": 0.24,
+  "sharpe": 0.57,
+  "max_dd": -547.0,
+  "total": 603.0
+ },
+ "H4 | MACD line sign | long+short | OANDA 2007-16": {
+  "per_day": 0.23,
+  "sharpe": 0.34,
+  "max_dd": -579.0,
+  "total": 563.0
+ },
+ "H4 | Range Osc +/-100 breakout, exit at 0 | long only | OANDA 2007-16": {
+  "per_day": 0.15,
+  "sharpe": 0.37,
+  "max_dd": -386.0,
+  "total": 374.0
+ },
+ "H4 | Range Osc +/-100 breakout, exit at 0 | long+short | OANDA 2007-16": {
+  "per_day": 0.07,
+  "sharpe": 0.08,
+  "max_dd": -466.0,
+  "total": 169.0
+ },
+ "H4 | RSI 30/70 reversal, exit at 50 | long only | OANDA 2007-16": {
+  "per_day": 0.07,
+  "sharpe": 0.28,
+  "max_dd": -282.0,
+  "total": 173.0
+ },
+ "H4 | RSI 30/70 reversal, exit at 50 | long+short | OANDA 2007-16": {
+  "per_day": -0.01,
+  "sharpe": -0.07,
+  "max_dd": -271.0,
+  "total": -15.0
+ },
+ "H4 | Hold | long only | OANDA 2007-16": {
+  "per_day": 0.22,
+  "sharpe": 0.42,
+  "max_dd": -916.0,
+  "total": 552.0
+ },
+ "H1 | MA stack 20/50/200 | long only | OANDA 2007-16": {
+  "per_day": -0.11,
+  "sharpe": -0.15,
+  "max_dd": -475.0,
+  "total": -265.0
+ },
+ "H1 | MA stack 20/50/200 | long+short | OANDA 2007-16": {
+  "per_day": -0.11,
+  "sharpe": -0.24,
+  "max_dd": -588.0,
+  "total": -282.0
+ },
+ "H1 | MACD line sign | long only | OANDA 2007-16": {
+  "per_day": 0.3,
+  "sharpe": 0.58,
+  "max_dd": -299.0,
+  "total": 744.0
+ },
+ "H1 | MACD line sign | long+short | OANDA 2007-16": {
+  "per_day": 0.34,
+  "sharpe": 0.33,
+  "max_dd": -297.0,
+  "total": 841.0
+ },
+ "H1 | Range Osc +/-100 breakout, exit at 0 | long only | OANDA 2007-16": {
+  "per_day": 0.19,
+  "sharpe": 0.49,
+  "max_dd": -291.0,
+  "total": 476.0
+ },
+ "H1 | Range Osc +/-100 breakout, exit at 0 | long+short | OANDA 2007-16": {
+  "per_day": 0.35,
+  "sharpe": 0.42,
+  "max_dd": -210.0,
+  "total": 875.0
+ },
+ "H1 | RSI 30/70 reversal, exit at 50 | long only | OANDA 2007-16": {
+  "per_day": -0.29,
+  "sharpe": -0.59,
+  "max_dd": -765.0,
+  "total": -720.0
+ },
+ "H1 | RSI 30/70 reversal, exit at 50 | long+short | OANDA 2007-16": {
+  "per_day": -0.39,
+  "sharpe": -0.78,
+  "max_dd": -1036.0,
+  "total": -976.0
+ },
+ "H1 | Hold | long only | OANDA 2007-16": {
+  "per_day": 0.22,
+  "sharpe": 0.42,
+  "max_dd": -916.0,
+  "total": 552.0
+ }
+}
