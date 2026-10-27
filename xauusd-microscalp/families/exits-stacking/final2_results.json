@@ -1,0 +1,480 @@
+{
+ "A_MR_gated_bracket": {
+  "train": {
+   "per_day": 1.6306382978724054,
+   "trades_day": 15.680851063829786,
+   "win": 0.9131614654002713,
+   "per_trade": 0.10398914518317919,
+   "days_ge5": 0.44680851063829785,
+   "losing_days": 0.2553191489361702,
+   "worst_day": -27.68000000000029,
+   "max_dd": -65.84000000000015,
+   "total": 76.64000000000306,
+   "days": 47,
+   "pwin": 0.9041501976284585,
+   "pd_jul": 0.9511538461538819,
+   "pd_aug": 2.471904761904863
+  },
+  "test": {
+   "per_day": -4.550344827586334,
+   "trades_day": 9.482758620689655,
+   "win": 0.88,
+   "per_trade": -0.4798545454545588,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.5517241379310345,
+   "worst_day": -40.899999999999636,
+   "max_dd": -125.17000000000462,
+   "total": -131.96000000000367,
+   "days": 29,
+   "pwin": 0.9041501976284585
+  },
+  "test_OHLC_base": {
+   "per_day": -4.550344827586334,
+   "trades_day": 9.482758620689655,
+   "win": 0.88,
+   "per_trade": -0.4798545454545588,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.5517241379310345,
+   "worst_day": -40.899999999999636,
+   "max_dd": -125.17000000000462,
+   "total": -131.96000000000367,
+   "days": 29,
+   "pwin": 0.9041501976284585
+  },
+  "test_FAIR_bar": {
+   "per_day": -4.104137931034592,
+   "trades_day": 9.586206896551724,
+   "win": 0.8848920863309353,
+   "per_trade": -0.4281294964028891,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.5172413793103449,
+   "worst_day": -40.850000000000364,
+   "max_dd": -120.02000000000407,
+   "total": -119.02000000000317,
+   "days": 29,
+   "pwin": 0.9088235294117647
+  },
+  "test_FAIR_wide": {
+   "per_day": -5.3917241379313054,
+   "trades_day": 9.344827586206897,
+   "win": 0.8671586715867159,
+   "per_trade": -0.5769741697417264,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.5862068965517241,
+   "worst_day": -41.01000000000022,
+   "max_dd": -141.84000000000742,
+   "total": -156.36000000000786,
+   "days": 29,
+   "pwin": 0.8858307849133538
+  },
+  "test_random_per_day": -3.5284137931035753,
+  "test_random_sd": 1.517561970048348,
+  "edge": {
+   "signals_day": {
+    "train": 19.1915,
+    "test": 11.2759
+   },
+   "avg_spread": {
+    "train": 0.1327,
+    "test": 0.138
+   },
+   "move_1m": {
+    "train": 0.334,
+    "test": -0.0133
+   },
+   "hit_1m": {
+    "train": 0.5488,
+    "test": 0.5107
+   },
+   "move_2m": {
+    "train": 0.4995,
+    "test": 0.3214
+   },
+   "hit_2m": {
+    "train": 0.5721,
+    "test": 0.5535
+   },
+   "move_3m": {
+    "train": 0.5689,
+    "test": 0.2977
+   },
+   "hit_3m": {
+    "train": 0.5665,
+    "test": 0.5413
+   },
+   "move_5m": {
+    "train": 0.3981,
+    "test": 0.6491
+   },
+   "hit_5m": {
+    "train": 0.5432,
+    "test": 0.5413
+   },
+   "move_10m": {
+    "train": 0.4135,
+    "test": 1.4595
+   },
+   "hit_10m": {
+    "train": 0.5177,
+    "test": 0.5657
+   }
+  }
+ },
+ "C_MR_gated_stacked": {
+  "train": {
+   "per_day": 1.4685106382979494,
+   "trades_day": 14.553191489361701,
+   "win": 0.9049707602339181,
+   "per_trade": 0.1009064327485433,
+   "days_ge5": 0.3829787234042553,
+   "losing_days": 0.2765957446808511,
+   "worst_day": -30.5600000000004,
+   "max_dd": -40.2800000000002,
+   "total": 69.02000000000362,
+   "days": 47,
+   "pwin": 0.9015706806282723,
+   "pd_jul": 1.5826923076923463,
+   "pd_aug": 1.327142857142982
+  },
+  "test": {
+   "per_day": -2.191379310344928,
+   "trades_day": 9.344827586206897,
+   "win": 0.8929889298892989,
+   "per_trade": -0.2345018450184609,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.5172413793103449,
+   "worst_day": -27.49999999999909,
+   "max_dd": -54.510000000003856,
+   "total": -63.55000000000291,
+   "days": 29,
+   "pwin": 0.9015706806282723
+  },
+  "test_OHLC_base": {
+   "per_day": -2.191379310344928,
+   "trades_day": 9.344827586206897,
+   "win": 0.8929889298892989,
+   "per_trade": -0.2345018450184609,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.5172413793103449,
+   "worst_day": -27.49999999999909,
+   "max_dd": -54.510000000003856,
+   "total": -63.55000000000291,
+   "days": 29,
+   "pwin": 0.9015706806282723
+  },
+  "test_FAIR_bar": {
+   "per_day": -1.7127586206897205,
+   "trades_day": 9.344827586206897,
+   "win": 0.9003690036900369,
+   "per_trade": -0.1832841328413354,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.4827586206896552,
+   "worst_day": -27.449999999999818,
+   "max_dd": -47.6700000000028,
+   "total": -49.67000000000189,
+   "days": 29,
+   "pwin": 0.9078534031413612
+  },
+  "test_FAIR_wide": {
+   "per_day": -3.361034482758849,
+   "trades_day": 9.344827586206897,
+   "win": 0.8782287822878229,
+   "per_trade": -0.35966789667899124,
+   "days_ge5": 0.1724137931034483,
+   "losing_days": 0.5517241379310345,
+   "worst_day": -34.36000000000058,
+   "max_dd": -81.45000000000618,
+   "total": -97.47000000000662,
+   "days": 29,
+   "pwin": 0.8869109947643979
+  },
+  "test_random_per_day": -2.4115517241380493,
+  "test_random_sd": 1.2275338254031634,
+  "edge": {
+   "signals_day": {
+    "train": 19.1915,
+    "test": 11.2759
+   },
+   "avg_spread": {
+    "train": 0.1327,
+    "test": 0.138
+   },
+   "move_1m": {
+    "train": 0.334,
+    "test": -0.0133
+   },
+   "hit_1m": {
+    "train": 0.5488,
+    "test": 0.5107
+   },
+   "move_2m": {
+    "train": 0.4995,
+    "test": 0.3214
+   },
+   "hit_2m": {
+    "train": 0.5721,
+    "test": 0.5535
+   },
+   "move_3m": {
+    "train": 0.5689,
+    "test": 0.2977
+   },
+   "hit_3m": {
+    "train": 0.5665,
+    "test": 0.5413
+   },
+   "move_5m": {
+    "train": 0.3981,
+    "test": 0.6491
+   },
+   "hit_5m": {
+    "train": 0.5432,
+    "test": 0.5413
+   },
+   "move_10m": {
+    "train": 0.4135,
+    "test": 1.4595
+   },
+   "hit_10m": {
+    "train": 0.5177,
+    "test": 0.5657
+   }
+  }
+ },
+ "B_MR_grid": {
+  "train": {
+   "per_day": 10.642978723406065,
+   "baskets_day": 35.22553191489361,
+   "positions_day": 51.47659574468086,
+   "per_basket": 0.30213822019441283,
+   "basket_win": 1.0,
+   "per_position": 0.2067602491982934,
+   "days_ge5": 1.0,
+   "losing_days": 0.0,
+   "worst_day": 6.420000000003165,
+   "best_day": 21.840000000001236,
+   "worst_intraday": -728.6519999999844,
+   "max_dd_closed": 0.0,
+   "max_dd_float": -734.0519999999844,
+   "min_equity": -585.3279999999392,
+   "worst_basket": 0.29999999999308785,
+   "worst_mae": -734.0519999999844,
+   "max_levels": 26.4,
+   "stops": 0.0,
+   "total": 500.220000000085,
+   "days": 47.0,
+   "stopout_1to100": 0.0,
+   "min_margin_level_1to100": 2.2932298296052265,
+   "stopout_1to500": 0.0,
+   "min_margin_level_1to500": 11.466149148026137
+  },
+  "train_worst_seed": {
+   "per_day": 10.61361702127838,
+   "baskets_day": 35.12765957446808,
+   "positions_day": 51.1063829787234,
+   "per_basket": 0.3021248499400334,
+   "basket_win": 1.0,
+   "per_position": 0.20494658997538365,
+   "days_ge5": 1.0,
+   "losing_days": 0.0,
+   "worst_day": 6.300000000002001,
+   "best_day": 21.24000000000069,
+   "worst_intraday": -1107.2399999999225,
+   "max_dd_closed": 0.0,
+   "max_dd_float": -1118.0399999999208,
+   "min_equity": -823.1799999998393,
+   "worst_basket": 0.29999999998835847,
+   "worst_mae": -1118.0399999999208,
+   "max_levels": 22,
+   "stops": 0.0,
+   "total": 498.8400000000838,
+   "days": 47,
+   "stopout_1to100": false,
+   "min_margin_level_1to100": 1.5482201641591613,
+   "stopout_1to500": false,
+   "min_margin_level_1to500": 7.741100820795807
+  },
+  "test": {
+   "per_day": 9.41772413793169,
+   "baskets_day": 31.344827586206897,
+   "positions_day": 52.42068965517241,
+   "per_basket": 0.30045433227271895,
+   "basket_win": 1.0,
+   "per_position": 0.1796618316343069,
+   "days_ge5": 0.9862068965517242,
+   "losing_days": 0.0,
+   "worst_day": 5.159999999999127,
+   "best_day": 15.060000000008221,
+   "worst_intraday": -869.2480000000645,
+   "max_dd_closed": 0.0,
+   "max_dd_float": -875.0960000000638,
+   "min_equity": -781.2340000000528,
+   "worst_basket": 0.29999999998981364,
+   "worst_mae": -875.6680000000633,
+   "max_levels": 29.2,
+   "stops": 0.0,
+   "total": 273.114000000019,
+   "days": 29.0,
+   "stopout_1to100": 0.0,
+   "min_margin_level_1to100": 1.7409028997964835,
+   "stopout_1to500": 0.0,
+   "min_margin_level_1to500": 8.704514498982416
+  },
+  "test_worst_seed": {
+   "per_day": 9.350689655173232,
+   "baskets_day": 31.137931034482758,
+   "positions_day": 52.03448275862069,
+   "per_basket": 0.3002976846747568,
+   "basket_win": 1.0,
+   "per_position": 0.17804990151019284,
+   "days_ge5": 0.9655172413793104,
+   "losing_days": 0.0,
+   "worst_day": 4.799999999999272,
+   "best_day": 14.700000000001637,
+   "worst_intraday": -920.7000000000671,
+   "max_dd_closed": 0.0,
+   "max_dd_float": -927.100000000064,
+   "min_equity": -833.0700000000543,
+   "worst_basket": 0.29999999998835847,
+   "worst_mae": -927.600000000064,
+   "max_levels": 26,
+   "stops": 0.0,
+   "total": 271.1700000000237,
+   "days": 29,
+   "stopout_1to100": false,
+   "min_margin_level_1to100": 1.6410355442968545,
+   "stopout_1to500": false,
+   "min_margin_level_1to500": 8.20517772148427
+  },
+  "test_OHLC_base": {
+   "per_day": 9.125172413794612,
+   "baskets_day": 30.344827586206897,
+   "positions_day": 51.10344827586207,
+   "per_basket": 0.3007159090909588,
+   "basket_win": 1.0,
+   "per_position": 0.17856275303646676,
+   "days_ge5": 0.9655172413793104,
+   "losing_days": 0.0,
+   "worst_day": 4.799999999999272,
+   "best_day": 14.40000000001055,
+   "worst_intraday": -920.7000000000653,
+   "max_dd_closed": 0.0,
+   "max_dd_float": -927.100000000064,
+   "min_equity": -833.9700000000421,
+   "worst_basket": 0.29999999998835847,
+   "worst_mae": -927.600000000064,
+   "max_levels": 30,
+   "stops": 0.0,
+   "total": 264.63000000004376,
+   "days": 29,
+   "stopout_1to100": false,
+   "min_margin_level_1to100": 1.6403539662164146,
+   "stopout_1to500": false,
+   "min_margin_level_1to500": 8.201769831082073
+  },
+  "test_FAIR_bar": {
+   "per_day": 9.49724137931154,
+   "baskets_day": 31.620689655172413,
+   "positions_day": 52.275862068965516,
+   "per_basket": 0.30034896401312394,
+   "basket_win": 1.0,
+   "per_position": 0.18167546174144764,
+   "days_ge5": 1.0,
+   "losing_days": 0.0,
+   "worst_day": 5.100000000015825,
+   "best_day": 15.300000000015643,
+   "worst_intraday": -918.900000000036,
+   "max_dd_closed": 0.0,
+   "max_dd_float": -925.6500000000342,
+   "min_equity": -828.280000000037,
+   "worst_basket": 0.29999999998835847,
+   "worst_mae": -926.1000000000349,
+   "max_levels": 30,
+   "stops": 0.0,
+   "total": 275.42000000003463,
+   "days": 29,
+   "stopout_1to100": false,
+   "min_margin_level_1to100": 1.6446630543028122,
+   "stopout_1to500": false,
+   "min_margin_level_1to500": 8.22331527151406
+  },
+  "test_FAIR_wide": {
+   "per_day": 9.196896551724077,
+   "baskets_day": 30.620689655172413,
+   "positions_day": 52.41379310344828,
+   "per_basket": 0.30034909909909707,
+   "basket_win": 1.0,
+   "per_position": 0.17546710526315673,
+   "days_ge5": 0.9655172413793104,
+   "losing_days": 0.0,
+   "worst_day": 4.799999999999272,
+   "best_day": 14.700000000009823,
+   "worst_intraday": -924.6000000000595,
+   "max_dd_closed": 0.0,
+   "max_dd_float": -930.8000000000575,
+   "min_equity": -837.0000000000605,
+   "worst_basket": 0.29999999998835847,
+   "worst_mae": -931.5000000000582,
+   "max_levels": 30,
+   "stops": 0.0,
+   "total": 266.7099999999982,
+   "days": 29,
+   "stopout_1to100": false,
+   "min_margin_level_1to100": 1.6380593200122227,
+   "stopout_1to500": false,
+   "min_margin_level_1to500": 8.190296600061112
+  },
+  "test_random_per_day": 9.097310344827733,
+  "test_random_sd": 0.5694533419912566,
+  "edge": {
+   "signals_day": {
+    "train": 42.5745,
+    "test": 40.6552
+   },
+   "avg_spread": {
+    "train": 0.2003,
+    "test": 0.2265
+   },
+   "move_1m": {
+    "train": 0.2368,
+    "test": 0.0765
+   },
+   "hit_1m": {
+    "train": 0.5447,
+    "test": 0.5259
+   },
+   "move_3m": {
+    "train": 0.4059,
+    "test": 0.2905
+   },
+   "hit_3m": {
+    "train": 0.5487,
+    "test": 0.5445
+   },
+   "move_5m": {
+    "train": 0.2803,
+    "test": 0.3853
+   },
+   "hit_5m": {
+    "train": 0.5277,
+    "test": 0.5344
+   },
+   "move_10m": {
+    "train": 0.0947,
+    "test": 0.6015
+   },
+   "hit_10m": {
+    "train": 0.5097,
+    "test": 0.5182
+   },
+   "move_30m": {
+    "train": -0.1458,
+    "test": 0.1557
+   },
+   "hit_30m": {
+    "train": 0.4993,
+    "test": 0.5038
+   }
+  }
+ }
+}

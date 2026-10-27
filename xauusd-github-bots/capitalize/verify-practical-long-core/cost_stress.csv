@@ -1,0 +1,13 @@
+case,rule_test,hold_test,rule_trainB,rule_common,rule_test_dd,swap_paid_test
+"base (0.30+0.10, $0.126)",1.38,1.74,0.15,1.98,-1447.0,174.0
+spread 0.60 + slip 0.30 both sides,1.38,1.74,0.15,1.98,-1447.0,174.0
+spread 1.00 + slip 0.50 both sides,1.37,1.74,0.15,1.98,-1447.0,174.0
+rollover fill: spread 5.00 + slip 2.00 both,1.36,1.74,0.13,1.98,-1447.0,174.0
+swap x2 ($0.252),1.24,1.57,0.04,1.84,-1465.0,347.0
+swap x3 ($0.378),1.1,1.39,-0.08,1.7,-1483.0,521.0
+swap 2.5%/yr of price,1.3,1.66,0.18,1.81,-1475.0,264.0
+swap 4%/yr of price,1.18,1.5,0.12,1.61,-1504.0,422.0
+swap Fed funds + 1.5%/yr (approx path),1.04,1.34,0.18,1.44,-1525.0,585.0
+swap Fed funds + 2.5%/yr (approx path),0.96,1.24,0.14,1.31,-1544.0,690.0
+"worst combo: spread 1+slip 0.5, FF+2.5%",0.95,1.24,0.13,1.31,-1544.0,690.0
+fill at 02:00 server H1 open (base costs),1.33,1.74,0.15,1.94,-1447.0,174.0

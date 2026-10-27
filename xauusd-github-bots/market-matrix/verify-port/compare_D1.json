@@ -1,0 +1,460 @@
+{
+ "tf": "D1",
+ "bars": 5738,
+ "warm_start": "2005-04-01",
+ "warm_bar": 202,
+ "compare": {
+  "rsi": {
+   "first_valid_mm": 1,
+   "first_valid_pine": 14,
+   "nan_mismatch_all": 13,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 14.332798259905253,
+   "max_abs_after_warm": 1.979628243731213e-05,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 2.3784132523019252e-05,
+   "max_abs_from_bar500": 0.0,
+   "max_abs_from_bar1000": 0.0,
+   "sign_mismatch_all": 18,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": [
+    "2004-06-14",
+    "2004-06-15",
+    "2004-06-16",
+    "2004-06-17",
+    "2004-06-18",
+    "2004-06-21",
+    "2004-06-22",
+    "2004-06-23",
+    "2004-06-24",
+    "2004-06-25",
+    "2004-06-28",
+    "2004-06-29"
+   ]
+  },
+  "rsi_ma": {
+   "first_valid_mm": 9,
+   "first_valid_pine": 22,
+   "nan_mismatch_all": 13,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 9.076475199042115,
+   "max_abs_after_warm": 2.4606859561515648e-05,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 2.6786091254393796e-05,
+   "max_abs_from_bar500": 2.842170943040401e-14,
+   "max_abs_from_bar1000": 2.842170943040401e-14,
+   "sign_mismatch_all": 20,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": [
+    "2004-06-24",
+    "2004-06-25",
+    "2004-06-28",
+    "2004-06-29",
+    "2004-06-30",
+    "2004-07-01",
+    "2004-07-02",
+    "2004-07-06",
+    "2004-07-07",
+    "2004-07-08",
+    "2004-07-09",
+    "2004-07-12"
+   ]
+  },
+  "macd": {
+   "first_valid_mm": 0,
+   "first_valid_pine": 25,
+   "nan_mismatch_all": 25,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 0.9819118967244549,
+   "max_abs_after_warm": 1.3953737152405665e-06,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 1.6275639040941314e-06,
+   "max_abs_from_bar500": 0.0,
+   "max_abs_from_bar1000": 0.0,
+   "sign_mismatch_all": 26,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": [
+    "2004-06-14",
+    "2004-06-15",
+    "2004-06-16",
+    "2004-06-17",
+    "2004-06-18",
+    "2004-06-21",
+    "2004-06-22",
+    "2004-06-23",
+    "2004-06-24",
+    "2004-06-25",
+    "2004-06-28",
+    "2004-06-29"
+   ]
+  },
+  "macd_sig": {
+   "first_valid_mm": 0,
+   "first_valid_pine": 33,
+   "nan_mismatch_all": 33,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 1.3410392143384595,
+   "max_abs_after_warm": 2.0520200446350056e-06,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 2.393476129403105e-06,
+   "max_abs_from_bar500": 0.0,
+   "max_abs_from_bar1000": 0.0,
+   "sign_mismatch_all": 41,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": [
+    "2004-06-14",
+    "2004-06-15",
+    "2004-06-16",
+    "2004-06-17",
+    "2004-06-18",
+    "2004-06-21",
+    "2004-06-22",
+    "2004-06-23",
+    "2004-06-24",
+    "2004-06-25",
+    "2004-06-28",
+    "2004-06-29"
+   ]
+  },
+  "macd_hist": {
+   "first_valid_mm": 0,
+   "first_valid_pine": 33,
+   "nan_mismatch_all": 33,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 0.7639023512930208,
+   "max_abs_after_warm": 6.566463293111724e-07,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 7.659122254199957e-07,
+   "max_abs_from_bar500": 0.0,
+   "max_abs_from_bar1000": 0.0,
+   "sign_mismatch_all": 32,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": [
+    "2004-06-14",
+    "2004-06-15",
+    "2004-06-16",
+    "2004-06-17",
+    "2004-06-18",
+    "2004-06-21",
+    "2004-06-22",
+    "2004-06-23",
+    "2004-06-24",
+    "2004-06-25",
+    "2004-06-28",
+    "2004-06-29"
+   ]
+  },
+  "rti": {
+   "first_valid_mm": 100,
+   "first_valid_pine": 100,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 1.573507901753146e-08,
+   "max_abs_after_warm": 1.573507901753146e-08,
+   "argmax_after_warm": "2012-12-28",
+   "max_abs_from_bar200": 1.573507901753146e-08,
+   "max_abs_from_bar500": 1.573507901753146e-08,
+   "max_abs_from_bar1000": 1.573507901753146e-08,
+   "sign_mismatch_all": 0,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": []
+  },
+  "rti_sig": {
+   "first_valid_mm": 100,
+   "first_valid_pine": 119,
+   "nan_mismatch_all": 19,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 1.8685841867645223,
+   "max_abs_after_warm": 0.000461168977992088,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 0.0005633670894624743,
+   "max_abs_from_bar500": 2.7003608238374e-09,
+   "max_abs_from_bar1000": 2.7003608238374e-09,
+   "sign_mismatch_all": 20,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": [
+    "2004-11-02",
+    "2004-11-03",
+    "2004-11-04",
+    "2004-11-05",
+    "2004-11-08",
+    "2004-11-09",
+    "2004-11-10",
+    "2004-11-11",
+    "2004-11-12",
+    "2004-11-15",
+    "2004-11-16",
+    "2004-11-17"
+   ]
+  },
+  "asi": {
+   "first_valid_mm": 0,
+   "first_valid_pine": 0,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 0.0,
+   "max_abs_after_warm": 0.0,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 0.0,
+   "max_abs_from_bar500": 0.0,
+   "max_abs_from_bar1000": 0.0,
+   "sign_mismatch_all": 0,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": []
+  },
+  "asi_sig": {
+   "first_valid_mm": 13,
+   "first_valid_pine": 13,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 5.329070518200751e-15,
+   "max_abs_after_warm": 5.329070518200751e-15,
+   "argmax_after_warm": "2018-01-19",
+   "max_abs_from_bar200": 5.329070518200751e-15,
+   "max_abs_from_bar500": 5.329070518200751e-15,
+   "max_abs_from_bar1000": 5.329070518200751e-15,
+   "sign_mismatch_all": 0,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": []
+  },
+  "rng": {
+   "first_valid_mm": 200,
+   "first_valid_pine": 199,
+   "nan_mismatch_all": 1,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 47.250705488103264,
+   "max_abs_after_warm": 47.250705488103264,
+   "argmax_after_warm": "2012-04-16",
+   "max_abs_from_bar200": 47.250705488103264,
+   "max_abs_from_bar500": 47.250705488103264,
+   "max_abs_from_bar1000": 47.250705488103264,
+   "sign_mismatch_all": 1,
+   "sign_mismatch_after_warm": 0,
+   "sign_mismatch_bars": [
+    "2005-03-29"
+   ]
+  },
+  "rng_mean": {
+   "first_valid_mm": 50,
+   "first_valid_pine": 1,
+   "nan_mismatch_all": 49,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 3.183231456205249e-12,
+   "max_abs_after_warm": 3.183231456205249e-12,
+   "argmax_after_warm": "2025-10-06",
+   "max_abs_from_bar200": 3.183231456205249e-12,
+   "max_abs_from_bar500": 3.183231456205249e-12,
+   "max_abs_from_bar1000": 3.183231456205249e-12
+  },
+  "rng_atr": {
+   "first_valid_mm": 200,
+   "first_valid_pine": 199,
+   "nan_mismatch_all": 1,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 22.62548080481892,
+   "max_abs_after_warm": 22.62548080481892,
+   "argmax_after_warm": "2012-04-16",
+   "max_abs_from_bar200": 22.62548080481892,
+   "max_abs_from_bar500": 22.62548080481892,
+   "max_abs_from_bar1000": 22.62548080481892
+  },
+  "ema89": {
+   "first_valid_mm": 0,
+   "first_valid_pine": 88,
+   "nan_mismatch_all": 88,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 1.2199289602961016,
+   "max_abs_after_warm": 0.09412675577817708,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 0.09845386386922428,
+   "max_abs_from_bar500": 0.0001162201890565484,
+   "max_abs_from_bar1000": 1.5323848856496625e-09
+  },
+  "sma20": {
+   "first_valid_mm": 19,
+   "first_valid_pine": 19,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 1.8189894035458565e-12,
+   "max_abs_after_warm": 1.8189894035458565e-12,
+   "argmax_after_warm": "2025-10-16",
+   "max_abs_from_bar200": 1.8189894035458565e-12,
+   "max_abs_from_bar500": 1.8189894035458565e-12,
+   "max_abs_from_bar1000": 1.8189894035458565e-12
+  },
+  "sma50": {
+   "first_valid_mm": 49,
+   "first_valid_pine": 49,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 2.7284841053187847e-12,
+   "max_abs_after_warm": 2.7284841053187847e-12,
+   "argmax_after_warm": "2026-01-21",
+   "max_abs_from_bar200": 2.7284841053187847e-12,
+   "max_abs_from_bar500": 2.7284841053187847e-12,
+   "max_abs_from_bar1000": 2.7284841053187847e-12
+  },
+  "sma200": {
+   "first_valid_mm": 199,
+   "first_valid_pine": 199,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 3.637978807091713e-12,
+   "max_abs_after_warm": 3.637978807091713e-12,
+   "argmax_after_warm": "2026-03-13",
+   "max_abs_from_bar200": 3.637978807091713e-12,
+   "max_abs_from_bar500": 3.637978807091713e-12,
+   "max_abs_from_bar1000": 3.637978807091713e-12
+  },
+  "vwap_live": {
+   "first_valid_mm": 0,
+   "first_valid_pine": 0,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 0.0,
+   "max_abs_after_warm": 0.0,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 0.0,
+   "max_abs_from_bar500": 0.0,
+   "max_abs_from_bar1000": 0.0
+  },
+  "vwap_redrawn": {
+   "first_valid_mm": 0,
+   "first_valid_pine": 0,
+   "nan_mismatch_all": 0,
+   "nan_mismatch_after_warm": 0,
+   "max_abs_all": 0.0,
+   "max_abs_after_warm": 0.0,
+   "argmax_after_warm": "2005-04-01",
+   "max_abs_from_bar200": 0.0,
+   "max_abs_from_bar500": 0.0,
+   "max_abs_from_bar1000": 0.0
+  },
+  "rsi-rsi_ma": {
+   "sign_mismatch_all": 16,
+   "sign_mismatch_after_warm": 0,
+   "bars": [
+    "2004-06-24",
+    "2004-06-25",
+    "2004-06-28",
+    "2004-06-29",
+    "2004-06-30",
+    "2004-07-01",
+    "2004-07-02",
+    "2004-07-06",
+    "2004-07-07",
+    "2004-07-08",
+    "2004-07-09",
+    "2004-07-12"
+   ]
+  },
+  "rti-rti_sig": {
+   "sign_mismatch_all": 19,
+   "sign_mismatch_after_warm": 0,
+   "bars": [
+    "2004-11-03",
+    "2004-11-04",
+    "2004-11-05",
+    "2004-11-08",
+    "2004-11-09",
+    "2004-11-10",
+    "2004-11-11",
+    "2004-11-12",
+    "2004-11-15",
+    "2004-11-16",
+    "2004-11-17",
+    "2004-11-18"
+   ]
+  },
+  "asi-asi_sig": {
+   "sign_mismatch_all": 0,
+   "sign_mismatch_after_warm": 0,
+   "bars": []
+  },
+  "close-ema89": {
+   "sign_mismatch_all": 90,
+   "sign_mismatch_after_warm": 1,
+   "bars": [
+    "2004-06-14",
+    "2004-06-15",
+    "2004-06-16",
+    "2004-06-17",
+    "2004-06-18",
+    "2004-06-21",
+    "2004-06-22",
+    "2004-06-23",
+    "2004-06-24",
+    "2004-06-25",
+    "2004-06-28",
+    "2004-06-29"
+   ]
+  },
+  "close-sma200": {
+   "sign_mismatch_all": 0,
+   "sign_mismatch_after_warm": 0,
+   "bars": []
+  },
+  "close-vwap_live": {
+   "sign_mismatch_all": 0,
+   "sign_mismatch_after_warm": 0,
+   "bars": []
+  },
+  "vw_dir_live": {
+   "mismatch_all": 0,
+   "bars": []
+  },
+  "vw_dir_redrawn": {
+   "mismatch_all": 0,
+   "bars": []
+  },
+  "vw_live_window1050_vs_fullhistory": {
+   "dir_mismatch_all": 0,
+   "dir_mismatch_after_first_full_window": 0,
+   "value_max_abs_after_first_full_window": 0.0,
+   "value_bars_diff_gt_0p01_after": 0,
+   "mismatch_bars": []
+  },
+  "vw_live_window441_vs_fullhistory": {
+   "dir_mismatch_all": 0,
+   "dir_mismatch_after_first_full_window": 0,
+   "value_max_abs_after_first_full_window": 0.0023965309646882815,
+   "value_bars_diff_gt_0p01_after": 0,
+   "mismatch_bars": []
+  },
+  "anchors": {
+   "n_mine": 67,
+   "n_mm": 67,
+   "identical": true,
+   "tags_identical": true,
+   "tag_counts": {
+    "HL": 24,
+    "HH": 17,
+    "LH": 15,
+    "LL": 9,
+    "": 2
+   },
+   "median_delay": 29.0
+  },
+  "redraw": {
+   "days_live_ne_redrawn_pct": 35.97
+  },
+  "asi_idx": {
+   "win_idx_at_count15": [
+    12
+   ],
+   "loss_idx_at_count15": [
+    2
+   ],
+   "rti_ranks": [
+    95,
+    5,
+    94.5,
+    4.5
+   ]
+  },
+  "ema_seed_alt": {
+   "macd_max_abs_after_warm": 1.3953737152405665e-06,
+   "hist_max_abs_after_warm": 6.566463293111724e-07
+  }
+ }
+}

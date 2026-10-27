@@ -1,0 +1,199 @@
+{
+ "D1": {
+  "mm_vs_pine_fullhist_rng_maxabs_excl_bar1999": 0.5714933885816436,
+  "bar1999": "2012-04-16 00:00:00",
+  "bar2699": "2014-12-31 00:00:00",
+  "atr_ratio_full_over_window_all": {
+   "min": 0.8619609285405091,
+   "median": 0.999999999999997,
+   "max": 1.023291892174357
+  },
+  "rng_maxabs_mm_vs_tvwindow_all": 66.28278718761283,
+  "rng_medianabs_mm_vs_tvwindow_all": 0.38219846131539015,
+  "rng_sign_mismatch_all": 1,
+  "beyond_100_mm_vs_tv_all": [
+   1797,
+   1755,
+   50
+  ],
+  "beyond_-100_mm_vs_tv_all": [
+   887,
+   838,
+   53
+  ],
+  "atr_ratio_full_over_window_from_bar2699": {
+   "min": 0.8619609285405091,
+   "median": 0.928221037672206,
+   "max": 1.023291892174357
+  },
+  "rng_maxabs_mm_vs_tvwindow_from_bar2699": 66.28278718761283,
+  "rng_medianabs_mm_vs_tvwindow_from_bar2699": 3.7681175571525642,
+  "rng_sign_mismatch_from_bar2699": 0,
+  "beyond_100_mm_vs_tv_from_bar2699": [
+   1025,
+   983,
+   50
+  ],
+  "beyond_-100_mm_vs_tv_from_bar2699": [
+   495,
+   445,
+   52
+  ],
+  "atr_ratio_full_over_window_by_year": {
+   "2005": 1.0,
+   "2006": 1.0,
+   "2007": 1.0,
+   "2008": 1.0,
+   "2009": 1.0,
+   "2010": 1.0,
+   "2011": 1.0,
+   "2012": 1.0,
+   "2013": 1.0,
+   "2014": 1.0,
+   "2015": 0.972,
+   "2016": 0.916,
+   "2017": 0.894,
+   "2018": 0.865,
+   "2019": 0.888,
+   "2020": 0.898,
+   "2021": 0.909,
+   "2022": 0.968,
+   "2023": 0.992,
+   "2024": 1.021,
+   "2025": 1.01,
+   "2026": 0.998
+  },
+  "last": {
+   "time": "2026-10-09 00:00:00",
+   "atr2000_full": 35.935623705853224,
+   "atr2000_window": 36.04021978345955,
+   "rng_mm": -204.9049407648895,
+   "rng_tv": -204.31680713681894
+  }
+ },
+ "H4": {
+  "mm_vs_pine_fullhist_rng_maxabs_excl_bar1999": 0.7699220324964244,
+  "bar1999": "2015-02-11 20:00:00",
+  "bar2699": "2015-07-27 20:00:00",
+  "atr_ratio_full_over_window_all": {
+   "min": 0.8296547686860579,
+   "median": 1.0,
+   "max": 1.097148191375662
+  },
+  "rng_maxabs_mm_vs_tvwindow_all": 81.49276838017704,
+  "rng_medianabs_mm_vs_tvwindow_all": 1.6294878093216516,
+  "rng_sign_mismatch_all": 1,
+  "beyond_100_mm_vs_tv_all": [
+   5445,
+   5362,
+   161
+  ],
+  "beyond_-100_mm_vs_tv_all": [
+   3947,
+   3884,
+   139
+  ],
+  "atr_ratio_full_over_window_from_bar2699": {
+   "min": 0.8296547686860579,
+   "median": 0.9990614200178932,
+   "max": 1.097148191375662
+  },
+  "rng_maxabs_mm_vs_tvwindow_from_bar2699": 81.49276838017704,
+  "rng_medianabs_mm_vs_tvwindow_from_bar2699": 2.170651459445466,
+  "rng_sign_mismatch_from_bar2699": 0,
+  "beyond_100_mm_vs_tv_from_bar2699": [
+   4928,
+   4845,
+   161
+  ],
+  "beyond_-100_mm_vs_tv_from_bar2699": [
+   3389,
+   3326,
+   139
+  ],
+  "atr_ratio_full_over_window_by_year": {
+   "2013": 1.0,
+   "2014": 1.0,
+   "2015": 1.0,
+   "2016": 1.006,
+   "2017": 0.987,
+   "2018": 1.058,
+   "2019": 1.063,
+   "2020": 1.0,
+   "2021": 0.888,
+   "2022": 0.969,
+   "2023": 0.99,
+   "2024": 1.005,
+   "2025": 0.963,
+   "2026": 0.936
+  },
+  "last": {
+   "time": "2026-10-09 20:00:00",
+   "atr2000_full": 30.80653863366054,
+   "atr2000_window": 34.59598118675361,
+   "rng_mm": 65.98705168637231,
+   "rng_tv": 58.759214410551365
+  }
+ },
+ "H1": {
+  "mm_vs_pine_fullhist_rng_maxabs_excl_bar1999": 0.2070947891516255,
+  "bar1999": "2016-11-30 09:00:00",
+  "bar2699": "2017-01-13 19:00:00",
+  "atr_ratio_full_over_window_all": {
+   "min": 0.796085976925651,
+   "median": 1.0,
+   "max": 1.1003999768385342
+  },
+  "rng_maxabs_mm_vs_tvwindow_all": 139.27586909767535,
+  "rng_medianabs_mm_vs_tvwindow_all": 2.263425692072431,
+  "rng_sign_mismatch_all": 1,
+  "beyond_100_mm_vs_tv_all": [
+   14653,
+   14480,
+   587
+  ],
+  "beyond_-100_mm_vs_tv_all": [
+   11463,
+   11242,
+   509
+  ],
+  "atr_ratio_full_over_window_from_bar2699": {
+   "min": 0.796085976925651,
+   "median": 0.9996247758092252,
+   "max": 1.1003999768385342
+  },
+  "rng_maxabs_mm_vs_tvwindow_from_bar2699": 139.27586909767535,
+  "rng_medianabs_mm_vs_tvwindow_from_bar2699": 2.4499215547648703,
+  "rng_sign_mismatch_from_bar2699": 0,
+  "beyond_100_mm_vs_tv_from_bar2699": [
+   14290,
+   14117,
+   587
+  ],
+  "beyond_-100_mm_vs_tv_from_bar2699": [
+   10884,
+   10663,
+   509
+  ],
+  "atr_ratio_full_over_window_by_year": {
+   "2016": 1.0,
+   "2017": 1.034,
+   "2018": 1.012,
+   "2019": 1.007,
+   "2020": 0.963,
+   "2021": 1.039,
+   "2022": 1.018,
+   "2023": 1.009,
+   "2024": 0.971,
+   "2025": 0.971,
+   "2026": 0.916
+  },
+  "last": {
+   "time": "2026-10-09 22:00:00",
+   "atr2000_full": 20.096218811808793,
+   "atr2000_window": 18.97979413626624,
+   "rng_mm": 117.35090204649894,
+   "rng_tv": 124.25368728227505
+  }
+ }
+}

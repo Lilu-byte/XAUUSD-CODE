@@ -1,0 +1,541 @@
+[
+ {
+  "combined": {
+   "pair": {
+    "per_day": 4.0,
+    "trades_day": 2.26,
+    "max_dd": -367.0,
+    "max_dd_mtm": -400.0,
+    "worst_month": -152.0
+   },
+   "m15_train": {
+    "per_day": 2.09,
+    "trades_day": 1.74,
+    "max_dd": -290.0,
+    "max_dd_mtm": -314.0,
+    "worst_month": -175.0
+   },
+   "m15_test": {
+    "per_day": 3.26,
+    "trades_day": 1.75,
+    "max_dd": -484.0,
+    "max_dd_mtm": -587.0,
+    "worst_month": -242.0
+   },
+   "h1_old": {
+    "per_day": -1.25,
+    "trades_day": 1.45,
+    "max_dd": -1931.0,
+    "max_dd_mtm": -1957.0,
+    "worst_month": -331.0
+   }
+  },
+  "alone": {
+   "pair": {
+    "per_day": -0.66,
+    "trades_day": 0.67,
+    "max_dd": -317.0,
+    "win_rate": 0.787
+   },
+   "m15_train": {
+    "per_day": 0.16,
+    "trades_day": 0.5,
+    "max_dd": -130.0,
+    "win_rate": 0.783
+   },
+   "m15_test": {
+    "per_day": -0.8,
+    "trades_day": 0.53,
+    "max_dd": -624.0,
+    "win_rate": 0.759
+   },
+   "h1_old": {
+    "per_day": -0.37,
+    "trades_day": 0.42,
+    "max_dd": -617.0,
+    "win_rate": 0.727
+   }
+  },
+  "by_year": {
+   "pair": {
+    "2025": -0.44,
+    "2026": -0.85
+   },
+   "m15_train": {
+    "2022": 0.14,
+    "2023": 0.4,
+    "2024": -0.32
+   },
+   "m15_test": {
+    "2024": -0.3,
+    "2025": -0.69,
+    "2026": -1.27
+   },
+   "h1_old": {
+    "2016": -1.24,
+    "2017": -0.29,
+    "2018": -0.62,
+    "2019": 0.02,
+    "2020": -0.12,
+    "2021": -0.41,
+    "2022": -0.44
+   }
+  },
+  "corr_pair": 0.04,
+  "best3_removed_pair_per_day": 3.96,
+  "top3_days": {
+   "2026-02-17": 5.4,
+   "2025-05-08": 5.0,
+   "2025-05-09": 5.0
+  },
+  "pair_exits": {
+   "TP": 195,
+   "SL": 31,
+   "pair busy": 12,
+   "EOD": 8,
+   "next open": 3
+  },
+  "corr_m15_test": -0.01,
+  "name": "move 10:00-15:30 against, TP 5 / SL 30, gate strict",
+  "cand": {
+   "family": "London",
+   "signal": "move 10:00-15:30 against",
+   "spec": {
+    "kind": "move",
+    "start": 600,
+    "end": 930,
+    "mode": -1,
+    "thr": 0.0
+   },
+   "tp": 5.0,
+   "sl": 30.0,
+   "gate": "strict"
+  },
+  "random_pct_test": 17.0,
+  "random_median": -0.52,
+  "random_p95": -0.07,
+  "tests": {
+   "a": false,
+   "b": false,
+   "c": false,
+   "d": false,
+   "e": false
+  },
+  "verdict": "fail",
+  "ungated_reference": {
+   "combined": {
+    "pair": {
+     "per_day": 3.02,
+     "trades_day": 2.58,
+     "max_dd": -472.0,
+     "max_dd_mtm": -472.0,
+     "worst_month": -172.0
+    },
+    "m15_train": {
+     "per_day": 1.4,
+     "trades_day": 2.23,
+     "max_dd": -379.0,
+     "max_dd_mtm": -409.0,
+     "worst_month": -157.0
+    },
+    "m15_test": {
+     "per_day": 2.71,
+     "trades_day": 2.21,
+     "max_dd": -511.0,
+     "max_dd_mtm": -619.0,
+     "worst_month": -241.0
+    },
+    "h1_old": {
+     "per_day": -1.64,
+     "trades_day": 2.03,
+     "max_dd": -2529.0,
+     "max_dd_mtm": -2560.0,
+     "worst_month": -376.0
+    }
+   },
+   "alone": {
+    "pair": {
+     "per_day": -1.64,
+     "trades_day": 0.99,
+     "max_dd": -633.0,
+     "win_rate": 0.786
+    },
+    "m15_train": {
+     "per_day": -0.53,
+     "trades_day": 0.99,
+     "max_dd": -307.0,
+     "win_rate": 0.79
+    },
+    "m15_test": {
+     "per_day": -1.35,
+     "trades_day": 0.98,
+     "max_dd": -963.0,
+     "win_rate": 0.79
+    },
+    "h1_old": {
+     "per_day": -0.76,
+     "trades_day": 0.99,
+     "max_dd": -1257.0,
+     "win_rate": 0.752
+    }
+   }
+  }
+ },
+ {
+  "combined": {
+   "pair": {
+    "per_day": 5.26,
+    "trades_day": 2.28,
+    "max_dd": -343.0,
+    "max_dd_mtm": -298.0,
+    "worst_month": -130.0
+   },
+   "m15_train": {
+    "per_day": 1.96,
+    "trades_day": 1.81,
+    "max_dd": -296.0,
+    "max_dd_mtm": -338.0,
+    "worst_month": -112.0
+   },
+   "m15_test": {
+    "per_day": 4.12,
+    "trades_day": 1.79,
+    "max_dd": -373.0,
+    "max_dd_mtm": -404.0,
+    "worst_month": -202.0
+   },
+   "h1_old": {
+    "per_day": -1.43,
+    "trades_day": 1.48,
+    "max_dd": -2201.0,
+    "max_dd_mtm": -2226.0,
+    "worst_month": -344.0
+   }
+  },
+  "alone": {
+   "pair": {
+    "per_day": 0.6,
+    "trades_day": 0.68,
+    "max_dd": -122.0,
+    "win_rate": 0.844
+   },
+   "m15_train": {
+    "per_day": 0.03,
+    "trades_day": 0.57,
+    "max_dd": -231.0,
+    "win_rate": 0.759
+   },
+   "m15_test": {
+    "per_day": 0.06,
+    "trades_day": 0.57,
+    "max_dd": -256.0,
+    "win_rate": 0.802
+   },
+   "h1_old": {
+    "per_day": -0.55,
+    "trades_day": 0.44,
+    "max_dd": -993.0,
+    "win_rate": 0.671
+   }
+  },
+  "by_year": {
+   "pair": {
+    "2025": -0.33,
+    "2026": 1.4
+   },
+   "m15_train": {
+    "2022": 0.79,
+    "2023": -0.12,
+    "2024": -0.4
+   },
+   "m15_test": {
+    "2024": -0.18,
+    "2025": -0.55,
+    "2026": 1.01
+   },
+   "h1_old": {
+    "2016": 0.66,
+    "2017": -1.1,
+    "2018": -0.69,
+    "2019": -0.51,
+    "2020": -0.24,
+    "2021": -0.91,
+    "2022": -0.12
+   }
+  },
+  "corr_pair": -0.08,
+  "best3_removed_pair_per_day": 5.22,
+  "top3_days": {
+   "2025-05-08": 5.0,
+   "2025-05-09": 5.0,
+   "2025-05-12": 5.0
+  },
+  "pair_exits": {
+   "TP": 214,
+   "EOD": 28,
+   "pair busy": 7,
+   "SL": 5,
+   "next open": 2
+  },
+  "corr_m15_test": -0.04,
+  "name": "H1 EMA20/80 at 17:00, TP 5 / SL 50, gate strict",
+  "cand": {
+   "family": "H1EMA",
+   "signal": "H1 EMA20/80 at 17:00",
+   "spec": {
+    "kind": "h1ema",
+    "T": 1020
+   },
+   "tp": 5.0,
+   "sl": 50.0,
+   "gate": "strict"
+  },
+  "random_pct_test": 84.0,
+  "random_median": -0.27,
+  "random_p95": 0.21,
+  "tests": {
+   "a": false,
+   "b": false,
+   "c": true,
+   "d": false,
+   "e": false
+  },
+  "verdict": "fail",
+  "ungated_reference": {
+   "combined": {
+    "pair": {
+     "per_day": 4.55,
+     "trades_day": 2.58,
+     "max_dd": -382.0,
+     "max_dd_mtm": -355.0,
+     "worst_month": -156.0
+    },
+    "m15_train": {
+     "per_day": 1.67,
+     "trades_day": 2.23,
+     "max_dd": -423.0,
+     "max_dd_mtm": -459.0,
+     "worst_month": -158.0
+    },
+    "m15_test": {
+     "per_day": 3.65,
+     "trades_day": 2.21,
+     "max_dd": -377.0,
+     "max_dd_mtm": -459.0,
+     "worst_month": -212.0
+    },
+    "h1_old": {
+     "per_day": -2.05,
+     "trades_day": 2.03,
+     "max_dd": -3163.0,
+     "max_dd_mtm": -3193.0,
+     "worst_month": -445.0
+    }
+   },
+   "alone": {
+    "pair": {
+     "per_day": -0.1,
+     "trades_day": 0.99,
+     "max_dd": -266.0,
+     "win_rate": 0.822
+    },
+    "m15_train": {
+     "per_day": -0.26,
+     "trades_day": 0.99,
+     "max_dd": -428.0,
+     "win_rate": 0.75
+    },
+    "m15_test": {
+     "per_day": -0.41,
+     "trades_day": 0.99,
+     "max_dd": -412.0,
+     "win_rate": 0.787
+    },
+    "h1_old": {
+     "per_day": -1.17,
+     "trades_day": 0.99,
+     "max_dd": -1906.0,
+     "win_rate": 0.695
+    }
+   }
+  }
+ },
+ {
+  "combined": {
+   "pair": {
+    "per_day": 3.97,
+    "trades_day": 2.09,
+    "max_dd": -387.0,
+    "max_dd_mtm": -420.0,
+    "worst_month": -159.0
+   },
+   "m15_train": {
+    "per_day": 1.95,
+    "trades_day": 1.55,
+    "max_dd": -305.0,
+    "max_dd_mtm": -315.0,
+    "worst_month": -172.0
+   },
+   "m15_test": {
+    "per_day": 3.35,
+    "trades_day": 1.52,
+    "max_dd": -390.0,
+    "max_dd_mtm": -437.0,
+    "worst_month": -174.0
+   },
+   "h1_old": {
+    "per_day": -0.97,
+    "trades_day": 1.23,
+    "max_dd": -1521.0,
+    "max_dd_mtm": -1546.0,
+    "worst_month": -301.0
+   }
+  },
+  "alone": {
+   "pair": {
+    "per_day": -0.69,
+    "trades_day": 0.5,
+    "max_dd": -487.0,
+    "win_rate": 0.759
+   },
+   "m15_train": {
+    "per_day": 0.02,
+    "trades_day": 0.31,
+    "max_dd": -178.0,
+    "win_rate": 0.702
+   },
+   "m15_test": {
+    "per_day": -0.71,
+    "trades_day": 0.3,
+    "max_dd": -524.0,
+    "win_rate": 0.695
+   },
+   "h1_old": {
+    "per_day": -0.09,
+    "trades_day": 0.19,
+    "max_dd": -282.0,
+    "win_rate": 0.681
+   }
+  },
+  "by_year": {
+   "pair": {
+    "2025": -1.06,
+    "2026": -0.37
+   },
+   "m15_train": {
+    "2022": 0.05,
+    "2023": 0.07,
+    "2024": -0.13
+   },
+   "m15_test": {
+    "2024": -1.43,
+    "2025": -0.97,
+    "2026": 0.1
+   },
+   "h1_old": {
+    "2016": 0.2,
+    "2017": -0.05,
+    "2018": 0.07,
+    "2019": -0.11,
+    "2020": -0.54,
+    "2021": 0.13,
+    "2022": -0.19
+   }
+  },
+  "corr_pair": -0.09,
+  "best3_removed_pair_per_day": 3.91,
+  "top3_days": {
+   "2025-05-09": 8.0,
+   "2025-05-14": 8.0,
+   "2025-05-16": 8.0
+  },
+  "pair_exits": {
+   "TP": 139,
+   "EOD": 25,
+   "SL": 21,
+   "next open": 2
+  },
+  "corr_m15_test": -0.06,
+  "name": "pullback H1EMA20, H4, TP 8 / SL 50, gate entry",
+  "cand": {
+   "family": "Pullback",
+   "signal": "pullback H1EMA20, H4",
+   "spec": {
+    "kind": "pullback",
+    "need_h1": false
+   },
+   "tp": 8.0,
+   "sl": 50.0,
+   "gate": "entry"
+  },
+  "random_pct_test": 34.5,
+  "random_median": -0.56,
+  "random_p95": -0.02,
+  "tests": {
+   "a": false,
+   "b": false,
+   "c": false,
+   "d": false,
+   "e": false
+  },
+  "verdict": "fail",
+  "ungated_reference": {
+   "combined": {
+    "pair": {
+     "per_day": 3.95,
+     "trades_day": 2.28,
+     "max_dd": -421.0,
+     "max_dd_mtm": -446.0,
+     "worst_month": -172.0
+    },
+    "m15_train": {
+     "per_day": 2.08,
+     "trades_day": 1.96,
+     "max_dd": -325.0,
+     "max_dd_mtm": -368.0,
+     "worst_month": -243.0
+    },
+    "m15_test": {
+     "per_day": 3.43,
+     "trades_day": 1.87,
+     "max_dd": -497.0,
+     "max_dd_mtm": -557.0,
+     "worst_month": -267.0
+    },
+    "h1_old": {
+     "per_day": -1.41,
+     "trades_day": 1.59,
+     "max_dd": -2205.0,
+     "max_dd_mtm": -2235.0,
+     "worst_month": -462.0
+    }
+   },
+   "alone": {
+    "pair": {
+     "per_day": -0.71,
+     "trades_day": 0.68,
+     "max_dd": -507.0,
+     "win_rate": 0.757
+    },
+    "m15_train": {
+     "per_day": 0.15,
+     "trades_day": 0.72,
+     "max_dd": -186.0,
+     "win_rate": 0.716
+    },
+    "m15_test": {
+     "per_day": -0.62,
+     "trades_day": 0.64,
+     "max_dd": -656.0,
+     "win_rate": 0.744
+    },
+    "h1_old": {
+     "per_day": -0.53,
+     "trades_day": 0.56,
+     "max_dd": -995.0,
+     "win_rate": 0.666
+    }
+   }
+  }
+ }
+]

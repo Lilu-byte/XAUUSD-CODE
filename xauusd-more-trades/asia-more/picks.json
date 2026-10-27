@@ -1,0 +1,31 @@
+[
+ {
+  "family": "A",
+  "spec": {
+   "kind": "change",
+   "rearm": "tp",
+   "fresh": "reinside",
+   "max_trades": 2,
+   "rearm_tp": 3,
+   "rearm_sl": 30
+  }
+ },
+ {
+  "family": "C",
+  "spec": {
+   "kind": "stream",
+   "range_start": 0,
+   "range_end": 420,
+   "tp": 8,
+   "sl": 30
+  }
+ },
+ {
+  "family": "D",
+  "spec": {
+   "kind": "stream",
+   "tp": 8,
+   "sl": 50
+  }
+ }
+]

@@ -1,0 +1,50 @@
+{
+ "H4 a_MA_stack": {
+  "train": {
+   "real": 0.174,
+   "shifted_median": -0.045,
+   "beats_pct": 96.0
+  },
+  "test": {
+   "real": 1.445,
+   "shifted_median": 0.278,
+   "beats_pct": 100.0
+  }
+ },
+ "D1 c_MACD_line": {
+  "train": {
+   "real": 0.083,
+   "shifted_median": 0.004,
+   "beats_pct": 73.0
+  },
+  "test": {
+   "real": 0.894,
+   "shifted_median": 0.501,
+   "beats_pct": 89.0
+  }
+ },
+ "H1 d_RangeOsc_break": {
+  "train": {
+   "real": 0.355,
+   "shifted_median": -0.036,
+   "beats_pct": 97.0
+  },
+  "test": {
+   "real": 1.235,
+   "shifted_median": 0.499,
+   "beats_pct": 93.0
+  }
+ },
+ "H1 e_all_5of7": {
+  "train": {
+   "real": -0.008,
+   "shifted_median": -0.306,
+   "beats_pct": 95.0
+  },
+  "test": {
+   "real": 1.927,
+   "shifted_median": 0.177,
+   "beats_pct": 100.0
+  }
+ }
+}

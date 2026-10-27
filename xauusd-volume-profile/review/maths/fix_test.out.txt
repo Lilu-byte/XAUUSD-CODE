@@ -1,0 +1,5 @@
+single candle, 60 rows, fixed: POC row 29 in 2000 of 2000; value areas seen [(9, 50)]
+real M1 ranges, fixed port vs reference: 30 profiles, max row diff 1.9e-13 of the POC row, POC/VA rows different in 0
+cap, M5 2026-01..2026-01 size 0.5: rows 1290 step 1 base 4309.00 -> POC 4615.50 VAL 4310.00 VAH 5028.00
+cap, H1 2016-01..2026-12 size 1: rows 1493 step 3 base 1122.00 -> POC 1276.50 VAL 1122.00 VAH 3642.00
+cap, M1 2026-09..2026-09 size 1e-07: rows 2000 step 0.2012206 base 4108.32 -> POC 4353.11 VAL 4282.38 VAH 4438.12

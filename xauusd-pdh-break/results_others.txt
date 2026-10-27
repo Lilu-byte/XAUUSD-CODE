@@ -1,0 +1,32 @@
+Turtle trades 57 mean R 1.01
+Turtle D1 0.01 lot 2004-06-11..2026-10-09: trades 57, $/day 0.44, total $2544, closed dd $-240, by year {2004: 6, 2005: -29, 2006: 71, 2007: -33, 2008: 170, 2009: 80, 2010: 38, 2011: 158, 2012: 33, 2013: -56, 2014: 2, 2015: -88, 2016: 8, 2017: -83, 2018: -22, 2019: 188, 2020: 133, 2021: -66, 2022: 34, 2023: 89, 2024: 329, 2025: 434, 2026: 1151}
+Turtle D1 0.01 lot 2016-08-01..2026-10-09: trades 25, $/day 0.82, total $2184, closed dd $-219, by year {2016: -2, 2017: -83, 2018: -22, 2019: 188, 2020: 133, 2021: -66, 2022: 34, 2023: 89, 2024: 329, 2025: 434, 2026: 1151}
+Turtle D1 0.01 lot 2025-05-06..2026-10-09: trades 3, $/day 4.24, total $1585, closed dd $-219, by year {2025: 434, 2026: 1151}
+Turtle with EA sizing at 0.5% of $3,000: trades 6, last entry 2005-11-17 skipped 566
+Turtle with EA sizing at 1.0% of $3,000: trades 24, last entry 2019-12-31 skipped 327
+  hold 0.01 lot 2004-06-11..2026-10-09: $/day 0.48
+  hold 0.01 lot 2016-08-01..2026-10-09: $/day 0.89
+  hold 0.01 lot 2025-05-06..2026-10-09: $/day 1.87
+EWMAC H1 (0-4 units of 0.01) 2016-08-01..2026-10-09: $/day 2.71, total $7209, dd $-1570, by year {2016: -104, 2017: 153, 2018: -208, 2019: -4, 2020: 1004, 2021: -198, 2022: -268, 2023: 299, 2024: 715, 2025: 3705, 2026: 2114}
+EWMAC H1 (0-4 units of 0.01) 2016-08-01..2021-06-30: $/day 0.64, total $823, dd $-535, by year {2016: -104, 2017: 153, 2018: -208, 2019: -4, 2020: 1004, 2021: -19}
+EWMAC H1 (0-4 units of 0.01) 2021-07-01..2026-10-09: $/day 4.64, total $6386, dd $-1570, by year {2021: -179, 2022: -268, 2023: 299, 2024: 715, 2025: 3705, 2026: 2114}
+EWMAC H1 (0-4 units of 0.01) 2025-05-06..2026-10-09: $/day 11.64, total $4354, dd $-1570, by year {2025: 2239, 2026: 2114}
+FOMC trades 80 win 0.45
+FOMC H1 0.01 lot 2016-01-01..2026-10-09: trades 80, $/day 0.04, total $122, closed dd $-80, by year {2016: 7, 2017: 9, 2018: -16, 2019: -2, 2020: -3, 2021: 25, 2022: -28, 2023: 11, 2024: 32, 2025: 40, 2026: 46}
+FOMC with EA sizing (0.5% of $3,000): trades 52 skipped 28 last 2026-04-29
+2016-08-01..2021-06-30: avg units 1.02 (time at 4 units 10%, flat 55%), EWMAC $/day 0.64, holding the same avg size $/day 0.15; dd EWMAC $-535 vs hold-same-size $-389; units changes/day 1.21
+2021-07-01..2026-10-09: avg units 1.12 (time at 4 units 12%, flat 54%), EWMAC $/day 4.64, holding the same avg size $/day 1.76; dd EWMAC $-1570 vs hold-same-size $-1602; units changes/day 1.22
+2025-05-06..2026-10-09: avg units 1.14 (time at 4 units 14%, flat 54%), EWMAC $/day 11.64, holding the same avg size $/day 2.13; dd EWMAC $-1570 vs hold-same-size $-1636; units changes/day 1.11
+2016-08-01..2026-10-09: avg units 1.07 (time at 4 units 11%, flat 55%), EWMAC $/day 2.71, holding the same avg size $/day 0.96; dd EWMAC $-1570 vs hold-same-size $-1538; units changes/day 1.21
+default 0-4 units: worst drop $-1570 from 2026-01-28 to 2026-08-04
+   2016-08-01..2021-06-30: $/day 0.64, dd $-535, worst month $-187, losing months 53%, by year {2016: -104, 2017: 153, 2018: -208, 2019: -4, 2020: 1004, 2021: -19}
+   2021-07-01..2026-10-09: $/day 4.64, dd $-1570, worst month $-831, losing months 47%, by year {2021: -179, 2022: -268, 2023: 299, 2024: 715, 2025: 3705, 2026: 2114}
+   2025-05-06..2026-10-09: $/day 11.64, dd $-1570, worst month $-831, losing months 39%, by year {2025: 2239, 2026: 2114}
+   pair: pair $/day 4.66, EWMAC 11.64, together 16.30, dd together $-1596 (pair alone -284), corr 0.26
+   m15_test: pair $/day 4.06, EWMAC 10.69, together 14.74, dd together $-1698 (pair alone -298), corr -0.09
+Cap=0.5 -> 0-1 unit: worst drop $-735 from 2026-01-29 to 2026-08-04
+   2016-08-01..2021-06-30: $/day 0.25, dd $-195, worst month $-68, losing months 51%, by year {2016: -65, 2017: 91, 2018: -52, 2019: -49, 2020: 373, 2021: 20}
+   2021-07-01..2026-10-09: $/day 1.41, dd $-735, worst month $-397, losing months 39%, by year {2021: -41, 2022: -78, 2023: 100, 2024: 158, 2025: 1422, 2026: 384}
+   2025-05-06..2026-10-09: $/day 3.14, dd $-735, worst month $-397, losing months 33%, by year {2025: 790, 2026: 384}
+   pair: pair $/day 4.66, EWMAC 3.14, together 7.80, dd together $-809 (pair alone -284), corr 0.27
+   m15_test: pair $/day 4.06, EWMAC 3.31, together 7.37, dd together $-915 (pair alone -298), corr 0.01

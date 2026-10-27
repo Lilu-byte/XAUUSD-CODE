@@ -1,0 +1,14 @@
+single candle, 60 rows: POC row distribution (ideal = 29 every time)
+  POC == 29: 1976 / 2000
+  POC more than 5 rows from the middle: 5 / 2000
+  example POCs: [29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29]
+  example candle 2650.12 2651.47 -> POC row 29 relative row spread 0.0
+
+longest row, in candles, for InpWidthPct = 30:
+  nb=   1: maxW=  0.30 candles -> longest row drawn 0 whole candles; rows under 100.0% of the POC have zero drawn width (left placement)
+  nb=   2: maxW=  0.60 candles -> longest row drawn 0 whole candles; rows under 100.0% of the POC have zero drawn width (left placement)
+  nb=   3: maxW=  0.90 candles -> longest row drawn 0 whole candles; rows under 100.0% of the POC have zero drawn width (left placement)
+  nb=   5: maxW=  1.50 candles -> longest row drawn 1 whole candles; rows under  66.7% of the POC have zero drawn width (left placement)
+  nb=  10: maxW=  3.00 candles -> longest row drawn 3 whole candles; rows under  33.3% of the POC have zero drawn width (left placement)
+  nb=  20: maxW=  6.00 candles -> longest row drawn 6 whole candles; rows under  16.7% of the POC have zero drawn width (left placement)
+  nb= 121: maxW= 36.30 candles -> longest row drawn 36 whole candles; rows under   2.8% of the POC have zero drawn width (left placement)

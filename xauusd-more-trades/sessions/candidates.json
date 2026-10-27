@@ -1,0 +1,26 @@
+[
+ {
+  "setup": "PDHL >01:00",
+  "family": "prevday",
+  "mode": "break",
+  "tp": 10,
+  "sl": 25,
+  "alone_per_day": 0.355
+ },
+ {
+  "setup": "NYO 30m",
+  "family": "nyopen",
+  "mode": "break",
+  "tp": 5,
+  "sl": 35,
+  "alone_per_day": 0.354
+ },
+ {
+  "setup": "USD 15m",
+  "family": "usdata",
+  "mode": "fail",
+  "tp": 10,
+  "sl": 15,
+  "alone_per_day": 0.176
+ }
+]

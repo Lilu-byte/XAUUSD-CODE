@@ -1,0 +1,38 @@
+[
+ {
+  "family": "London",
+  "signal": "move 10:00-15:30 against",
+  "spec": {
+   "kind": "move",
+   "start": 600,
+   "end": 930,
+   "mode": -1,
+   "thr": 0.0
+  },
+  "tp": 5.0,
+  "sl": 30.0,
+  "gate": "strict"
+ },
+ {
+  "family": "H1EMA",
+  "signal": "H1 EMA20/80 at 17:00",
+  "spec": {
+   "kind": "h1ema",
+   "T": 1020
+  },
+  "tp": 5.0,
+  "sl": 50.0,
+  "gate": "strict"
+ },
+ {
+  "family": "Pullback",
+  "signal": "pullback H1EMA20, H4",
+  "spec": {
+   "kind": "pullback",
+   "need_h1": false
+  },
+  "tp": 8.0,
+  "sl": 50.0,
+  "gate": "entry"
+ }
+]

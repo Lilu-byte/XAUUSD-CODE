@@ -1,0 +1,61 @@
+[
+ {
+  "family": "change",
+  "how": "eligible, best $/day",
+  "spec": {
+   "kind": "change/armed",
+   "anchors": [
+    "H1",
+    "H4"
+   ],
+   "fast": [
+    "M15"
+   ],
+   "fast_emas": [
+    5,
+    20
+   ]
+  },
+  "name": "change/armed anchors H1+H4 fast M15 fastEMA5/20"
+ },
+ {
+  "family": "short",
+  "how": "none eligible: best $/day among E1",
+  "spec": {
+   "kind": "short",
+   "tfs": [
+    "M15",
+    "M30",
+    "H1",
+    "H4"
+   ],
+   "drop": 0,
+   "emas": [
+    8,
+    32
+   ]
+  },
+  "name": "short M15+M30+H1+H4 EMA8/32"
+ },
+ {
+  "family": "sibling",
+  "how": "none eligible: smallest dd excess among E1+E2+E4",
+  "spec": {
+   "kind": "sibling",
+   "tfs": [
+    "M15",
+    "M30",
+    "H1",
+    "H4"
+   ],
+   "drop": 0,
+   "emas": [
+    15,
+    60
+   ],
+   "side": 1,
+   "mode": "hold"
+  },
+  "name": "sibling M15+M30+H1+H4 EMA15/60 side+1 hold"
+ }
+]

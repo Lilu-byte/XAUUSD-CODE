@@ -1,0 +1,157 @@
+{
+ "('H4', 'a_MA_stack')": {
+  "maxdiff_from2016": 0.0,
+  "n_gt_0p01_from2016": 0,
+  "maxdiff_all": 0.27240708292682925,
+  "argmax_all": "2015-10-08 00:00:00",
+  "days_only_verify": 0,
+  "days_only_main": 0,
+  "last_verify": "2026-10-09 00:00:00",
+  "last_main": "2026-10-09 00:00:00"
+ },
+ "('H4', 'b_hold')": {
+  "maxdiff_from2016": 0.1000000000003638,
+  "n_gt_0p01_from2016": 1,
+  "maxdiff_all": 0.28087336097561,
+  "argmax_all": "2015-12-03 00:00:00",
+  "days_only_verify": 0,
+  "days_only_main": 0,
+  "last_verify": "2026-10-09 00:00:00",
+  "last_main": "2026-10-09 00:00:00"
+ },
+ "('D1', 'c_MACD_line')": {
+  "maxdiff_from2016": 0.0,
+  "n_gt_0p01_from2016": 0,
+  "maxdiff_all": 0.3426155121951222,
+  "argmax_all": "2004-06-17 00:00:00",
+  "days_only_verify": 0,
+  "days_only_main": 0,
+  "last_verify": "2026-10-09 00:00:00",
+  "last_main": "2026-10-09 00:00:00"
+ },
+ "('D1', 'b_hold')": {
+  "maxdiff_from2016": 0.1000000000003638,
+  "n_gt_0p01_from2016": 1,
+  "maxdiff_all": 0.3426155121951222,
+  "argmax_all": "2004-06-17 00:00:00",
+  "days_only_verify": 0,
+  "days_only_main": 0,
+  "last_verify": "2026-10-09 00:00:00",
+  "last_main": "2026-10-09 00:00:00"
+ },
+ "('H1', 'd_RangeOsc_break')": {
+  "maxdiff_from2016": 0.1000000000003638,
+  "n_gt_0p01_from2016": 1,
+  "maxdiff_all": 0.1000000000003638,
+  "argmax_all": "2026-10-09 00:00:00",
+  "days_only_verify": 0,
+  "days_only_main": 0,
+  "last_verify": "2026-10-09 00:00:00",
+  "last_main": "2026-10-09 00:00:00"
+ },
+ "('H1', 'e_all_5of7')": {
+  "maxdiff_from2016": 0.1000000000003638,
+  "n_gt_0p01_from2016": 1,
+  "maxdiff_all": 0.1000000000003638,
+  "argmax_all": "2026-10-09 00:00:00",
+  "days_only_verify": 0,
+  "days_only_main": 0,
+  "last_verify": "2026-10-09 00:00:00",
+  "last_main": "2026-10-09 00:00:00"
+ },
+ "('H1', 'b_hold')": {
+  "maxdiff_from2016": 0.1000000000003638,
+  "n_gt_0p01_from2016": 1,
+  "maxdiff_all": 0.1000000000003638,
+  "argmax_all": "2026-10-09 00:00:00",
+  "days_only_verify": 0,
+  "days_only_main": 0,
+  "last_verify": "2026-10-09 00:00:00",
+  "last_main": "2026-10-09 00:00:00"
+ },
+ "usd_vs_ret": {
+  "D1|test": {
+   "hold_ret": 0.699,
+   "hold_usd": 0.495,
+   "spearman": 0.943,
+   "n_usd_higher": 17,
+   "n": 44,
+   "flips_vs_hold": [
+    "Close vs 89 EMA (main chart)|long only: ret 0.67 usd 0.52",
+    "Swing VWAP direction|long only: ret 0.68 usd 0.52",
+    "MACD line sign|long only: ret 0.69 usd 0.55"
+   ]
+  },
+  "D1|train": {
+   "hold_ret": 0.467,
+   "hold_usd": 0.212,
+   "spearman": 0.913,
+   "n_usd_higher": 7,
+   "n": 44,
+   "flips_vs_hold": [
+    "MA stack 20/50/200|long only: ret 0.43 usd 0.25",
+    "Close vs 200 SMA|long+short: ret 0.35 usd 0.27",
+    "RSI above/below 50 and its MA|long+short: ret 0.20 usd 0.24",
+    "RSI above/below 50 and its MA|long only: ret 0.39 usd 0.25",
+    "MACD histogram sign|long+short: ret 0.34 usd 0.26",
+    "MACD line sign|long only: ret 0.45 usd 0.25",
+    "ASI vs its signal|long+short: ret 0.45 usd 0.50",
+    "ASI sign|long+short: ret 0.22 usd 0.25",
+    "ASI -8/+8 reversal, exit at 0|long only: ret 0.31 usd 0.26",
+    "Range Osc +/-100 breakout, exit at 0|long only: ret 0.31 usd 0.23",
+    "All panels: 4+ of 7 agree|long only: ret 0.33 usd 0.22",
+    "All panels: 5+ of 7 agree|long only: ret 0.41 usd 0.27",
+    "All panels: 6+ of 7 agree|long only: ret 0.42 usd 0.26",
+    "All panels: 7+ of 7 agree|long+short: ret 0.24 usd 0.23",
+    "All panels: 7+ of 7 agree|long only: ret 0.44 usd 0.32"
+   ]
+  },
+  "H1|test": {
+   "hold_ret": 0.907,
+   "hold_usd": 0.639,
+   "spearman": 0.961,
+   "n_usd_higher": 29,
+   "n": 44,
+   "flips_vs_hold": [
+    "Swing VWAP direction|long only: ret 0.89 usd 0.73",
+    "MACD histogram sign|long+short: ret 0.56 usd 0.80",
+    "MACD line sign|long+short: ret 0.64 usd 0.70",
+    "All panels: 5+ of 7 agree|long+short: ret 0.67 usd 0.84",
+    "All panels: 6+ of 7 agree|long+short: ret 0.71 usd 0.85",
+    "All panels: 7+ of 7 agree|long+short: ret 0.74 usd 0.95"
+   ]
+  },
+  "H1|train": {
+   "hold_ret": 0.424,
+   "hold_usd": 0.338,
+   "spearman": 0.995,
+   "n_usd_higher": 27,
+   "n": 44,
+   "flips_vs_hold": [
+    "MACD line sign|long only: ret 0.35 usd 0.37",
+    "Range Osc +/-100 breakout, exit at 0|long+short: ret 0.32 usd 0.38"
+   ]
+  },
+  "H4|test": {
+   "hold_ret": 0.907,
+   "hold_usd": 0.639,
+   "spearman": 0.96,
+   "n_usd_higher": 19,
+   "n": 44,
+   "flips_vs_hold": [
+    "RSI 30/70 reversal, exit at 50|long only: ret 0.88 usd 0.87",
+    "MACD histogram sign|long only: ret 0.64 usd 0.70",
+    "All panels: 6+ of 7 agree|long only: ret 0.76 usd 0.76",
+    "All panels: 7+ of 7 agree|long only: ret 0.71 usd 0.71"
+   ]
+  },
+  "H4|train": {
+   "hold_ret": 0.208,
+   "hold_usd": 0.163,
+   "spearman": 0.959,
+   "n_usd_higher": 19,
+   "n": 44,
+   "flips_vs_hold": []
+  }
+ }
+}

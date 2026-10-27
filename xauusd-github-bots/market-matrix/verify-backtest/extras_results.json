@@ -1,0 +1,257 @@
+{
+ "D1 c_MACD_line": {
+  "by_year": {
+   "2016": 0.38,
+   "2017": -0.07,
+   "2018": -0.0,
+   "2019": 0.4,
+   "2020": 0.62,
+   "2021": -0.47,
+   "2022": 0.37,
+   "2023": 0.54,
+   "2024": 1.03,
+   "2025": 5.4,
+   "2026": 1.85
+  },
+  "y2022_24": {
+   "per_day": 0.644,
+   "sharpe_ret": 0.74,
+   "sharpe_usd": 0.64,
+   "max_dd": -348.0,
+   "total": 499.0,
+   "losing_months": "12/36",
+   "days": 774
+  },
+  "y2025_26": {
+   "per_day": 3.848,
+   "sharpe_ret": 1.4,
+   "sharpe_usd": 1.07,
+   "max_dd": -774.0,
+   "total": 1762.0,
+   "losing_months": "4/22",
+   "days": 458
+  },
+  "test_trades": 44,
+  "entries_at_day_open": 44,
+  "exits_at_day_open": 44,
+  "cost_per_day_of_extra_1usd_at_day_open": 0.032,
+  "cost_per_day_of_extra_0p20_spread": 0.003,
+  "avg_bars_held": 37.5
+ },
+ "D1 b_hold": {
+  "by_year": {
+   "2016": 0.18,
+   "2017": 0.41,
+   "2018": -0.26,
+   "2019": 0.75,
+   "2020": 1.27,
+   "2021": -0.43,
+   "2022": -0.2,
+   "2023": 0.75,
+   "2024": 1.99,
+   "2025": 6.39,
+   "2026": -0.8
+  },
+  "y2022_24": {
+   "per_day": 0.852,
+   "sharpe_ret": 0.74,
+   "sharpe_usd": 0.71,
+   "max_dd": -453.0,
+   "total": 660.0,
+   "losing_months": "17/36",
+   "days": 774
+  },
+  "y2025_26": {
+   "per_day": 3.253,
+   "sharpe_ret": 1.14,
+   "sharpe_usd": 0.77,
+   "max_dd": -1458.0,
+   "total": 1490.0,
+   "losing_months": "7/22",
+   "days": 458
+  }
+ },
+ "H4 a_MA_stack": {
+  "by_year": {
+   "2016": 0.03,
+   "2017": -0.13,
+   "2018": -0.02,
+   "2019": 0.4,
+   "2020": 0.85,
+   "2021": 0.15,
+   "2022": 0.2,
+   "2023": 0.24,
+   "2024": 1.13,
+   "2025": 3.09,
+   "2026": 2.89
+  },
+  "y2022_24": {
+   "per_day": 0.524,
+   "sharpe_ret": 0.81,
+   "sharpe_usd": 0.79,
+   "max_dd": -111.0,
+   "total": 406.0,
+   "losing_months": "11/36",
+   "days": 774
+  },
+  "y2025_26": {
+   "per_day": 3.002,
+   "sharpe_ret": 1.68,
+   "sharpe_usd": 1.47,
+   "max_dd": -452.0,
+   "total": 1375.0,
+   "losing_months": "6/22",
+   "days": 458
+  },
+  "test_trades": 167,
+  "entries_at_day_open": 22,
+  "exits_at_day_open": 24,
+  "cost_per_day_of_extra_1usd_at_day_open": 0.037,
+  "cost_per_day_of_extra_0p20_spread": 0.027,
+  "avg_bars_held": 11.7
+ },
+ "H4 b_hold": {
+  "by_year": {
+   "2016": 0.18,
+   "2017": 0.41,
+   "2018": -0.26,
+   "2019": 0.75,
+   "2020": 1.27,
+   "2021": -0.43,
+   "2022": -0.2,
+   "2023": 0.75,
+   "2024": 1.99,
+   "2025": 6.39,
+   "2026": -0.8
+  },
+  "y2022_24": {
+   "per_day": 0.852,
+   "sharpe_ret": 0.74,
+   "sharpe_usd": 0.71,
+   "max_dd": -453.0,
+   "total": 660.0,
+   "losing_months": "17/36",
+   "days": 774
+  },
+  "y2025_26": {
+   "per_day": 3.253,
+   "sharpe_ret": 1.14,
+   "sharpe_usd": 0.77,
+   "max_dd": -1458.0,
+   "total": 1490.0,
+   "losing_months": "7/22",
+   "days": 458
+  }
+ },
+ "H1 d_RangeOsc_break": {
+  "by_year": {
+   "2016": -0.98,
+   "2017": 0.13,
+   "2018": -0.12,
+   "2019": 0.31,
+   "2020": 1.48,
+   "2021": -0.04,
+   "2022": 0.08,
+   "2023": 0.48,
+   "2024": 1.18,
+   "2025": 3.24,
+   "2026": 1.19
+  },
+  "y2022_24": {
+   "per_day": 0.579,
+   "sharpe_ret": 0.79,
+   "sharpe_usd": 0.79,
+   "max_dd": -174.0,
+   "total": 448.0,
+   "losing_months": "17/36",
+   "days": 774
+  },
+  "y2025_26": {
+   "per_day": 2.345,
+   "sharpe_ret": 1.17,
+   "sharpe_usd": 0.92,
+   "max_dd": -716.0,
+   "total": 1074.0,
+   "losing_months": "10/22",
+   "days": 458
+  },
+  "test_trades": 309,
+  "entries_at_day_open": 9,
+  "exits_at_day_open": 7,
+  "cost_per_day_of_extra_1usd_at_day_open": 0.013,
+  "cost_per_day_of_extra_0p20_spread": 0.05,
+  "avg_bars_held": 35.7
+ },
+ "H1 e_all_5of7": {
+  "by_year": {
+   "2016": -0.95,
+   "2017": 0.11,
+   "2018": -0.54,
+   "2019": -0.09,
+   "2020": 1.15,
+   "2021": -0.67,
+   "2022": 0.17,
+   "2023": -0.09,
+   "2024": 1.1,
+   "2025": 4.68,
+   "2026": 4.3
+  },
+  "y2022_24": {
+   "per_day": 0.394,
+   "sharpe_ret": 0.56,
+   "sharpe_usd": 0.58,
+   "max_dd": -277.0,
+   "total": 305.0,
+   "losing_months": "18/36",
+   "days": 774
+  },
+  "y2025_26": {
+   "per_day": 4.518,
+   "sharpe_ret": 2.31,
+   "sharpe_usd": 2.17,
+   "max_dd": -397.0,
+   "total": 2069.0,
+   "losing_months": "8/22",
+   "days": 458
+  },
+  "test_trades": 978,
+  "entries_at_day_open": 25,
+  "exits_at_day_open": 25,
+  "cost_per_day_of_extra_1usd_at_day_open": 0.041,
+  "cost_per_day_of_extra_0p20_spread": 0.159,
+  "avg_bars_held": 9.3
+ },
+ "H1 b_hold": {
+  "by_year": {
+   "2016": -1.97,
+   "2017": 0.41,
+   "2018": -0.26,
+   "2019": 0.75,
+   "2020": 1.27,
+   "2021": -0.43,
+   "2022": -0.2,
+   "2023": 0.75,
+   "2024": 1.99,
+   "2025": 6.39,
+   "2026": -0.8
+  },
+  "y2022_24": {
+   "per_day": 0.852,
+   "sharpe_ret": 0.74,
+   "sharpe_usd": 0.71,
+   "max_dd": -453.0,
+   "total": 660.0,
+   "losing_months": "17/36",
+   "days": 774
+  },
+  "y2025_26": {
+   "per_day": 3.253,
+   "sharpe_ret": 1.14,
+   "sharpe_usd": 0.77,
+   "max_dd": -1458.0,
+   "total": 1490.0,
+   "losing_months": "7/22",
+   "days": 458
+  }
+ }
+}

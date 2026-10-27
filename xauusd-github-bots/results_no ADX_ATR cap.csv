@@ -1,0 +1,5 @@
+bot,trades,per_day,win,pf,avg,trades_day,max_dd,worst_trade,worst_month,pos_months,total,days,tf_from,common_per_day,common_win,coinflip_median,beats_random_%
+"GoldReversionGuard, no ADX filter (M5)",527,-0.03,64.5,0.99,-0.02,1.42,-329.0,-85.0,-85.0,7/18,-12.0,372,2025-05-05,-0.03,64.5,-0.68,80
+"GoldReversionGuard, no ADX filter (M15)",754,-0.6,62.2,0.78,-0.88,0.69,-780.0,-69.0,-103.0,17/52,-660.0,1099,2022-07-08,-1.13,64.3,-0.53,30
+"n30 TickRobust, no ADX filter (M1)",53,-0.6,64.2,0.58,-0.86,0.7,-67.0,-9.0,-32.0,1/5,-46.0,76,2026-06-26,-0.6,64.2,-0.56,45
+"ilahuerta, ATR cap scaled to price (M5)",65,0.1,46.2,1.08,0.59,0.17,-122.0,-27.0,-68.0,8/18,39.0,372,2025-05-05,0.1,46.2,-0.04,70

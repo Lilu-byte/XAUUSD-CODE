@@ -1,0 +1,114 @@
+{
+ "H4": {
+  "rsi": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "rsi_ma": {
+   "max_abs_after_warm": 2.842170943040401e-14,
+   "sign_mismatch_after_warm": 0
+  },
+  "macd": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "macd_sig": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "macd_hist": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "rti": {
+   "max_abs_after_warm": 5.7808175827123165e-05,
+   "sign_mismatch_after_warm": 1
+  },
+  "rti_sig": {
+   "max_abs_after_warm": 5.506224738383025e-06,
+   "sign_mismatch_after_warm": 0
+  },
+  "asi": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "asi_sig": {
+   "max_abs_after_warm": 5.329070518200751e-15,
+   "sign_mismatch_after_warm": 0
+  },
+  "rng": {
+   "max_abs_after_warm": 44.05480505449009,
+   "sign_mismatch_after_warm": 0
+  },
+  "ema89": {
+   "max_abs_after_warm": 9.549694368615746e-12
+  },
+  "sma200": {
+   "max_abs_after_warm": 5.4569682106375694e-12
+  },
+  "vwap_redrawn": {
+   "max_abs_after_warm": 0.0
+  },
+  "vw_dir_redrawn_mismatch": 0,
+  "vw_dir_live_window1050_vs_mm_mismatch_after_1050": 0,
+  "vwap_live_window1050_vs_mm_maxabs_after_1050": 0.0,
+  "anchors_identical": true,
+  "n_anchors": 256
+ },
+ "H1": {
+  "rsi": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "rsi_ma": {
+   "max_abs_after_warm": 2.842170943040401e-14,
+   "sign_mismatch_after_warm": 0
+  },
+  "macd": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "macd_sig": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "macd_hist": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "rti": {
+   "max_abs_after_warm": 0.00012154842426781443,
+   "sign_mismatch_after_warm": 3
+  },
+  "rti_sig": {
+   "max_abs_after_warm": 1.1565920615907999e-05,
+   "sign_mismatch_after_warm": 0
+  },
+  "asi": {
+   "max_abs_after_warm": 0.0,
+   "sign_mismatch_after_warm": 0
+  },
+  "asi_sig": {
+   "max_abs_after_warm": 7.105427357601002e-15,
+   "sign_mismatch_after_warm": 0
+  },
+  "rng": {
+   "max_abs_after_warm": 0.005318967503910699,
+   "sign_mismatch_after_warm": 0
+  },
+  "ema89": {
+   "max_abs_after_warm": 0.0
+  },
+  "sma200": {
+   "max_abs_after_warm": 5.4569682106375694e-12
+  },
+  "vwap_redrawn": {
+   "max_abs_after_warm": 0.0
+  },
+  "vw_dir_redrawn_mismatch": 0,
+  "vw_dir_live_window1050_vs_mm_mismatch_after_1050": 0,
+  "vwap_live_window1050_vs_mm_maxabs_after_1050": 0.0,
+  "anchors_identical": true,
+  "n_anchors": 767
+ }
+}

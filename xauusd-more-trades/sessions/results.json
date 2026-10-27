@@ -1,0 +1,281 @@
+[
+ {
+  "setup": "PDHL >01:00",
+  "mode": "break",
+  "tp": 10,
+  "sl": 25,
+  "alone": {
+   "pair": {
+    "per_day": -0.33,
+    "trades_day": 0.82,
+    "max_dd": -311.0,
+    "max_dd_mtm": -311.0,
+    "worst_month": -115.0
+   },
+   "m15_train": {
+    "per_day": 0.35,
+    "trades_day": 0.78,
+    "max_dd": -256.0,
+    "max_dd_mtm": -256.0,
+    "worst_month": -91.0
+   },
+   "m15_test": {
+    "per_day": 0.01,
+    "trades_day": 0.79,
+    "max_dd": -286.0,
+    "max_dd_mtm": -286.0,
+    "worst_month": -99.0
+   },
+   "h1_old": {
+    "per_day": -0.89,
+    "trades_day": 0.73,
+    "max_dd": -1530.0,
+    "max_dd_mtm": -1530.0,
+    "worst_month": -140.0
+   }
+  },
+  "combined": {
+   "pair": {
+    "per_day": 4.33,
+    "trades_day": 2.41,
+    "max_dd": -481.0,
+    "max_dd_mtm": -497.0,
+    "worst_month": -234.0
+   },
+   "m15_train": {
+    "per_day": 2.29,
+    "trades_day": 2.02,
+    "max_dd": -294.0,
+    "max_dd_mtm": -321.0,
+    "worst_month": -149.0
+   },
+   "m15_test": {
+    "per_day": 4.07,
+    "trades_day": 2.02,
+    "max_dd": -424.0,
+    "max_dd_mtm": -451.0,
+    "worst_month": -224.0
+   },
+   "h1_old": {
+    "per_day": -1.77,
+    "trades_day": 1.76,
+    "max_dd": -2769.0,
+    "max_dd_mtm": -2795.0,
+    "worst_month": -395.0
+   }
+  },
+  "corr_pair": 0.12,
+  "best3_removed_pair_per_day": 4.25,
+  "top3_days": {
+   "2025-11-19": 10.0,
+   "2026-07-27": 10.0,
+   "2025-05-06": 10.0
+  },
+  "pair_win_rate": 0.693,
+  "pair_exits": {
+   "TP": 209,
+   "SL": 85,
+   "EOD": 12
+  },
+  "corr_m15_test": 0.04,
+  "random_pct_test": 97.5,
+  "random_median_p95": [
+   -0.87,
+   -0.12
+  ],
+  "tests": {
+   "a": false,
+   "b": false,
+   "c": true,
+   "d": false,
+   "e": true
+  },
+  "verdict": "fail"
+ },
+ {
+  "setup": "NYO 30m",
+  "mode": "break",
+  "tp": 5,
+  "sl": 35,
+  "alone": {
+   "pair": {
+    "per_day": -1.19,
+    "trades_day": 0.95,
+    "max_dd": -506.0,
+    "max_dd_mtm": -506.0,
+    "worst_month": -161.0
+   },
+   "m15_train": {
+    "per_day": 0.35,
+    "trades_day": 0.94,
+    "max_dd": -147.0,
+    "max_dd_mtm": -147.0,
+    "worst_month": -112.0
+   },
+   "m15_test": {
+    "per_day": -0.72,
+    "trades_day": 0.95,
+    "max_dd": -438.0,
+    "max_dd_mtm": -438.0,
+    "worst_month": -130.0
+   },
+   "h1_old": {
+    "per_day": -0.33,
+    "trades_day": 0.78,
+    "max_dd": -545.0,
+    "max_dd_mtm": -545.0,
+    "worst_month": -104.0
+   }
+  },
+  "combined": {
+   "pair": {
+    "per_day": 3.47,
+    "trades_day": 2.55,
+    "max_dd": -335.0,
+    "max_dd_mtm": -307.0,
+    "worst_month": -176.0
+   },
+   "m15_train": {
+    "per_day": 2.29,
+    "trades_day": 2.17,
+    "max_dd": -246.0,
+    "max_dd_mtm": -250.0,
+    "worst_month": -116.0
+   },
+   "m15_test": {
+    "per_day": 3.34,
+    "trades_day": 2.17,
+    "max_dd": -468.0,
+    "max_dd_mtm": -499.0,
+    "worst_month": -311.0
+   },
+   "h1_old": {
+    "per_day": -1.21,
+    "trades_day": 1.82,
+    "max_dd": -1871.0,
+    "max_dd_mtm": -1898.0,
+    "worst_month": -271.0
+   }
+  },
+  "corr_pair": -0.09,
+  "best3_removed_pair_per_day": 3.43,
+  "top3_days": {
+   "2025-05-06": 5.0,
+   "2025-05-07": 5.0,
+   "2025-05-08": 5.0
+  },
+  "pair_win_rate": 0.759,
+  "pair_exits": {
+   "TP": 267,
+   "EOD": 59,
+   "SL": 31
+  },
+  "corr_m15_test": -0.08,
+  "random_pct_test": 3.0,
+  "random_median_p95": [
+   -0.05,
+   0.48
+  ],
+  "tests": {
+   "a": false,
+   "b": false,
+   "c": false,
+   "d": false,
+   "e": false
+  },
+  "verdict": "fail"
+ },
+ {
+  "setup": "USD 15m",
+  "mode": "fail",
+  "tp": 10,
+  "sl": 15,
+  "alone": {
+   "pair": {
+    "per_day": 0.3,
+    "trades_day": 0.8,
+    "max_dd": -190.0,
+    "max_dd_mtm": -190.0,
+    "worst_month": -86.0
+   },
+   "m15_train": {
+    "per_day": 0.18,
+    "trades_day": 0.69,
+    "max_dd": -137.0,
+    "max_dd_mtm": -137.0,
+    "worst_month": -36.0
+   },
+   "m15_test": {
+    "per_day": 0.05,
+    "trades_day": 0.66,
+    "max_dd": -219.0,
+    "max_dd_mtm": -219.0,
+    "worst_month": -128.0
+   },
+   "h1_old": {
+    "per_day": -0.1,
+    "trades_day": 0.35,
+    "max_dd": -283.0,
+    "max_dd_mtm": -283.0,
+    "worst_month": -48.0
+   }
+  },
+  "combined": {
+   "pair": {
+    "per_day": 4.95,
+    "trades_day": 2.4,
+    "max_dd": -303.0,
+    "max_dd_mtm": -258.0,
+    "worst_month": -143.0
+   },
+   "m15_train": {
+    "per_day": 2.11,
+    "trades_day": 1.93,
+    "max_dd": -288.0,
+    "max_dd_mtm": -315.0,
+    "worst_month": -177.0
+   },
+   "m15_test": {
+    "per_day": 4.1,
+    "trades_day": 1.88,
+    "max_dd": -326.0,
+    "max_dd_mtm": -409.0,
+    "worst_month": -208.0
+   },
+   "h1_old": {
+    "per_day": -0.98,
+    "trades_day": 1.39,
+    "max_dd": -1586.0,
+    "max_dd_mtm": -1611.0,
+    "worst_month": -281.0
+   }
+  },
+  "corr_pair": 0.07,
+  "best3_removed_pair_per_day": 4.87,
+  "top3_days": {
+   "2025-05-06": 10.0,
+   "2025-05-07": 10.0,
+   "2025-05-08": 10.0
+  },
+  "pair_win_rate": 0.597,
+  "pair_exits": {
+   "TP": 173,
+   "SL": 102,
+   "EOD": 25
+  },
+  "corr_m15_test": -0.07,
+  "random_pct_test": 90.0,
+  "random_median_p95": [
+   -0.39,
+   0.24
+  ],
+  "tests": {
+   "a": false,
+   "b": false,
+   "c": true,
+   "d": false,
+   "e": false
+  },
+  "verdict": "fail"
+ }
+]
